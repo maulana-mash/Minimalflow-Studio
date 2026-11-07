@@ -422,11 +422,37 @@ window.MinimalFlow = window.MinimalFlow || {};
             textEl.style.userSelect = "none";
             textEl.style.webkitUserSelect = "none";
 
-            layout.lines.forEach((line, index) => {
+            layout.lines.forEach((lineSpans, index) => {
               const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
               tspan.setAttribute("x", layout.xPos);
               if (index > 0) tspan.setAttribute("dy", layout.lineHeight);
-              tspan.textContent = line || " ";
+
+              if (Array.isArray(lineSpans)) {
+                if (lineSpans.length === 0 || (lineSpans.length === 1 && !lineSpans[0].text)) {
+                  tspan.textContent = " ";
+                } else {
+                  lineSpans.forEach(span => {
+                    const subSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                    if (span.bold) {
+                      subSpan.setAttribute("font-weight", "700");
+                    } else {
+                      subSpan.setAttribute("font-weight", node.text.bold ? "700" : "500");
+                    }
+
+                    if (span.italic) {
+                      subSpan.setAttribute("font-style", "italic");
+                    } else {
+                      subSpan.setAttribute("font-style", node.text.italic ? "italic" : "normal");
+                    }
+
+                    subSpan.textContent = span.text;
+                    tspan.appendChild(subSpan);
+                  });
+                }
+              } else {
+                tspan.textContent = lineSpans || " ";
+              }
+
               textEl.appendChild(tspan);
             });
             g.appendChild(textEl);

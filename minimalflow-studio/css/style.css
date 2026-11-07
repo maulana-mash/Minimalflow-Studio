@@ -1311,4 +1311,87 @@ body.dark-mode .status-error {
   animation: spin 0.9s linear infinite;
 }
 
+/* --------------------------------------------------------------------------
+   EXPORT IMAGE QUALITY MODAL
+   -------------------------------------------------------------------------- */
+.export-format-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 10px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  position: relative;
+}
+
+.export-format-card:hover {
+  border-color: var(--border-dark);
+  background: var(--bg-subtle);
+}
+
+.export-format-card.active {
+  border-color: var(--text-main);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 1.5px var(--text-main);
+}
+
+.format-card-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  color: var(--text-main);
+}
+
+.format-card-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+
+.format-card-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  line-height: 1.2;
+}
+
+.export-scale-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.export-scale-btn:hover {
+  border-color: var(--border-dark);
+  background: var(--bg-subtle);
+}
+
+.export-scale-btn.active {
+  border-color: var(--accent-black);
+  background: var(--accent-black);
+  color: var(--bg-surface);
+}
+
+.export-scale-btn.active span {
+  color: var(--bg-surface) !important;
+}
+
+
 

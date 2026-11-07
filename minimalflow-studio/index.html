@@ -103,28 +103,16 @@
           <span>Ekspor</span>
         </button>
         <div id="export-menu" class="dropdown-menu">
+          <button class="dropdown-item" data-action="open-export-modal">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              <span>Ekspor Gambar (PNG / JPG)...</span>
+            </div>
+          </button>
           <button class="dropdown-item" data-action="export-svg">
             <div style="display:flex; align-items:center; gap:8px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
               <span>Ekspor Vektor SVG</span>
-            </div>
-          </button>
-          <button class="dropdown-item" data-action="export-png-trans">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-              <span>PNG Transparan (2x)</span>
-            </div>
-          </button>
-          <button class="dropdown-item" data-action="export-png-white">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-              <span>PNG Background Putih</span>
-            </div>
-          </button>
-          <button class="dropdown-item" data-action="export-jpg">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle></svg>
-              <span>JPG Kualitas Tinggi</span>
             </div>
           </button>
           <button class="dropdown-item" data-action="export-pdf">
@@ -732,6 +720,113 @@
             <span>Kompilasi & Terapkan (Gantikan)</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pengaturan Ekspor Gambar (Opsi B: Format & Kualitas Multiplier) -->
+  <div id="export-image-modal-backdrop" class="modal-backdrop">
+    <div id="export-image-modal" class="modal-dialog" style="width:480px; max-width:92vw; border-radius:12px; overflow:hidden;">
+      <!-- Header -->
+      <div class="modal-header" style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; background:var(--bg-surface);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:34px; height:34px; border-radius:8px; background:var(--bg-subtle); display:flex; align-items:center; justify-content:center; color:var(--text-main);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title" style="font-family:var(--font-heading); font-size:16px; font-weight:700; color:var(--text-main);">Ekspor Gambar</h2>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:1px;">Pilih format dan tingkat resolusi gambar kanvas</div>
+          </div>
+        </div>
+        <button id="btn-close-export-modal" class="btn-icon" style="width:32px; height:32px; border-radius:8px;" title="Tutup (Esc)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Body Content -->
+      <div style="padding:20px; display:flex; flex-direction:column; gap:18px; background:var(--bg-surface);">
+        
+        <!-- Format Selection -->
+        <div>
+          <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); display:block; margin-bottom:8px;">PILIH FORMAT GAMBAR</label>
+          <div class="export-format-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+            <button type="button" class="export-format-card active" data-format="png-trans">
+              <div class="format-card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <span class="format-card-title">PNG Transparan</span>
+              <span class="format-card-sub">Latar tembus pandang</span>
+            </button>
+
+            <button type="button" class="export-format-card" data-format="png-white">
+              <div class="format-card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor" fill-opacity="0.1"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <span class="format-card-title">PNG Solid</span>
+              <span class="format-card-sub">Latar sesuai tema</span>
+            </button>
+
+            <button type="button" class="export-format-card" data-format="jpg">
+              <div class="format-card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+              </div>
+              <span class="format-card-title">JPG Kualitas Tinggi</span>
+              <span class="format-card-sub">Berkas terkompresi</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scale / Quality Selection -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted);">SKALA KUALITAS / RESOLUSI</label>
+            <span id="export-scale-badge" style="font-size:11px; font-weight:600; color:var(--text-main);">2x (Retina HD)</span>
+          </div>
+          <div class="export-scale-row" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;">
+            <button type="button" class="export-scale-btn" data-scale="1">
+              <span style="font-weight:700; font-size:13px;">1x</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">Standar Web</span>
+            </button>
+            <button type="button" class="export-scale-btn active" data-scale="2">
+              <span style="font-weight:700; font-size:13px;">2x</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">Retina HD</span>
+            </button>
+            <button type="button" class="export-scale-btn" data-scale="3">
+              <span style="font-weight:700; font-size:13px;">3x</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">Ultra HD</span>
+            </button>
+            <button type="button" class="export-scale-btn" data-scale="4">
+              <span style="font-weight:700; font-size:13px;">4x</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">Print-Ready</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Dimension Preview Info Box -->
+        <div style="border:1px solid var(--border-color); border-radius:8px; padding:12px 14px; background:var(--bg-subtle); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted);">RESOLUSI HASIL EKSPOR</div>
+            <div id="export-dim-preview" style="font-family:'Fira Code', monospace; font-size:16px; font-weight:700; color:var(--text-main); margin-top:2px;">3200 × 1800 px</div>
+          </div>
+          <div style="text-align:right;">
+            <div id="export-aspect-preview" style="font-size:11px; color:var(--text-muted);">Workspace: 16:9</div>
+            <div id="export-size-estimate" style="font-size:11px; font-weight:600; color:var(--text-main); margin-top:2px;">~450 KB – 1.2 MB</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons -->
+      <div style="padding:14px 20px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:var(--bg-subtle);">
+        <button id="btn-cancel-export-modal" class="btn-labeled" style="height:34px; font-size:12px; padding:0 16px;">Batal</button>
+        <button id="btn-do-download-image" class="btn-labeled primary" style="height:34px; font-size:12.5px; font-weight:600; padding:0 20px; display:inline-flex; align-items:center; gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Unduh Gambar Sekarang</span>
+        </button>
       </div>
     </div>
   </div>

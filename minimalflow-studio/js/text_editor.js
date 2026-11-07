@@ -20,6 +20,58 @@ window.MinimalFlow = window.MinimalFlow || {};
     return measureCtx;
   }
 
+  // Parse inline Markdown / HTML tags into styled spans
+  function parseInlineSpans(str, defaultBold = false, defaultItalic = false) {
+    if (!str) return [];
+    const regex = /(\*\*\*(.*?)\*\*\*|<b><i>(.*?)<\/i><\/b>|<i><b>(.*?)<\/b><\/i>|\*\*(.*?)\*\*|<b>(.*?)<\/b>|\*(.*?)\*|<i>(.*?)<\/i>)/gi;
+    const tokens = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(str)) !== null) {
+      if (match.index > lastIndex) {
+        tokens.push({
+          text: str.slice(lastIndex, match.index),
+          bold: defaultBold,
+          italic: defaultItalic
+        });
+      }
+
+      const full = match[0];
+      if (full.startsWith("***") || match[2] !== undefined || match[3] !== undefined) {
+        const content = (match[1] && match[1].startsWith("***")) ? match[1].slice(3, -3) : (match[2] || match[3] || "");
+        tokens.push({ text: content, bold: true, italic: true });
+      } else if (full.startsWith("**") || match[5] !== undefined) {
+        const content = (match[1] && match[1].startsWith("**")) ? match[1].slice(2, -2) : (match[4] || match[5] || "");
+        tokens.push({ text: content, bold: true, italic: defaultItalic });
+      } else if (full.startsWith("*") || match[7] !== undefined) {
+        const content = (match[1] && match[1].startsWith("*")) ? match[1].slice(1, -1) : (match[6] || match[7] || "");
+        tokens.push({ text: content, bold: defaultBold, italic: true });
+      }
+
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < str.length) {
+      tokens.push({
+        text: str.slice(lastIndex),
+        bold: defaultBold,
+        italic: defaultItalic
+      });
+    }
+
+    return tokens;
+  }
+
+  function measureSpanWidth(str, bold, italic, fontSize, fontFamily) {
+    const ctx = getMeasureContext();
+    if (!ctx) return str.length * fontSize * 0.6;
+    const fontStyle = italic ? "italic " : "";
+    const fontWeight = bold ? "700 " : "500 ";
+    ctx.font = `${fontStyle}${fontWeight}${fontSize}px ${fontFamily}`;
+    return ctx.measureText(str).width;
+  }
+
   function layoutNodeText(node) {
     if (!node.text) {
       return { lines: [], xPos: 0, startY: 0, lineHeight: 14, anchor: "middle", totalTextHeight: 0 };
@@ -28,6 +80,10 @@ window.MinimalFlow = window.MinimalFlow || {};
     const { width, height, text } = node;
     const paddingX = text.paddingX !== undefined ? text.paddingX : 14;
     const paddingY = text.paddingY !== undefined ? text.paddingY : 10;
+    const fontSize = text.fontSize || 14;
+    const fontFamily = text.fontFamily || "Poppins, sans-serif";
+    const defaultBold = !!text.bold;
+    const defaultItalic = !!text.italic;
 
     // Reduksi area aman berdasarkan geometri bentuk chart
     let shapeSafeReduction = 0;
@@ -43,37 +99,27 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     const maxWidth = Math.max(8, width - (paddingX * 2) - shapeSafeReduction);
-    const lineHeight = (text.fontSize || 14) * 1.35;
-    const ctx = getMeasureContext();
+    const lineHeight = fontSize * 1.35;
 
-    if (ctx) {
-      const fontStyle = text.italic ? "italic " : "";
-      const fontWeight = text.bold ? "700 " : "500 ";
-      ctx.font = `${fontStyle}${fontWeight}${text.fontSize || 14}px ${text.fontFamily || 'Poppins, sans-serif'}`;
-    }
-
-    function measureTextWidth(w) {
-      if (!ctx) return w.length * (text.fontSize || 14) * 0.6;
-      return ctx.measureText(w).width;
-    }
-
-    // Pecah kata panjang yang tidak punya spasi per-karakter agar tidak tembus keluar chart
-    function breakWordIfNeeded(w) {
-      if (!w) return [""];
-      if (measureTextWidth(w) <= maxWidth) return [w];
+    // Pecah kata panjang per karakter jika melebihi maxWidth
+    function breakWordIfNeeded(word, bold, italic) {
+      if (!word) return [];
+      if (measureSpanWidth(word, bold, italic, fontSize, fontFamily) <= maxWidth) {
+        return [{ word, bold, italic }];
+      }
       const chunks = [];
       let cur = "";
-      for (let i = 0; i < w.length; i++) {
-        const ch = w[i];
-        if (measureTextWidth(cur + ch) <= maxWidth) {
+      for (let i = 0; i < word.length; i++) {
+        const ch = word[i];
+        if (measureSpanWidth(cur + ch, bold, italic, fontSize, fontFamily) <= maxWidth) {
           cur += ch;
         } else {
-          if (cur) chunks.push(cur);
+          if (cur) chunks.push({ word: cur, bold, italic });
           cur = ch;
         }
       }
-      if (cur) chunks.push(cur);
-      return chunks.length > 0 ? chunks : [w];
+      if (cur) chunks.push({ word: cur, bold, italic });
+      return chunks.length > 0 ? chunks : [{ word, bold, italic }];
     }
 
     const paragraphs = (text.content || "").split("\n");
@@ -81,27 +127,62 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     for (const para of paragraphs) {
       if (!para.trim()) {
-        lines.push("");
+        lines.push([{ text: "", bold: defaultBold, italic: defaultItalic }]);
         continue;
       }
-      const rawWords = para.split(" ");
-      const words = [];
-      for (const rw of rawWords) {
-        const broken = breakWordIfNeeded(rw);
-        words.push(...broken);
-      }
 
-      let currentLine = words[0] || "";
-      for (let i = 1; i < words.length; i++) {
-        const testLine = currentLine + " " + words[i];
-        if (measureTextWidth(testLine) <= maxWidth) {
-          currentLine = testLine;
-        } else {
-          lines.push(currentLine);
-          currentLine = words[i];
+      const spans = parseInlineSpans(para, defaultBold, defaultItalic);
+      const words = [];
+
+      for (const span of spans) {
+        const parts = span.text.split(" ");
+        for (let i = 0; i < parts.length; i++) {
+          if (parts[i].length > 0) {
+            const broken = breakWordIfNeeded(parts[i], span.bold, span.italic);
+            words.push(...broken);
+          }
         }
       }
-      lines.push(currentLine);
+
+      if (words.length === 0) {
+        lines.push([{ text: "", bold: defaultBold, italic: defaultItalic }]);
+        continue;
+      }
+
+      let currentSpans = [];
+      let currentLineWidth = 0;
+
+      for (let i = 0; i < words.length; i++) {
+        const item = words[i];
+        const itemW = measureSpanWidth(item.word, item.bold, item.italic, fontSize, fontFamily);
+        const needSpace = currentSpans.length > 0;
+        const prevSpan = currentSpans[currentSpans.length - 1];
+        const spaceW = needSpace 
+          ? measureSpanWidth(" ", prevSpan ? prevSpan.bold : item.bold, prevSpan ? prevSpan.italic : item.italic, fontSize, fontFamily)
+          : 0;
+        const additionalW = spaceW + itemW;
+
+        if (currentLineWidth + additionalW <= maxWidth || currentSpans.length === 0) {
+          if (needSpace) {
+            currentSpans[currentSpans.length - 1].text += " ";
+          }
+          const lastSpan = currentSpans[currentSpans.length - 1];
+          if (lastSpan && lastSpan.bold === item.bold && lastSpan.italic === item.italic) {
+            lastSpan.text += item.word;
+          } else {
+            currentSpans.push({ text: item.word, bold: item.bold, italic: item.italic });
+          }
+          currentLineWidth += additionalW;
+        } else {
+          lines.push(currentSpans);
+          currentSpans = [{ text: item.word, bold: item.bold, italic: item.italic }];
+          currentLineWidth = itemW;
+        }
+      }
+
+      if (currentSpans.length > 0) {
+        lines.push(currentSpans);
+      }
     }
 
     let anchor = "middle";
@@ -117,21 +198,21 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     const totalTextHeight = lines.length * lineHeight;
     let availableHeight = height - paddingY * 2;
-    let startY = paddingY + (availableHeight - totalTextHeight) / 2 + (text.fontSize || 14) * 0.85;
+    let startY = paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
 
     // Centering vertikal khusus tabung database agar tidak menabrak elips atas
     if (node.type === "cylinder") {
       const ry = Math.min(height * 0.22, 18);
       availableHeight = height - ry * 1.5 - paddingY * 2;
-      startY = ry + paddingY + (availableHeight - totalTextHeight) / 2 + (text.fontSize || 14) * 0.85;
+      startY = ry + paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
     }
 
-    if (startY < paddingY + (text.fontSize || 14) * 0.8) {
-      startY = paddingY + (text.fontSize || 14) * 0.8;
+    if (startY < paddingY + fontSize * 0.8) {
+      startY = paddingY + fontSize * 0.8;
     }
 
     if (node.isContainer) {
-      startY = paddingY + (text.fontSize || 14) * 0.85;
+      startY = paddingY + fontSize * 0.85;
     }
 
     return { lines, xPos, startY, lineHeight, anchor, totalTextHeight };
@@ -298,6 +379,23 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     textarea.addEventListener("keydown", (e) => {
       e.stopPropagation(); // Shortcut keyboard seperti Delete / Ctrl+A bekerja lokal pada textarea, bukan kanvas
+
+      // Ctrl + B: Tebal (Bold) untuk teks yang disorot
+      if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B" || e.code === "KeyB")) {
+        e.preventDefault();
+        toggleSelectionFormatting(textarea, "**");
+        onLiveInput();
+        return;
+      }
+
+      // Ctrl + I: Miring (Italic) untuk teks yang disorot
+      if ((e.ctrlKey || e.metaKey) && (e.key === "i" || e.key === "I" || e.code === "KeyI")) {
+        e.preventDefault();
+        toggleSelectionFormatting(textarea, "*");
+        onLiveInput();
+        return;
+      }
+
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         finishEditing();
@@ -319,10 +417,58 @@ window.MinimalFlow = window.MinimalFlow || {};
     }, 25);
   }
 
+  function toggleSelectionFormatting(textarea, marker) {
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const val = textarea.value;
+    const mLen = marker.length;
+
+    if (start === end) {
+      textarea.value = val.slice(0, start) + marker + marker + val.slice(end);
+      textarea.selectionStart = start + mLen;
+      textarea.selectionEnd = start + mLen;
+      textarea.dispatchEvent(new Event("input"));
+      return;
+    }
+
+    const selectedText = val.slice(start, end);
+
+    // Cek apakah teks yang disorot sudah ber-marker di dalamnya
+    if (selectedText.startsWith(marker) && selectedText.endsWith(marker) && selectedText.length >= mLen * 2) {
+      const unwrapped = selectedText.slice(mLen, -mLen);
+      textarea.value = val.slice(0, start) + unwrapped + val.slice(end);
+      textarea.selectionStart = start;
+      textarea.selectionEnd = start + unwrapped.length;
+      textarea.dispatchEvent(new Event("input"));
+      return;
+    }
+
+    // Cek apakah marker berada tepat di luar batas teks yang disorot
+    if (start >= mLen && end + mLen <= val.length &&
+        val.slice(start - mLen, start) === marker &&
+        val.slice(end, end + mLen) === marker) {
+      textarea.value = val.slice(0, start - mLen) + selectedText + val.slice(end + mLen);
+      textarea.selectionStart = start - mLen;
+      textarea.selectionEnd = end - mLen;
+      textarea.dispatchEvent(new Event("input"));
+      return;
+    }
+
+    // Bungkus teks yang disorot
+    const wrapped = marker + selectedText + marker;
+    textarea.value = val.slice(0, start) + wrapped + val.slice(end);
+    textarea.selectionStart = start;
+    textarea.selectionEnd = start + wrapped.length;
+    textarea.dispatchEvent(new Event("input"));
+  }
+
   exports.TextEditor = {
     layoutNodeText,
     open: openInlineEditor,
-    close: closeInlineEditor
+    close: closeInlineEditor,
+    toggleSelectionFormatting,
+    parseInlineSpans
   };
 
 })(window.MinimalFlow);

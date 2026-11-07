@@ -127,7 +127,17 @@ window.MinimalFlow = window.MinimalFlow || {};
     btnRunVisionScan: document.getElementById("btn-run-vision-scan"),
     detailsGeminiConfig: document.getElementById("details-gemini-config"),
     visionStatusDot: document.getElementById("vision-status-dot"),
-    visionStatusSummary: document.getElementById("vision-status-summary")
+    visionStatusSummary: document.getElementById("vision-status-summary"),
+    // Export Image Modal Elements
+    exportModalBackdrop: document.getElementById("export-image-modal-backdrop"),
+    exportModal: document.getElementById("export-image-modal"),
+    btnCloseExportModal: document.getElementById("btn-close-export-modal"),
+    btnCancelExportModal: document.getElementById("btn-cancel-export-modal"),
+    btnDoDownloadImage: document.getElementById("btn-do-download-image"),
+    exportDimPreview: document.getElementById("export-dim-preview"),
+    exportAspectPreview: document.getElementById("export-aspect-preview"),
+    exportSizeEstimate: document.getElementById("export-size-estimate"),
+    exportScaleBadge: document.getElementById("export-scale-badge")
   };
 
   // Managers
@@ -1810,6 +1820,10 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     if (e.key === "Escape") {
+      if (dom.exportModalBackdrop && dom.exportModalBackdrop.classList.contains("show")) {
+        closeExportModal();
+        return;
+      }
       if (dom.guideModalBackdrop && dom.guideModalBackdrop.classList.contains("show")) {
         dom.guideModalBackdrop.classList.remove("show");
         return;
@@ -2125,23 +2139,49 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (node && node.text) { saveSnapshot(); node.text.align = e.target.value; renderAll(); }
   });
 
-  dom.btnTextBold.addEventListener("click", () => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node && node.text) {
-      saveSnapshot();
-      node.text.bold = !node.text.bold;
-      renderAll();
-    }
-  });
+  if (dom.btnTextBold) {
+    dom.btnTextBold.addEventListener("mousedown", (e) => {
+      const activeTextarea = document.querySelector(".node-seamless-editor");
+      if (activeTextarea) e.preventDefault();
+    });
+    dom.btnTextBold.addEventListener("click", () => {
+      const activeTextarea = document.querySelector(".node-seamless-editor");
+      if (activeTextarea) {
+        if (window.MinimalFlow && window.MinimalFlow.TextEditor) {
+          window.MinimalFlow.TextEditor.toggleSelectionFormatting(activeTextarea, "**");
+        }
+        return;
+      }
+      const node = AppState.document.nodes[AppState.ui.selectedId];
+      if (node && node.text) {
+        saveSnapshot();
+        node.text.bold = !node.text.bold;
+        renderAll();
+      }
+    });
+  }
 
-  dom.btnTextItalic.addEventListener("click", () => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node && node.text) {
-      saveSnapshot();
-      node.text.italic = !node.text.italic;
-      renderAll();
-    }
-  });
+  if (dom.btnTextItalic) {
+    dom.btnTextItalic.addEventListener("mousedown", (e) => {
+      const activeTextarea = document.querySelector(".node-seamless-editor");
+      if (activeTextarea) e.preventDefault();
+    });
+    dom.btnTextItalic.addEventListener("click", () => {
+      const activeTextarea = document.querySelector(".node-seamless-editor");
+      if (activeTextarea) {
+        if (window.MinimalFlow && window.MinimalFlow.TextEditor) {
+          window.MinimalFlow.TextEditor.toggleSelectionFormatting(activeTextarea, "*");
+        }
+        return;
+      }
+      const node = AppState.document.nodes[AppState.ui.selectedId];
+      if (node && node.text) {
+        saveSnapshot();
+        node.text.italic = !node.text.italic;
+        renderAll();
+      }
+    });
+  }
 
   dom.btnTextUnderline.addEventListener("click", () => {
     const node = AppState.document.nodes[AppState.ui.selectedId];
@@ -2302,31 +2342,138 @@ window.MinimalFlow = window.MinimalFlow || {};
   });
   window.addEventListener("click", () => exportMenu.classList.remove("show"));
 
+  // --------------------------------------------------------------------------
+  // EXPORT IMAGE QUALITY MODAL CONTROLLER
+  // --------------------------------------------------------------------------
+  let currentExportFormat = "png-trans"; // "png-trans" | "png-white" | "jpg"
+  let currentExportScale = 2; // 1 | 2 | 3 | 4
+
+  const SCALE_LABELS = {
+    1: "1x (Standar Web)",
+    2: "2x (Retina HD)",
+    3: "3x (Ultra HD)",
+    4: "4x (Print-Ready)"
+  };
+
+  const FORMAT_SIZE_ESTIMATES = {
+    "png-trans": { 1: "~150 KB – 350 KB", 2: "~450 KB – 1.2 MB", 3: "~1.2 MB – 2.5 MB", 4: "~2.5 MB – 5.0 MB" },
+    "png-white": { 1: "~180 KB – 400 KB", 2: "~500 KB – 1.4 MB", 3: "~1.5 MB – 3.0 MB", 4: "~3.0 MB – 6.0 MB" },
+    "jpg":       { 1: "~80 KB – 200 KB",  2: "~220 KB – 550 KB", 3: "~500 KB – 1.1 MB", 4: "~1.0 MB – 2.2 MB" }
+  };
+
+  function updateExportModalPreview() {
+    if (!dom.exportDimPreview) return;
+    const bbox = Exporter.getExportBoundingBox(AppState.document);
+    const outW = Math.round(bbox.width * currentExportScale);
+    const outH = Math.round(bbox.height * currentExportScale);
+
+    dom.exportDimPreview.textContent = `${outW} × ${outH} px`;
+
+    if (dom.exportAspectPreview) {
+      const preset = AppState.document.canvas.boundaryPreset || "16:9_landscape";
+      let presetLabel = "16:9 Landscape";
+      if (preset.includes("9:16")) presetLabel = "9:16 Portrait";
+      else if (preset.includes("a4_portrait")) presetLabel = "A4 Portrait";
+      else if (preset.includes("a4_landscape")) presetLabel = "A4 Landscape";
+      else if (preset.includes("square")) presetLabel = "1:1 Persegi";
+      dom.exportAspectPreview.textContent = `Batas: ${presetLabel}`;
+    }
+
+    if (dom.exportSizeEstimate) {
+      const estTable = FORMAT_SIZE_ESTIMATES[currentExportFormat] || FORMAT_SIZE_ESTIMATES["png-trans"];
+      dom.exportSizeEstimate.textContent = estTable[currentExportScale] || "~500 KB";
+    }
+
+    if (dom.exportScaleBadge) {
+      dom.exportScaleBadge.textContent = SCALE_LABELS[currentExportScale] || `${currentExportScale}x`;
+    }
+  }
+
+  function openExportModal(defaultFormat) {
+    if (!dom.exportModalBackdrop) return;
+    if (defaultFormat) {
+      currentExportFormat = defaultFormat;
+      document.querySelectorAll(".export-format-card").forEach(card => {
+        card.classList.toggle("active", card.dataset.format === defaultFormat);
+      });
+    }
+    updateExportModalPreview();
+    dom.exportModalBackdrop.classList.add("show");
+  }
+
+  function closeExportModal() {
+    if (!dom.exportModalBackdrop) return;
+    dom.exportModalBackdrop.classList.remove("show");
+  }
+
+  if (dom.btnCloseExportModal) dom.btnCloseExportModal.addEventListener("click", closeExportModal);
+  if (dom.btnCancelExportModal) dom.btnCancelExportModal.addEventListener("click", closeExportModal);
+  if (dom.exportModalBackdrop) {
+    dom.exportModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === dom.exportModalBackdrop) closeExportModal();
+    });
+  }
+
+  document.querySelectorAll(".export-format-card").forEach(card => {
+    card.addEventListener("click", () => {
+      document.querySelectorAll(".export-format-card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+      currentExportFormat = card.dataset.format || "png-trans";
+      updateExportModalPreview();
+    });
+  });
+
+  document.querySelectorAll(".export-scale-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".export-scale-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentExportScale = parseInt(btn.dataset.scale) || 2;
+      updateExportModalPreview();
+    });
+  });
+
+  if (dom.btnDoDownloadImage) {
+    dom.btnDoDownloadImage.addEventListener("click", () => {
+      const projName = projectManager.getActiveProjectName();
+      closeExportModal();
+
+      if (currentExportFormat === "png-trans") {
+        const filename = Projects.getSafeFilename(projName + `-trans-${currentExportScale}x`, "png");
+        Exporter.exportPng(AppState.document, dom.svg, true, currentExportScale, filename, () => {
+          showToast(`PNG Transparan (${currentExportScale}x) berhasil diunduh!`);
+        });
+      } else if (currentExportFormat === "png-white") {
+        const filename = Projects.getSafeFilename(projName + `-${currentExportScale}x`, "png");
+        Exporter.exportPng(AppState.document, dom.svg, false, currentExportScale, filename, () => {
+          showToast(`PNG Solid (${currentExportScale}x) berhasil diunduh!`);
+        });
+      } else if (currentExportFormat === "jpg") {
+        const filename = Projects.getSafeFilename(projName + `-${currentExportScale}x`, "jpg");
+        Exporter.exportJpg(AppState.document, dom.svg, currentExportScale, 0.95, filename, () => {
+          showToast(`JPG Kualitas Tinggi (${currentExportScale}x) berhasil diunduh!`);
+        });
+      }
+    });
+  }
+
   exportMenu.addEventListener("click", (e) => {
     const item = e.target.closest(".dropdown-item");
     if (!item) return;
     const action = item.dataset.action;
     const projName = projectManager.getActiveProjectName();
 
-    if (action === "export-svg") {
+    if (action === "open-export-modal") {
+      openExportModal();
+    } else if (action === "export-png-trans") {
+      openExportModal("png-trans");
+    } else if (action === "export-png-white") {
+      openExportModal("png-white");
+    } else if (action === "export-jpg") {
+      openExportModal("jpg");
+    } else if (action === "export-svg") {
       const filename = Projects.getSafeFilename(projName, "svg");
       Exporter.exportSvg(AppState.document, dom.svg, filename);
       showToast("SVG Batas Workspace diunduh!");
-    } else if (action === "export-png-trans") {
-      const filename = Projects.getSafeFilename(projName + "-transparent", "png");
-      Exporter.exportPng(AppState.document, dom.svg, true, filename, () => {
-        showToast("PNG Transparan berhasil diunduh!");
-      });
-    } else if (action === "export-png-white") {
-      const filename = Projects.getSafeFilename(projName, "png");
-      Exporter.exportPng(AppState.document, dom.svg, false, filename, () => {
-        showToast("PNG berhasil diunduh!");
-      });
-    } else if (action === "export-jpg") {
-      const filename = Projects.getSafeFilename(projName, "jpg");
-      Exporter.exportJpg(AppState.document, dom.svg, filename, () => {
-        showToast("JPG berhasil diunduh!");
-      });
     } else if (action === "copy-clipboard") {
       Exporter.copyCanvasToClipboard(AppState.document, dom.svg, () => {
         showToast("Gambar disalin ke Clipboard!");

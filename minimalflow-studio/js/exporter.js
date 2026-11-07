@@ -84,7 +84,16 @@ window.MinimalFlow = window.MinimalFlow || {};
     URL.revokeObjectURL(url);
   }
 
-  function exportToCanvas(doc, svgEl, transparent, callback) {
+  function exportToCanvas(doc, svgEl, transparent, scaleOrCallback, callback) {
+    let scale = 2;
+    let cb = callback;
+    if (typeof scaleOrCallback === "function") {
+      cb = scaleOrCallback;
+      scale = 2;
+    } else if (typeof scaleOrCallback === "number" || !isNaN(Number(scaleOrCallback))) {
+      scale = Math.max(1, Math.min(4, Number(scaleOrCallback) || 2));
+    }
+
     const { xml, width, height } = generateCleanSVG(doc, svgEl, transparent);
     const img = new Image();
     const svgBlob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
@@ -92,10 +101,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     const isDark = doc.theme === "dark";
 
     img.onload = () => {
-      const scale = 2; // High-DPI 2x
       const canvas = document.createElement("canvas");
-      canvas.width = width * scale;
-      canvas.height = height * scale;
+      canvas.width = Math.round(width * scale);
+      canvas.height = Math.round(height * scale);
       const ctx = canvas.getContext("2d");
 
       if (!transparent) {
@@ -107,7 +115,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
-      callback(canvas);
+      if (typeof cb === "function") cb(canvas);
     };
     img.src = url;
   }
@@ -118,25 +126,47 @@ window.MinimalFlow = window.MinimalFlow || {};
     downloadBlob(blob, filename);
   }
 
-  function exportPng(doc, svgEl, transparent, filename = "flowchart.png", onSuccess) {
-    exportToCanvas(doc, svgEl, transparent, (canvas) => {
+  function exportPng(doc, svgEl, transparent, scale = 2, filename = "flowchart.png", onSuccess) {
+    let s = scale;
+    let fn = filename;
+    let cb = onSuccess;
+
+    if (typeof scale === "string") {
+      fn = scale;
+      s = 2;
+      cb = filename;
+    }
+
+    exportToCanvas(doc, svgEl, transparent, s, (canvas) => {
       canvas.toBlob((blob) => {
         if (blob) {
-          downloadBlob(blob, filename);
-          if (typeof onSuccess === "function") onSuccess();
+          downloadBlob(blob, fn || "flowchart.png");
+          if (typeof cb === "function") cb();
         }
       }, "image/png");
     });
   }
 
-  function exportJpg(doc, svgEl, filename = "flowchart.jpg", onSuccess) {
-    exportToCanvas(doc, svgEl, false, (canvas) => {
+  function exportJpg(doc, svgEl, scale = 2, quality = 0.95, filename = "flowchart.jpg", onSuccess) {
+    let s = scale;
+    let q = quality;
+    let fn = filename;
+    let cb = onSuccess;
+
+    if (typeof scale === "string") {
+      fn = scale;
+      s = 2;
+      cb = quality;
+      q = 0.95;
+    }
+
+    exportToCanvas(doc, svgEl, false, s, (canvas) => {
       canvas.toBlob((blob) => {
         if (blob) {
-          downloadBlob(blob, filename);
-          if (typeof onSuccess === "function") onSuccess();
+          downloadBlob(blob, fn || "flowchart.jpg");
+          if (typeof cb === "function") cb();
         }
-      }, "image/jpeg", 0.95);
+      }, "image/jpeg", q || 0.95);
     });
   }
 
