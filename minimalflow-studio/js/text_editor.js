@@ -36,11 +36,13 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (!html) return "";
     let res = String(html)
       .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/^<div>/i, "")
       .replace(/<\/div><div>/gi, "\n")
       .replace(/<div>/gi, "\n")
       .replace(/<\/div>/gi, "")
+      .replace(/^<p>/i, "")
       .replace(/<\/p><p>/gi, "\n")
-      .replace(/<p>/gi, "")
+      .replace(/<p>/gi, "\n")
       .replace(/<\/p>/gi, "")
       .replace(/&nbsp;/g, " ");
 
@@ -48,7 +50,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     res = res.replace(/<em\b[^>]*>/gi, "<i>").replace(/<\/em>/gi, "</i>");
     res = res.replace(/<b>\s*<\/b>/gi, "").replace(/<i>\s*<\/i>/gi, "");
 
-    return res.trim();
+    if (res.startsWith("\n")) res = res.slice(1);
+    return res;
   }
 
   // Parse inline Markdown / HTML tags into styled spans (100% clean, ZERO asterisks)
@@ -409,7 +412,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         node.text.content = "";
         node.text.isPlaceholder = false;
       } else {
-        node.text.content = serializeEditorHtml(editor.innerHTML);
+        node.text.content = serializeEditorHtml(editor.innerHTML).trim();
         node.text.isPlaceholder = false;
       }
 
@@ -443,16 +446,25 @@ window.MinimalFlow = window.MinimalFlow || {};
         return;
       }
 
-      if (e.key === "Enter" && !e.shiftKey) {
+      // Ctrl + Enter: Simpan dan selesai mengedit
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
         finishEditing();
-      } else if (e.key === "Enter" && e.shiftKey) {
+        return;
+      }
+
+      // Enter langsung atau Shift + Enter: Langsung buat baris baru di bawahnya
+      if (e.key === "Enter") {
         e.preventDefault();
         document.execCommand("insertLineBreak");
         onLiveInput();
-      } else if (e.key === "Escape") {
+        return;
+      }
+
+      if (e.key === "Escape") {
         e.preventDefault();
         finishEditing();
+        return;
       }
     });
 
