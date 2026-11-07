@@ -50,6 +50,26 @@ window.MinimalFlow = window.MinimalFlow || {};
     propPaddingY: document.getElementById("prop-padding-y"),
     propPaddingYNum: document.getElementById("prop-padding-y-num"),
     propCustomColor: document.getElementById("prop-custom-color"),
+    propTextVAlign: document.getElementById("prop-text-valign"),
+    btnTextColorPicker: document.getElementById("btn-text-color-picker"),
+    textColorBar: document.getElementById("text-color-bar"),
+    btnScaleDownAll: document.getElementById("btn-scale-down-all"),
+    btnScaleUpAll: document.getElementById("btn-scale-up-all"),
+    btnEqualizeSize: document.getElementById("btn-equalize-size"),
+    btnFillColorPicker: document.getElementById("btn-fill-color-picker"),
+    fillColorBar: document.getElementById("fill-color-bar"),
+    btnStrokeColorPicker: document.getElementById("btn-stroke-color-picker"),
+    strokeColorBar: document.getElementById("stroke-color-bar"),
+    btnAlignMenu: document.getElementById("btn-align-menu"),
+    menuAlignDropdown: document.getElementById("menu-align-dropdown"),
+    wordColorPickerPopover: document.getElementById("word-color-picker-popover"),
+    wordThemeColorsGrid: document.getElementById("word-theme-colors-grid"),
+    wordStandardColorsRow: document.getElementById("word-standard-colors-row"),
+    btnWordColorAuto: document.getElementById("btn-word-color-auto"),
+    wordColorAutoBox: document.getElementById("word-color-auto-box"),
+    wordColorAutoText: document.getElementById("word-color-auto-text"),
+    btnWordMoreColors: document.getElementById("btn-word-more-colors"),
+    wordHiddenNativeColor: document.getElementById("word-hidden-native-color"),
     selectWorkspace: document.getElementById("select-workspace-preset"),
     btnToggleOrientation: document.getElementById("btn-toggle-orientation"),
     wsBoundaryRect: document.getElementById("workspace-boundary-rect"),
@@ -446,6 +466,13 @@ window.MinimalFlow = window.MinimalFlow || {};
 
           document.getElementById("prop-text-align").value = node.text.align;
 
+          if (dom.propTextVAlign) {
+            dom.propTextVAlign.value = node.text.verticalAlign || "middle";
+          }
+          if (dom.textColorBar) {
+            dom.textColorBar.style.background = node.text.color || (AppState.document.theme === "dark" ? "#fafafa" : "#18181b");
+          }
+
           const padXVal = node.text.paddingX !== undefined ? node.text.paddingX : 14;
           const padYVal = node.text.paddingY !== undefined ? node.text.paddingY : 10;
           if (dom.propPaddingX) dom.propPaddingX.value = padXVal;
@@ -460,6 +487,18 @@ window.MinimalFlow = window.MinimalFlow || {};
 
         dom.propNodeW.value = node.width;
         dom.propNodeH.value = node.height;
+
+        if (dom.fillColorBar) {
+          dom.fillColorBar.style.background = node.style.fill || "#ffffff";
+        }
+        if (dom.strokeColorBar) {
+          dom.strokeColorBar.style.background = node.style.stroke || (AppState.document.theme === "dark" ? "#f4f4f5" : "#18181b");
+        }
+
+        if (dom.btnAlignMenu) {
+          const isMulti = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size >= 2;
+          dom.btnAlignMenu.style.opacity = isMulti ? "1" : "0.75";
+        }
 
         if (node.locked) {
           dom.iconLock.style.display = "block";
@@ -478,7 +517,7 @@ window.MinimalFlow = window.MinimalFlow || {};
           if (isMatch) matched = true;
         });
 
-        if (!matched && node.style.fill && node.style.fill.startsWith("#")) {
+        if (!matched && node.style.fill && node.style.fill.startsWith("#") && dom.propCustomColor) {
           dom.propCustomColor.value = node.style.fill;
         }
         return;
@@ -1332,8 +1371,17 @@ window.MinimalFlow = window.MinimalFlow || {};
           cy: node.y + node.height / 2,
           rot: node.rotation || 0,
           corner,
-          nodeId
+          nodeId,
+          multiNodes: {}
         };
+        if (AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 1) {
+          AppState.ui.selectedNodeIds.forEach(id => {
+            const n = AppState.document.nodes[id];
+            if (n && !n.locked) {
+              AppState.ui.resizeStart.multiNodes[id] = { w: n.width, h: n.height, x: n.x, y: n.y };
+            }
+          });
+        }
         return;
       }
     }
@@ -1506,8 +1554,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     if (AppState.ui.mode === "DRAGGING_NODE") {
-      const dx = world.x - AppState.ui.dragStartPos.x;
-      const dy = world.y - AppState.ui.dragStartPos.y;
+      let dx = world.x - AppState.ui.dragStartPos.x;
+      let dy = world.y - AppState.ui.dragStartPos.y;
       if (Math.hypot(dx, dy) > 2) {
         if (!AppState.ui.hasMovedNode) {
           saveSnapshot();
@@ -1517,6 +1565,104 @@ window.MinimalFlow = window.MinimalFlow || {};
         const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
           ? Array.from(AppState.ui.selectedNodeIds)
           : [AppState.ui.selectedId];
+
+        const primaryId = nodeIds[0];
+        const primaryInit = AppState.ui.nodesInitialPos && AppState.ui.nodesInitialPos[primaryId];
+        const primaryNode = AppState.document.nodes[primaryId];
+
+        let guideLinesSvg = "";
+
+        // Smart Alignment Snapping (Efek Kaku saat sejajar, nonaktifkan jika Shift ditahan)
+        if (primaryNode && primaryInit && !e.shiftKey) {
+          const SNAP_THRESHOLD = 7;
+          const curX = primaryInit.x + dx;
+          const curY = primaryInit.y + dy;
+          const w = primaryNode.width;
+          const h = primaryNode.height;
+
+          const top = curY;
+          const centerY = curY + h / 2;
+          const bottom = curY + h;
+
+          const left = curX;
+          const centerX = curX + w / 2;
+          const right = curX + w;
+
+          let bestSnapY = null;
+          let bestDistY = SNAP_THRESHOLD + 1;
+          let guideY = null;
+
+          let bestSnapX = null;
+          let bestDistX = SNAP_THRESHOLD + 1;
+          let guideX = null;
+
+          const selectedSet = new Set(nodeIds);
+
+          Object.values(AppState.document.nodes).forEach(other => {
+            if (selectedSet.has(other.id) || other.isContainer) return;
+
+            const oTop = other.y;
+            const oCenterY = other.y + other.height / 2;
+            const oBottom = other.y + other.height;
+
+            const oLeft = other.x;
+            const oCenterX = other.x + other.width / 2;
+            const oRight = other.x + other.width;
+
+            // Snap sumbu Y (Efek kaku saat tinggi sejajar / berdampingan)
+            const yCandidates = [
+              { val: top, target: oTop, offset: 0 },
+              { val: centerY, target: oCenterY, offset: h / 2 },
+              { val: bottom, target: oBottom, offset: h },
+              { val: top, target: oBottom, offset: 0 },
+              { val: bottom, target: oTop, offset: h }
+            ];
+
+            yCandidates.forEach(cand => {
+              const diff = Math.abs(cand.val - cand.target);
+              if (diff < bestDistY) {
+                bestDistY = diff;
+                bestSnapY = (cand.target - cand.offset) - primaryInit.y;
+                const minLineX = Math.min(left, oLeft) - 40;
+                const maxLineX = Math.max(right, oRight) + 40;
+                guideY = `<line x1="${minLineX}" y1="${cand.target}" x2="${maxLineX}" y2="${cand.target}" class="alignment-guide-line" />`;
+              }
+            });
+
+            // Snap sumbu X (Sejajar kiri, tengah, atau kanan)
+            const xCandidates = [
+              { val: left, target: oLeft, offset: 0 },
+              { val: centerX, target: oCenterX, offset: w / 2 },
+              { val: right, target: oRight, offset: w },
+              { val: left, target: oRight, offset: 0 },
+              { val: right, target: oLeft, offset: w }
+            ];
+
+            xCandidates.forEach(cand => {
+              const diff = Math.abs(cand.val - cand.target);
+              if (diff < bestDistX) {
+                bestDistX = diff;
+                bestSnapX = (cand.target - cand.offset) - primaryInit.x;
+                const minLineY = Math.min(top, oTop) - 40;
+                const maxLineY = Math.max(bottom, oBottom) + 40;
+                guideX = `<line x1="${cand.target}" y1="${minLineY}" x2="${cand.target}" y2="${maxLineY}" class="alignment-guide-line" />`;
+              }
+            });
+          });
+
+          if (bestSnapY !== null) {
+            dy = bestSnapY;
+            if (guideY) guideLinesSvg += guideY;
+          }
+          if (bestSnapX !== null) {
+            dx = bestSnapX;
+            if (guideX) guideLinesSvg += guideX;
+          }
+        }
+
+        if (dom.layerDraft) {
+          dom.layerDraft.innerHTML = guideLinesSvg;
+        }
 
         nodeIds.forEach(id => {
           const n = AppState.document.nodes[id];
@@ -1621,6 +1767,26 @@ window.MinimalFlow = window.MinimalFlow || {};
             node.y = Math.round(rs.ny + (rs.h - newH));
             node.height = newH;
           }
+        }
+
+        // Multi-Selection Scale: Perbesar semua chart yang dipilih secara bersamaan
+        if (rs.multiNodes && Object.keys(rs.multiNodes).length > 1) {
+          const ratioW = node.width / rs.w;
+          const ratioH = node.height / rs.h;
+          Object.entries(rs.multiNodes).forEach(([id, init]) => {
+            if (id === rs.nodeId) return;
+            const otherNode = AppState.document.nodes[id];
+            if (otherNode && !otherNode.locked) {
+              const targetW = Math.max(MIN_W, Math.round(init.w * ratioW));
+              const targetH = Math.max(MIN_H, Math.round(init.h * ratioH));
+              const deltaW = targetW - otherNode.width;
+              const deltaH = targetH - otherNode.height;
+              otherNode.width = targetW;
+              otherNode.height = targetH;
+              otherNode.x = Math.round(otherNode.x - deltaW / 2);
+              otherNode.y = Math.round(otherNode.y - deltaH / 2);
+            }
+          });
         }
 
         renderAll();
@@ -1746,6 +1912,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     if (AppState.ui.mode === "DRAGGING_NODE") {
+      if (dom.layerDraft) dom.layerDraft.innerHTML = "";
       AppState.ui.mode = "IDLE";
       // If user merely clicked without dragging, and without Shift, isolate selection to clicked node
       if (!AppState.ui.hasMovedNode && AppState.ui.lastClickNodeId && !e.shiftKey) {
@@ -2246,23 +2413,361 @@ window.MinimalFlow = window.MinimalFlow || {};
     dom.propPaddingYNum.addEventListener("change", () => saveSnapshot());
   }
 
+  // Batch Scaling Helpers
+  function scaleSelectedNodes(factor) {
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    if (nodes.length === 0) return;
+    saveSnapshot();
+
+    nodes.forEach(n => {
+      const newW = Math.max(20, Math.round(n.width * factor));
+      const newH = Math.max(20, Math.round(n.height * factor));
+      const dw = newW - n.width;
+      const dh = newH - n.height;
+      n.x = Math.round(n.x - dw / 2);
+      n.y = Math.round(n.y - dh / 2);
+      n.width = newW;
+      n.height = newH;
+    });
+
+    if (nodes.length === 1 && dom.propNodeW && dom.propNodeH) {
+      dom.propNodeW.value = nodes[0].width;
+      dom.propNodeH.value = nodes[0].height;
+    }
+    renderAll();
+    showToast(factor > 1 ? "Perbesar seluruh chart terpilih (+15%)" : "Perkecil seluruh chart terpilih (-15%)");
+  }
+
+  function equalizeSelectedNodesSize() {
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    if (nodes.length < 2) {
+      showToast("Pilih minimal 2 chart untuk menyamakan ukuran");
+      return;
+    }
+    saveSnapshot();
+    const targetW = nodes[0].width;
+    const targetH = nodes[0].height;
+    nodes.slice(1).forEach(n => {
+      n.width = targetW;
+      n.height = targetH;
+    });
+    renderAll();
+    showToast(`Ukuran seluruh chart disamakan (${targetW} x ${targetH} px)`);
+  }
+
+  // Word-Style Object Alignment (Gambar 1)
+  function alignSelectedNodes(type) {
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    if (nodes.length < 2) {
+      showToast("Pilih minimal 2 chart untuk perataan");
+      return;
+    }
+
+    saveSnapshot();
+
+    if (type === "left") {
+      const minX = Math.min(...nodes.map(n => n.x));
+      nodes.forEach(n => { n.x = minX; });
+      showToast("Rata Kiri (Align Left)");
+    } else if (type === "center") {
+      const minX = Math.min(...nodes.map(n => n.x));
+      const maxX = Math.max(...nodes.map(n => n.x + n.width));
+      const midX = (minX + maxX) / 2;
+      nodes.forEach(n => { n.x = Math.round(midX - n.width / 2); });
+      showToast("Rata Tengah Horizontal (Align Center)");
+    } else if (type === "right") {
+      const maxX = Math.max(...nodes.map(n => n.x + n.width));
+      nodes.forEach(n => { n.x = maxX - n.width; });
+      showToast("Rata Kanan (Align Right)");
+    } else if (type === "top") {
+      const minY = Math.min(...nodes.map(n => n.y));
+      nodes.forEach(n => { n.y = minY; });
+      showToast("Rata Atas (Align Top)");
+    } else if (type === "middle") {
+      const minY = Math.min(...nodes.map(n => n.y));
+      const maxY = Math.max(...nodes.map(n => n.y + n.height));
+      const midY = (minY + maxY) / 2;
+      nodes.forEach(n => { n.y = Math.round(midY - n.height / 2); });
+      showToast("Rata Tengah Vertikal (Align Middle)");
+    } else if (type === "bottom") {
+      const maxY = Math.max(...nodes.map(n => n.y + n.height));
+      nodes.forEach(n => { n.y = maxY - n.height; });
+      showToast("Rata Bawah (Align Bottom)");
+    } else if (type === "distribute-h") {
+      if (nodes.length < 3) {
+        showToast("Pilih minimal 3 chart untuk bagi jarak");
+        return;
+      }
+      const sorted = [...nodes].sort((a, b) => a.x - b.x);
+      const first = sorted[0];
+      const last = sorted[sorted.length - 1];
+      const totalInnerW = sorted.slice(1, -1).reduce((sum, n) => sum + n.width, 0);
+      const availableSpan = last.x - (first.x + first.width);
+      const gap = (availableSpan - totalInnerW) / (sorted.length - 1);
+      let curX = first.x + first.width + gap;
+      for (let i = 1; i < sorted.length - 1; i++) {
+        sorted[i].x = Math.round(curX);
+        curX += sorted[i].width + gap;
+      }
+      showToast("Bagi Rata Jarak Horizontal");
+    } else if (type === "distribute-v") {
+      if (nodes.length < 3) {
+        showToast("Pilih minimal 3 chart untuk bagi tinggi");
+        return;
+      }
+      const sorted = [...nodes].sort((a, b) => a.y - b.y);
+      const first = sorted[0];
+      const last = sorted[sorted.length - 1];
+      const totalInnerH = sorted.slice(1, -1).reduce((sum, n) => sum + n.height, 0);
+      const availableSpan = last.y - (first.y + first.height);
+      const gap = (availableSpan - totalInnerH) / (sorted.length - 1);
+      let curY = first.y + first.height + gap;
+      for (let i = 1; i < sorted.length - 1; i++) {
+        sorted[i].y = Math.round(curY);
+        curY += sorted[i].height + gap;
+      }
+      showToast("Bagi Rata Jarak Vertikal");
+    }
+
+    renderAll();
+  }
+
+  // Word-Style Color Palette (Gambar 3)
+  const WORD_THEME_COLORS = [
+    ["#ffffff", "#000000", "#e7e6e6", "#44546a", "#4472c4", "#ed7d31", "#a5a5a5", "#ffc000", "#5b9bd5", "#70ad47"],
+    ["#f2f2f2", "#7f7f7f", "#f2f2f2", "#d6dce4", "#d9e1f2", "#fbe5d6", "#ededed", "#fff2cc", "#deebf7", "#e2efda"],
+    ["#d9d9d9", "#595959", "#d9d9d9", "#acb9ca", "#b4c6e7", "#f8cbad", "#dbdbdb", "#ffe699", "#bdd7ee", "#c6e0b4"],
+    ["#bfbfbf", "#3f3f3f", "#aeaaaa", "#8497b0", "#8ea9db", "#f4b084", "#c9c9c9", "#ffd966", "#9dc3e6", "#a9d08e"],
+    ["#a6a6a6", "#262626", "#757171", "#333f48", "#305496", "#c65911", "#7b7b7b", "#bf8f00", "#2e75b6", "#548235"],
+    ["#7f7f7f", "#0c0c0c", "#3a3838", "#222a35", "#203764", "#833c0c", "#525252", "#806000", "#1f4e78", "#375623"]
+  ];
+
+  const WORD_STANDARD_COLORS = [
+    "#c00000", "#ff0000", "#ffc000", "#ffff00", "#92d050", "#00b050", "#00b0f0", "#0070c0", "#002060", "#7030a0"
+  ];
+
+  let activeWordColorTarget = null; // "fill" | "stroke" | "textColor"
+
+  function initWordColorPalette() {
+    if (!dom.wordThemeColorsGrid || !dom.wordStandardColorsRow) return;
+
+    dom.wordThemeColorsGrid.innerHTML = "";
+    WORD_THEME_COLORS.forEach(row => {
+      row.forEach(color => {
+        const cell = document.createElement("div");
+        cell.className = "word-color-cell";
+        cell.dataset.color = color;
+        cell.style.background = color;
+        cell.title = color;
+        cell.addEventListener("click", () => applyWordChosenColor(color));
+        dom.wordThemeColorsGrid.appendChild(cell);
+      });
+    });
+
+    dom.wordStandardColorsRow.innerHTML = "";
+    WORD_STANDARD_COLORS.forEach(color => {
+      const cell = document.createElement("div");
+      cell.className = "word-color-cell";
+      cell.dataset.color = color;
+      cell.style.background = color;
+      cell.title = color;
+      cell.addEventListener("click", () => applyWordChosenColor(color));
+      dom.wordStandardColorsRow.appendChild(cell);
+    });
+
+    // Tambahkan opsi transparan pada baris standard
+    const transCell = document.createElement("div");
+    transCell.className = "word-color-cell transparent-cell";
+    transCell.dataset.color = "transparent";
+    transCell.title = "Transparan (Tanpa Warna)";
+    transCell.addEventListener("click", () => applyWordChosenColor("transparent"));
+    dom.wordStandardColorsRow.appendChild(transCell);
+  }
+
+  function openWordColorPicker(target, triggerEl) {
+    activeWordColorTarget = target;
+    const isDark = AppState.document.theme === "dark";
+
+    if (target === "textColor") {
+      dom.wordColorAutoBox.style.background = isDark ? "#fafafa" : "#18181b";
+      dom.wordColorAutoText.textContent = "Automatic (Warna Font Teks)";
+    } else if (target === "fill") {
+      dom.wordColorAutoBox.style.background = isDark ? "#18181b" : "#ffffff";
+      dom.wordColorAutoText.textContent = "Automatic (Warna Latar Putih/Hitam)";
+    } else {
+      dom.wordColorAutoBox.style.background = isDark ? "#f4f4f5" : "#18181b";
+      dom.wordColorAutoText.textContent = "Automatic (Warna Garis Tepi)";
+    }
+
+    const rect = triggerEl.getBoundingClientRect();
+    dom.wordColorPickerPopover.style.top = `${rect.bottom + window.scrollY + 6}px`;
+    dom.wordColorPickerPopover.style.left = `${Math.max(10, Math.min(window.innerWidth - 250, rect.left + window.scrollX - 40))}px`;
+    dom.wordColorPickerPopover.classList.add("show");
+  }
+
+  function closeWordColorPicker() {
+    if (dom.wordColorPickerPopover) {
+      dom.wordColorPickerPopover.classList.remove("show");
+    }
+    activeWordColorTarget = null;
+  }
+
+  function applyWordChosenColor(color) {
+    if (!activeWordColorTarget) return;
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n);
+    if (nodes.length === 0) {
+      closeWordColorPicker();
+      return;
+    }
+
+    saveSnapshot();
+
+    if (activeWordColorTarget === "fill") {
+      nodes.forEach(n => { n.style.fill = color; });
+      if (dom.fillColorBar) dom.fillColorBar.style.background = color;
+      showToast(`Warna latar diubah`);
+    } else if (activeWordColorTarget === "stroke") {
+      nodes.forEach(n => { n.style.stroke = color; });
+      if (dom.strokeColorBar) dom.strokeColorBar.style.background = color;
+      showToast(`Warna garis tepi diubah`);
+    } else if (activeWordColorTarget === "textColor") {
+      nodes.forEach(n => { if (n.text) n.text.color = color; });
+      if (dom.textColorBar) dom.textColorBar.style.background = color;
+      showToast(`Warna teks diubah`);
+    }
+
+    renderAll();
+    closeWordColorPicker();
+  }
+
+  initWordColorPalette();
+
+  if (dom.btnFillColorPicker) {
+    dom.btnFillColorPicker.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openWordColorPicker("fill", dom.btnFillColorPicker);
+    });
+  }
+
+  if (dom.btnStrokeColorPicker) {
+    dom.btnStrokeColorPicker.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openWordColorPicker("stroke", dom.btnStrokeColorPicker);
+    });
+  }
+
+  if (dom.btnTextColorPicker) {
+    dom.btnTextColorPicker.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openWordColorPicker("textColor", dom.btnTextColorPicker);
+    });
+  }
+
+  if (dom.btnWordColorAuto) {
+    dom.btnWordColorAuto.addEventListener("click", () => {
+      const isDark = AppState.document.theme === "dark";
+      if (activeWordColorTarget === "fill") {
+        applyWordChosenColor(isDark ? "#18181b" : "#ffffff");
+      } else if (activeWordColorTarget === "textColor") {
+        applyWordChosenColor(isDark ? "#fafafa" : "#18181b");
+      } else {
+        applyWordChosenColor(isDark ? "#f4f4f5" : "#18181b");
+      }
+    });
+  }
+
+  if (dom.btnWordMoreColors && dom.wordHiddenNativeColor) {
+    dom.btnWordMoreColors.addEventListener("click", () => {
+      dom.wordHiddenNativeColor.click();
+    });
+    dom.wordHiddenNativeColor.addEventListener("input", (e) => {
+      applyWordChosenColor(e.target.value);
+    });
+  }
+
+  // Close menus when clicking outside
+  window.addEventListener("click", (e) => {
+    if (dom.wordColorPickerPopover && !dom.wordColorPickerPopover.contains(e.target) && !e.target.closest(".word-color-btn")) {
+      closeWordColorPicker();
+    }
+    if (dom.menuAlignDropdown && !dom.menuAlignDropdown.contains(e.target) && !e.target.closest("#btn-align-menu")) {
+      dom.menuAlignDropdown.classList.remove("show");
+    }
+  });
+
+  // Multi-Node Batch Resize Inputs
   dom.propNodeW.addEventListener("change", (e) => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node) {
+    const val = Math.max(10, parseInt(e.target.value) || 10);
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    if (nodes.length > 0) {
       saveSnapshot();
-      node.width = Math.max(10, parseInt(e.target.value) || 10);
+      nodes.forEach(n => { n.width = val; });
       renderAll();
     }
   });
 
   dom.propNodeH.addEventListener("change", (e) => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node) {
+    const val = Math.max(10, parseInt(e.target.value) || 10);
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    if (nodes.length > 0) {
       saveSnapshot();
-      node.height = Math.max(10, parseInt(e.target.value) || 10);
+      nodes.forEach(n => { n.height = val; });
       renderAll();
     }
   });
+
+  // Batch Scale Buttons
+  if (dom.btnScaleDownAll) dom.btnScaleDownAll.addEventListener("click", () => scaleSelectedNodes(0.85));
+  if (dom.btnScaleUpAll) dom.btnScaleUpAll.addEventListener("click", () => scaleSelectedNodes(1.15));
+  if (dom.btnEqualizeSize) dom.btnEqualizeSize.addEventListener("click", () => equalizeSelectedNodesSize());
+
+  // Text Vertical Alignment
+  if (dom.propTextVAlign) {
+    dom.propTextVAlign.addEventListener("change", (e) => {
+      const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+        ? Array.from(AppState.ui.selectedNodeIds)
+        : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+      const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && n.text);
+      if (nodes.length > 0) {
+        saveSnapshot();
+        nodes.forEach(n => { n.text.verticalAlign = e.target.value; });
+        renderAll();
+      }
+    });
+  }
+
+  // Alignment Menu
+  if (dom.btnAlignMenu && dom.menuAlignDropdown) {
+    dom.btnAlignMenu.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dom.menuAlignDropdown.classList.toggle("show");
+    });
+    dom.menuAlignDropdown.querySelectorAll(".dropdown-item").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        alignSelectedNodes(btn.dataset.align);
+        dom.menuAlignDropdown.classList.remove("show");
+      });
+    });
+  }
 
   dom.btnNodeEditText.addEventListener("click", () => {
     if (AppState.ui.selectedId) openInlineEditor(AppState.ui.selectedId);
@@ -2302,10 +2807,12 @@ window.MinimalFlow = window.MinimalFlow || {};
     });
   });
 
-  dom.propCustomColor.addEventListener("input", (e) => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node) applyNodeFill(node, e.target.value);
-  });
+  if (dom.propCustomColor) {
+    dom.propCustomColor.addEventListener("input", (e) => {
+      const node = AppState.document.nodes[AppState.ui.selectedId];
+      if (node) applyNodeFill(node, e.target.value);
+    });
+  }
 
   // Edge Property Bar Controls
   document.getElementById("prop-edge-type").addEventListener("change", (e) => {

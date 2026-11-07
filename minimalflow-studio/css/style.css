@@ -1402,5 +1402,197 @@ body.dark-mode .status-error {
   color: var(--bg-surface) !important;
 }
 
+/* --------------------------------------------------------------------------
+   WORD-STYLE COLOR PALETTE & DROPDOWN CONTROLS
+   -------------------------------------------------------------------------- */
+.word-color-btn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.word-color-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-dark);
+}
+
+.color-indicator-bar {
+  display: block;
+  pointer-events: none;
+}
+
+#word-color-picker-popover {
+  position: absolute;
+  z-index: 1000;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  padding: 10px;
+  width: 236px;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn 0.12s ease;
+}
+
+#word-color-picker-popover.show {
+  display: flex;
+}
+
+.palette-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.word-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2.5px;
+}
+
+.word-color-cell {
+  width: 19px;
+  height: 19px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: transform 0.1s ease, outline 0.1s ease;
+}
+
+.word-color-cell:hover {
+  transform: scale(1.22);
+  z-index: 2;
+  outline: 1.5px solid var(--text-main);
+  outline-offset: 1px;
+}
+
+.word-color-cell.transparent-cell {
+  background: repeating-conic-gradient(#bbb 0% 25%, #fff 0% 50%) 50% / 6px 6px !important;
+}
+
+.btn-word-automatic {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: all 0.12s ease;
+  width: 100%;
+}
+
+.btn-word-automatic:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-dark);
+}
+
+.btn-word-more-colors {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px dashed var(--border-color);
+  background: transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-main);
+  transition: all 0.12s ease;
+  width: 100%;
+}
+
+.btn-word-more-colors:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-dark);
+}
+
+/* --------------------------------------------------------------------------
+   WORD-STYLE ALIGNMENT DROPDOWN MENU
+   -------------------------------------------------------------------------- */
+.dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.context-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  min-width: 210px;
+  display: none;
+  flex-direction: column;
+  gap: 1px;
+  z-index: 1001;
+  animation: fadeIn 0.12s ease;
+}
+
+.context-dropdown-menu.show {
+  display: flex;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-main);
+  border: none;
+  background: transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease;
+  width: 100%;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-subtle);
+}
+
+.dropdown-item svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.dropdown-item:hover svg {
+  color: var(--text-main);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 3px 0;
+}
+
+/* --------------------------------------------------------------------------
+   SMART ALIGNMENT GUIDES (EFEK KAKU)
+   -------------------------------------------------------------------------- */
+.alignment-guide-line {
+  stroke: #3b82f6;
+  stroke-width: 1.5;
+  stroke-dasharray: 4, 3;
+  pointer-events: none;
+}
+
+
 
 

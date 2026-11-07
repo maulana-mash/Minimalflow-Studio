@@ -231,6 +231,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       xPos = width - paddingX - (shapeSafeReduction / 2);
     }
 
+    const verticalAlign = (node.text && node.text.verticalAlign) || "middle";
     const totalTextHeight = lines.length * lineHeight;
     let availableHeight = height - paddingY * 2;
     let startY = paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
@@ -239,7 +240,21 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (node.type === "cylinder") {
       const ry = Math.min(height * 0.22, 18);
       availableHeight = height - ry * 1.5 - paddingY * 2;
-      startY = ry + paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
+      if (verticalAlign === "top") {
+        startY = ry + paddingY + fontSize * 0.85;
+      } else if (verticalAlign === "bottom") {
+        startY = Math.max(ry + paddingY + fontSize * 0.8, height - paddingY - totalTextHeight + fontSize * 0.85);
+      } else {
+        startY = ry + paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
+      }
+    } else {
+      if (verticalAlign === "top") {
+        startY = paddingY + fontSize * 0.85;
+      } else if (verticalAlign === "bottom") {
+        startY = Math.max(paddingY + fontSize * 0.8, height - paddingY - totalTextHeight + fontSize * 0.85);
+      } else {
+        startY = paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
+      }
     }
 
     if (startY < paddingY + fontSize * 0.8) {
@@ -330,10 +345,23 @@ window.MinimalFlow = window.MinimalFlow || {};
     function adjustPadding() {
       const layout = layoutNodeText(node);
       const totalH = layout.totalTextHeight || (node.text.fontSize || 14) * 1.35;
+      const vAlign = (node.text && node.text.verticalAlign) || "middle";
+      const padY = node.text.paddingY !== undefined ? node.text.paddingY : 10;
       let padTop = Math.max(0, (node.height - totalH) / 2);
+      if (vAlign === "top") {
+        padTop = padY;
+      } else if (vAlign === "bottom") {
+        padTop = Math.max(0, node.height - totalH - padY);
+      }
       if (node.type === "cylinder") {
         const ry = Math.min(node.height * 0.22, 18);
-        padTop = Math.max(ry, ry + (node.height - ry * 1.5 - totalH) / 2);
+        if (vAlign === "top") {
+          padTop = ry + padY;
+        } else if (vAlign === "bottom") {
+          padTop = Math.max(ry, node.height - totalH - padY);
+        } else {
+          padTop = Math.max(ry, ry + (node.height - ry * 1.5 - totalH) / 2);
+        }
       }
       let safePadX = node.text.paddingX !== undefined ? node.text.paddingX : 14;
       if (node.type === "parallelogram") {

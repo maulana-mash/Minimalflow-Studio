@@ -254,11 +254,23 @@
             <button id="btn-text-underline" class="btn-icon" style="width:26px; height:26px; text-decoration:underline; font-size:12px;" title="Garis Bawah (Underline)">U</button>
           </div>
 
-          <select id="prop-text-align" class="prop-select" title="Perataan Teks">
-            <option value="center">Tengah</option>
-            <option value="left">Kiri</option>
-            <option value="right">Kanan</option>
+          <select id="prop-text-align" class="prop-select" title="Perataan Teks Horizontal">
+            <option value="center">Horiz: Tengah</option>
+            <option value="left">Horiz: Kiri</option>
+            <option value="right">Horiz: Kanan</option>
           </select>
+
+          <select id="prop-text-valign" class="prop-select" title="Perataan Vertikal Teks ala Word (Align Text)">
+            <option value="middle">Vert: Tengah (Middle)</option>
+            <option value="top">Vert: Atas (Top)</option>
+            <option value="bottom">Vert: Bawah (Bottom)</option>
+          </select>
+
+          <!-- Word-Style Text Color Button (Huruf A dengan strip warna di bawahnya) -->
+          <button id="btn-text-color-picker" class="btn-icon word-color-btn" style="width:28px; height:26px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;" title="Warna Font Teks ala Word">
+            <span style="font-weight:700; font-size:13px; font-family:'Times New Roman', serif; line-height:1;">A</span>
+            <span id="text-color-bar" class="color-indicator-bar" style="width:16px; height:3px; background:#000000; border-radius:1px;"></span>
+          </button>
 
           <!-- Margin Sliders & Number Input -->
           <div class="prop-slider-group" title="Margin Kiri-Kanan ala Word (Ketik Piksel & Slider)">
@@ -284,23 +296,31 @@
             <input type="number" id="prop-node-h" class="prop-input-number" min="10" max="1200" step="2">
           </div>
 
-          <!-- Color Palette & Custom Picker -->
-          <div class="color-swatch-group" title="Pilihan Warna Chart">
-            <div class="color-swatch active" data-color="#ffffff" style="background:#ffffff;" title="Putih"></div>
-            <div class="color-swatch" data-color="#f4f4f5" style="background:#f4f4f5;" title="Abu Terang"></div>
-            <div class="color-swatch" data-color="#e0f2fe" style="background:#e0f2fe;" title="Soft Blue"></div>
-            <div class="color-swatch" data-color="#dcfce7" style="background:#dcfce7;" title="Soft Green"></div>
-            <div class="color-swatch" data-color="#fef3c7" style="background:#fef3c7;" title="Soft Amber"></div>
-            <div class="color-swatch" data-color="#ffe4e6" style="background:#ffe4e6;" title="Soft Rose"></div>
-            <div class="color-swatch" data-color="#18181b" style="background:#18181b;" title="Hitam Terbalik"></div>
-            <div class="color-swatch" data-color="transparent" style="background: repeating-conic-gradient(#bbb 0% 25%, #fff 0% 50%) 50% / 8px 8px;" title="Transparan"></div>
-            <div class="color-picker-wrapper" title="Pilih Warna Bebas (Hex Picker)">
-              <input type="color" id="prop-custom-color" value="#ffffff">
-            </div>
+          <!-- Multi-Select Batch Scale Buttons -->
+          <div style="display:flex; align-items:center; gap:2px;" title="Perbesar / Perkecil Seluruh Chart Terpilih Sekaligus">
+            <button id="btn-scale-down-all" class="btn-icon" style="width:24px; height:26px; font-weight:700; font-size:12px;" title="Perkecil Semua Terpilih (-15%)">−</button>
+            <button id="btn-scale-up-all" class="btn-icon" style="width:24px; height:26px; font-weight:700; font-size:12px;" title="Perbesar Semua Terpilih (+15%)">+</button>
+            <button id="btn-equalize-size" class="btn-icon" style="width:24px; height:26px;" title="Samakan Ukuran Seluruh Chart Terpilih">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6h4M14 6v4"/></svg>
+            </button>
+          </div>
+
+          <!-- Word-Style Shape Fill & Border Color Pickers -->
+          <div style="display:flex; align-items:center; gap:3px;">
+            <button id="btn-fill-color-picker" class="btn-icon word-color-btn" style="height:26px; display:inline-flex; align-items:center; gap:4px; padding:0 6px;" title="Warna Latar Chart ala Word (Shape Fill)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 11l-8-8-8.5 8.5a2.12 2.12 0 0 0 0 3l5.5 5.5a2.12 2.12 0 0 0 3 0L19 11z"/><path d="M5 2l5 5"/><path d="M2 13h15"/></svg>
+              <span id="fill-color-bar" class="color-indicator-bar" style="width:14px; height:12px; background:#ffffff; border:1px solid #71717a; border-radius:2px;"></span>
+              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <button id="btn-stroke-color-picker" class="btn-icon word-color-btn" style="height:26px; display:inline-flex; align-items:center; gap:4px; padding:0 6px;" title="Warna Garis Tepi Chart ala Word (Shape Outline)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+              <span id="stroke-color-bar" class="color-indicator-bar" style="width:14px; height:12px; background:#18181b; border:1px solid #71717a; border-radius:2px;"></span>
+              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
           </div>
 
           <!-- Layer Z-Order Quick Actions (Ikon Saja: Ke Bawah, Ke Atas, Paling Bawah, Paling Atas) -->
-          <div class="layer-order-group" style="display:flex; align-items:center; gap:2px; margin-left:10px;" title="Urutan Layer / Z-Order">
+          <div class="layer-order-group" style="display:flex; align-items:center; gap:2px; margin-left:6px;" title="Urutan Layer / Z-Order">
             <button id="btn-layer-down" class="btn-icon" style="width:28px; height:28px;" title="Ke Bawah (Ctrl + [)">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
@@ -318,20 +338,55 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
             </button>
             <div style="width:1px; height:18px; background:var(--border-color); margin:0 3px;"></div>
-            <button id="btn-align-center" class="btn-icon" style="width:28px; height:28px;" title="Ratakan Tengah Vertikal (Alt + C)">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="2" x2="12" y2="22"></line>
-                <rect x="4" y="5" width="16" height="5" rx="1"></rect>
-                <rect x="6" y="14" width="12" height="5" rx="1"></rect>
-              </svg>
-            </button>
-            <button id="btn-align-middle" class="btn-icon" style="width:28px; height:28px;" title="Ratakan Tengah Horizontal (Alt + M)">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <rect x="5" y="4" width="5" height="16" rx="1"></rect>
-                <rect x="14" y="6" width="5" height="12" rx="1"></rect>
-              </svg>
-            </button>
+
+            <!-- Word-Style Object Alignment Dropdown (Gambar 1) -->
+            <div class="dropdown-wrapper" id="dropdown-align-wrapper">
+              <button id="btn-align-menu" class="btn-icon dropdown-trigger" style="height:28px; padding:0 6px; display:inline-flex; align-items:center; gap:4px;" title="Perataan Posisi Objek ala Word (Align)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="21" y1="10" x2="3" y2="10"/>
+                  <line x1="21" y1="6" x2="3" y2="6"/>
+                  <line x1="21" y1="14" x2="3" y2="14"/>
+                  <line x1="21" y1="18" x2="3" y2="18"/>
+                </svg>
+                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="menu-align-dropdown" class="context-dropdown-menu">
+                <button class="dropdown-item" data-align="left">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="2" x2="4" y2="22"/><rect x="4" y="5" width="14" height="5" rx="1"/><rect x="4" y="14" width="9" height="5" rx="1"/></svg>
+                  <span>Align Left (Rata Kiri)</span>
+                </button>
+                <button class="dropdown-item" data-align="center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><rect x="5" y="5" width="14" height="5" rx="1"/><rect x="7" y="14" width="10" height="5" rx="1"/></svg>
+                  <span>Align Center (Rata Tengah)</span>
+                </button>
+                <button class="dropdown-item" data-align="right">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="20" y1="2" x2="20" y2="22"/><rect x="6" y="5" width="14" height="5" rx="1"/><rect x="11" y="14" width="9" height="5" rx="1"/></svg>
+                  <span>Align Right (Rata Kanan)</span>
+                </button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" data-align="top">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="4" x2="22" y2="4"/><rect x="5" y="4" width="5" height="14" rx="1"/><rect x="14" y="4" width="5" height="9" rx="1"/></svg>
+                  <span>Align Top (Rata Atas)</span>
+                </button>
+                <button class="dropdown-item" data-align="middle">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="12" x2="22" y2="12"/><rect x="5" y="5" width="5" height="14" rx="1"/><rect x="14" y="7" width="5" height="10" rx="1"/></svg>
+                  <span>Align Middle (Rata Tengah Vertikal)</span>
+                </button>
+                <button class="dropdown-item" data-align="bottom">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="20" x2="22" y2="20"/><rect x="5" y="6" width="5" height="14" rx="1"/><rect x="14" y="11" width="5" height="9" rx="1"/></svg>
+                  <span>Align Bottom (Rata Bawah)</span>
+                </button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" data-align="distribute-h">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="4" height="14" rx="1"/><rect x="10" y="5" width="4" height="14" rx="1"/><rect x="17" y="5" width="4" height="14" rx="1"/></svg>
+                  <span>Distribute Horizontally (Bagi Rata Jarak)</span>
+                </button>
+                <button class="dropdown-item" data-align="distribute-v">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="17" width="14" height="4" rx="1"/></svg>
+                  <span>Distribute Vertically (Bagi Rata Tinggi)</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Quick Action Buttons -->
@@ -945,6 +1000,28 @@
         <button id="btn-close-guide-footer" class="btn-labeled primary" style="height:30px; padding:0 16px; font-size:12px;">Tutup</button>
       </div>
     </div>
+  <!-- Word-Style Theme Colors & Standard Colors Palette Popover (Gambar 3) -->
+  <div id="word-color-picker-popover">
+    <button id="btn-word-color-auto" class="btn-word-automatic">
+      <span id="word-color-auto-box" style="width:16px; height:16px; background:#000000; border:1px solid #71717a; border-radius:2px; display:inline-block;"></span>
+      <span id="word-color-auto-text">Automatic (Hitam Kontras)</span>
+    </button>
+
+    <div>
+      <div class="palette-section-title">Theme Colors</div>
+      <div id="word-theme-colors-grid" class="word-palette-grid"></div>
+    </div>
+
+    <div>
+      <div class="palette-section-title">Standard Colors</div>
+      <div id="word-standard-colors-row" class="word-palette-grid"></div>
+    </div>
+
+    <button id="btn-word-more-colors" class="btn-word-more-colors">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12"/></svg>
+      <span>More Colors...</span>
+    </button>
+    <input type="color" id="word-hidden-native-color" style="display:none;">
   </div>
 
   <!-- ========================================================================
