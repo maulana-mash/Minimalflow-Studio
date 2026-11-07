@@ -1,0 +1,1226 @@
+{
+  "version": "1.5.0",
+  "theme": "dark",
+  "canvas": {
+    "pan": {
+      "x": 50,
+      "y": 50
+    },
+    "zoom": 0.65,
+    "gridSize": 24,
+    "workspace": {
+      "preset": "custom_portrait",
+      "orientation": "portrait",
+      "x": 40,
+      "y": 40,
+      "width": 1600,
+      "height": 2506
+    }
+  },
+  "nodes": {
+    "G_start": {
+      "id": "G_start",
+      "type": "rounded",
+      "x": 525,
+      "y": 135,
+      "width": 170,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Mulai (Guru)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_open": {
+      "id": "G_open",
+      "type": "rectangle",
+      "x": 475,
+      "y": 260,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Buka Aplikasi di PC Windows / Meja Guru",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_lab": {
+      "id": "G_lab",
+      "type": "rectangle",
+      "x": 489,
+      "y": 385,
+      "width": 242,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Akses Fitur Teacher Lab Mode",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_jobsheet": {
+      "id": "G_jobsheet",
+      "type": "rectangle",
+      "x": 475,
+      "y": 510,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Susun Jobsheet & Skema Sirkuit Kelistrikan Bodi",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_lock": {
+      "id": "G_lock",
+      "type": "rectangle",
+      "x": 475,
+      "y": 635,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Atur Kunci Kanvas (Canvas Lock) & Batasan Komponen (Restricted Kit)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_qr": {
+      "id": "G_qr",
+      "type": "rectangle",
+      "x": 475,
+      "y": 760,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Generate Kode QR Tugas Praktikum Luring (RFC 1950)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_display": {
+      "id": "G_display",
+      "type": "rectangle",
+      "x": 475,
+      "y": 885,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Tampilkan Kode QR di Layar Monitor / Proyektor Kelas",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_report": {
+      "id": "G_report",
+      "type": "rectangle",
+      "x": 855,
+      "y": 135,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Terima Laporan Praktikum Virtual Siswa (File PDF / Pindai QR)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_eval": {
+      "id": "G_eval",
+      "type": "diamond",
+      "x": 840,
+      "y": 260,
+      "width": 300,
+      "height": 110,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Evaluasi & Penilaian Unjuk Kerja Virtual Siswa",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_revisi": {
+      "id": "G_revisi",
+      "type": "rectangle",
+      "x": 855,
+      "y": 385,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Instruksi Bimbingan & Minta Siswa Merevisi Rangkaian",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_rekap": {
+      "id": "G_rekap",
+      "type": "rectangle",
+      "x": 855,
+      "y": 385,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Rekapitulasi Nilai Kognitif & Keterampilan Praktik Virtual",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "G_selesai": {
+      "id": "G_selesai",
+      "type": "rounded",
+      "x": 877,
+      "y": 510,
+      "width": 227,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "GURU",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Selesai (Praktikum Tuntas)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "subgraph_GURU": {
+      "id": "subgraph_GURU",
+      "type": "rectangle",
+      "x": 440,
+      "y": 90,
+      "width": 735,
+      "height": 908,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ GURU (APLIKASI MASHIMURELAY - VERSI WINDOWS PC) ]",
+        "fontFamily": "Inter, sans-serif",
+        "fontSize": 12,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 18,
+        "paddingY": 14
+      }
+    },
+    "S_start": {
+      "id": "S_start",
+      "type": "rounded",
+      "x": 525,
+      "y": 1173,
+      "width": 170,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Mulai (Siswa)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "S_open": {
+      "id": "S_open",
+      "type": "rectangle",
+      "x": 475,
+      "y": 1298,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Buka Aplikasi di Smartphone Android (Luring Penuh)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "S_scan": {
+      "id": "S_scan",
+      "type": "rectangle",
+      "x": 475,
+      "y": 1423,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pindai Kode QR Tugas dari Layar Guru",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "S_kanvas": {
+      "id": "S_kanvas",
+      "type": "rectangle",
+      "x": 475,
+      "y": 1548,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Kanvas Tugas Praktikum Terbuka di Smartphone",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "S_sop": {
+      "id": "S_sop",
+      "type": "rectangle",
+      "x": 475,
+      "y": 1673,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pelajari Panduan SOP K3 & Video Demonstrasi Sirkuit (Opsional)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "S_rakit": {
+      "id": "S_rakit",
+      "type": "rectangle",
+      "x": 475,
+      "y": 1798,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Rakit & Simulasi Rangkaian Kelistrikan Bodi secara Virtual",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "S_uji": {
+      "id": "S_uji",
+      "type": "rectangle",
+      "x": 475,
+      "y": 1923,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Uji Kelayakan Sirkuit Virtual (Indikator Lampu & Audio FX)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "S_laporan": {
+      "id": "S_laporan",
+      "type": "rectangle",
+      "x": 475,
+      "y": 2048,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Generate Laporan Praktikum (Ekspor PDF Beretiket Resmi / QR Hasil)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "S_serahkan": {
+      "id": "S_serahkan",
+      "type": "rectangle",
+      "x": 475,
+      "y": 2173,
+      "width": 270,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Serahkan Laporan Hasil Praktikum Virtual ke Guru",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "S_selesai": {
+      "id": "S_selesai",
+      "type": "rounded",
+      "x": 865,
+      "y": 1173,
+      "width": 250,
+      "height": 68,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "SISWA",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Selesai (Kompetensi Tercapai)",
+        "fontFamily": "Poppins, sans-serif",
+        "fontSize": 12.5,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 12,
+        "paddingY": 10
+      }
+    },
+    "subgraph_SISWA": {
+      "id": "subgraph_SISWA",
+      "type": "rectangle",
+      "x": 440,
+      "y": 1128,
+      "width": 709.5,
+      "height": 1158,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ SISWA (APLIKASI MASHIMURELAY - VERSI ANDROID SMARTPHONE) ]",
+        "fontFamily": "Inter, sans-serif",
+        "fontSize": 12,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 18,
+        "paddingY": 14
+      }
+    }
+  },
+  "edges": {
+    "edge_1": {
+      "id": "edge_1",
+      "type": "step",
+      "source": {
+        "nodeId": "G_start",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_open",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_2": {
+      "id": "edge_2",
+      "type": "step",
+      "source": {
+        "nodeId": "G_open",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_lab",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_3": {
+      "id": "edge_3",
+      "type": "step",
+      "source": {
+        "nodeId": "G_lab",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_jobsheet",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_4": {
+      "id": "edge_4",
+      "type": "step",
+      "source": {
+        "nodeId": "G_jobsheet",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_lock",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_5": {
+      "id": "edge_5",
+      "type": "step",
+      "source": {
+        "nodeId": "G_lock",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_qr",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_6": {
+      "id": "edge_6",
+      "type": "step",
+      "source": {
+        "nodeId": "G_qr",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_display",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_7": {
+      "id": "edge_7",
+      "type": "step",
+      "source": {
+        "nodeId": "G_report",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_eval",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_8": {
+      "id": "edge_8",
+      "type": "step",
+      "source": {
+        "nodeId": "G_eval",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_revisi",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Perlu Perbaikan",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_9": {
+      "id": "edge_9",
+      "type": "step",
+      "source": {
+        "nodeId": "G_eval",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_rekap",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Lulus / Tervalidasi",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_10": {
+      "id": "edge_10",
+      "type": "step",
+      "source": {
+        "nodeId": "G_rekap",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "G_selesai",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_11": {
+      "id": "edge_11",
+      "type": "step",
+      "source": {
+        "nodeId": "S_start",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_open",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_12": {
+      "id": "edge_12",
+      "type": "step",
+      "source": {
+        "nodeId": "S_open",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_scan",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_13": {
+      "id": "edge_13",
+      "type": "step",
+      "source": {
+        "nodeId": "S_scan",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_kanvas",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_14": {
+      "id": "edge_14",
+      "type": "step",
+      "source": {
+        "nodeId": "S_kanvas",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_sop",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_15": {
+      "id": "edge_15",
+      "type": "step",
+      "source": {
+        "nodeId": "S_sop",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_rakit",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_16": {
+      "id": "edge_16",
+      "type": "step",
+      "source": {
+        "nodeId": "S_rakit",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_uji",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_17": {
+      "id": "edge_17",
+      "type": "step",
+      "source": {
+        "nodeId": "S_uji",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_laporan",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_18": {
+      "id": "edge_18",
+      "type": "step",
+      "source": {
+        "nodeId": "S_laporan",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_serahkan",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_19": {
+      "id": "edge_19",
+      "type": "step",
+      "source": {
+        "nodeId": "G_display",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_scan",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "1. Pindai QR Tugas Luring",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_20": {
+      "id": "edge_20",
+      "type": "step",
+      "source": {
+        "nodeId": "S_serahkan",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "G_report",
+        "pin": "W"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "2. Kirim Laporan PDF / QR",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_21": {
+      "id": "edge_21",
+      "type": "step",
+      "source": {
+        "nodeId": "G_revisi",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_rakit",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "3. Instruksi Perbaikan Rangkaian",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "edge_22": {
+      "id": "edge_22",
+      "type": "step",
+      "source": {
+        "nodeId": "G_rekap",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "S_selesai",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "4. Konfirmasi Ketuntasan Belajar",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    }
+  }
+}
