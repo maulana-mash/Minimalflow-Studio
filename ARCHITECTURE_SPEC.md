@@ -1,192 +1,114 @@
-# 📐 Spesifikasi Arsitektur & Panduan Migrasi: MinimalFlow Studio
-**Dari Monolith Single-File (`minimalflow.html`) ke Modern Web Architecture (Svelte 5 + TypeScript)**
+# 📐 Spesifikasi Arsitektur: MinimalFlow Studio (Modular Vanilla JS)
+**Model Arsitektur Bergaya Mashimurelay: Zero Node Modules, Ultra-Lightweight (<500 KB), & Instant 60 FPS**
 
 ---
 
-## 1. Ringkasan Eksekutif & Tujuan
+## 1. Filosofi & Prinsip Utama
 
-* **Kondisi Eksisting:** Berkas `minimalflow.html` adalah berkas tunggal monolitik (~3.962 baris kode) yang menggabungkan HTML, CSS variabel, dan JavaScript DOM imperatif dalam satu file.
-* **Tujuan Rekayasa Ulang:** Memecah proyek menjadi arsitektur web modern yang modular, berkinerja tinggi (60 FPS), *type-safe*, mudah dirawat, dengan estetika **Monokrom Murni (Zero Emojis)** berbasis **Vite + Svelte + TypeScript**.
-* **Lingkup Platform:** Web Murni (Client-Side Only / Statis, tanpa backend server, persistensi via `localStorage`).
+Dokumen ini adalah acuan resmi untuk merekonstruksi **MinimalFlow Studio** dari file monolitik lama (`minimalflow.html`) menjadi arsitektur modular murni (**Vanilla Web Standards**) tanpa framework dan tanpa bundler:
 
----
-
-## 2. Pilihan Stack Teknologi yang Dipilih
-
-| Lapisan | Teknologi | Alasan Pemilihan |
-|---|---|---|
-| **Bundler & Build Tool** | **Vite** | Kompilasi ultra-cepat, Hot Module Replacement (HMR) instan. |
-| **Framework UI** | **Svelte 5 (Runes)** | Zero Virtual DOM overhead, ukuran bundel sangat kecil (~15 KB), performa reaktif murni cocok untuk kanvas. |
-| **Bahasa Utama** | **TypeScript** | *Type safety* mutlak untuk struktur graph node, pin koordinat, dan konektor garis. |
-| **Styling & Tema** | **CSS Variables + Modular CSS** | Mempertahankan identitas monokrom (Light/Dark Mode, palet Zinc/Neutral). |
-| **PDF Exporter** | **jspdf** | Ekspor dokumen diagram ke PDF berkualitas vektor. |
+1. **Zero `node_modules` (0 MB Bloat):** Tidak memerlukan instalasi npm, Vite, Webpack, atau perkakas compiler yang memakan ratusan megabyte.
+2. **Ukuran Proyek Sangat Ringan (< 500 KB):** Seluruh kode program, style, dan aset berukuran ringkas, hemat memori, dan instan dibuka.
+3. **Pemisahan Modul Bersih (Separation of Concerns):** Setiap logika (kanvas, shape diagram, editor teks, manajemen proyek, dan ekspor) berada di filenya masing-masing.
+4. **Instan Dijalankan:** Cukup buka `index.html` langsung di browser Chrome/Edge/Firefox atau jalankan lewat local server sederhana (`python -m http.server`).
+5. **Siap Dibungkus ke Desktop (`.exe`):** Struktur folder ini kompatibel 100% jika di kemudian hari ingin dikemas menjadi aplikasi desktop Windows via Tauri (seperti `simurelay-windows`).
 
 ---
 
-## 3. Rancangan Struktur Direktori (Folder Tree)
+## 2. Struktur Folder & Tata Letak Berkas
 
 ```text
 minimalflow-studio/
-├── index.html                  # Shell HTML utama (bersih & ringkas)
-├── package.json                # Dependensi (Vite, Svelte, TypeScript, jsPDF)
-├── svelte.config.js
-├── tsconfig.json
-├── vite.config.ts
-├── public/
-│   ├── favicon.svg
-│   └── fonts/                  # Inter, Fira Code, Poppins (opsional offline)
-└── src/
-    ├── app.d.ts
-    ├── App.svelte              # Komponen root orkestrator
-    ├── main.ts                 # Entry point aplikasi
-    │
-    ├── types/                  # Definisi Tipe Data Diagram (TypeScript)
-    │   ├── node.ts             # Tipe Node (Process, Decision, Terminator, Image)
-    │   ├── connector.ts        # Tipe Line, Pin Magnetik, Waypoints
-    │   └── project.ts          # Tipe Proyek, Kanvas, dan Riwayat Undo/Redo
-    │
-    ├── engine/                 # Logika Matematika & Kanvas (Framework-Agnostic)
-    │   ├── canvasRenderer.ts   # Transformasi matriks, zoom, pan, grid dots
-    │   ├── magneticEngine.ts   # Deteksi pin magnetik & snapping koordinat
-    │   ├── lineRouter.ts       # Kalkulasi garis lurus, kurva bezier, orthogonal
-    │   ├── historyManager.ts   # Tumpukan Undo & Redo (Snapshot state)
-    │   └── exporter.ts         # Logika ekspor ke JSON, SVG, PNG, dan PDF
-    │
-    ├── components/             # Komponen Antarmuka Svelte
-    │   ├── CanvasViewport.svelte    # Kanvas kerja utama (SVG + HTML Layer)
-    │   ├── ToolbarHeader.svelte     # Bar navigasi atas (New, Open, Export, Theme)
-    │   ├── FloatingProperties.svelte# Palet melayang (Font, tebal garis, panah)
-    │   ├── ContextMenu.svelte       # Menu klik kanan pada elemen
-    │   ├── ProjectModal.svelte      # Dialog drawer galeri proyek tersimpan
-    │   └── InlineTextEditor.svelte  # Live text editor di atas shape kanvas
-    │
-    └── styles/
-        ├── variables.css       # Token warna monokrom (Light & Dark theme)
-        ├── global.css          # Reset CSS & tipografi
-        └── canvas.css          # Styling elemen kanvas, grid, dan kursor
+├── index.html               # Kerangka utama bersih (~180 baris)
+├── favicon.svg              # Favicon geometris monokrom
+├── css/
+│   └── style.css            # Variabel warna monokrom (Light & Dark), grid, UI
+├── js/
+│   ├── canvas.js            # Koordinat kanvas, zoom, pan, grid dots, render loop
+│   ├── flow_engine.js       # Logika bentuk node, pin magnetik, kawat/konektor garis
+│   ├── text_editor.js       # Live inline text editor (double-click di shape)
+│   ├── history.js           # Sistem Undo & Redo (Snapshot state stack)
+│   ├── projects.js          # Multi-project manager, LocalStorage, Safe export
+│   ├── exporter.js          # Export engine (PNG, SVG, PDF, & file .flow)
+│   └── app.js               # Orkestrator utama, toolbar, keyboard shortcuts, modal
+└── assets/
+    └── icons/               # Ikon SVG monokrom geometris murni (Zero Emojis)
 ```
 
 ---
 
-## 4. Skema & Definisi Data Inti (`src/types/`)
+## 3. Spesifikasi Rinci Setiap Modul
 
-### A. Model Node (`src/types/node.ts`)
-```typescript
-export type NodeType = 'process' | 'decision' | 'terminator' | 'image' | 'text-card';
+### A. `index.html` — *Kerangka Bersih*
+* Hanya berisi struktur dasar DOM semantik:
+  * Container toolbar atas (Brand multi-proyek, Undo, Redo, Workspace Preset & Orientation, Clear, Theme Switch, Open JSON, Export Dropdown).
+  * Area kanvas kerja utama (`<svg id="canvas-svg">`).
+  * Floating contextual property palette (Two-tier stacked bar: font, ukuran, B/I/U, align, pad-x/y, W/H, 8 warna + picker, rotate, lock).
+  * Floating edge contextual bar (orthogonal, bezier, straight, markers, stroke-width, dash, reset handle).
+  * Modal drawer galeri proyek (New Project, Duplicate, Rename, Delete, Reset Default).
+* Memuat skrip secara berurutan di akhir tag `<body>`:
+  ```html
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="js/canvas.js"></script>
+  <script src="js/flow_engine.js"></script>
+  <script src="js/text_editor.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/exporter.js"></script>
+  <script src="js/app.js"></script>
+  ```
 
-export interface MagneticPin {
-  id: string; // misal: 'top', 'right', 'bottom', 'left'
-  x: number;
-  y: number;
-  direction: 'N' | 'E' | 'S' | 'W';
-}
+### B. `css/style.css` — *Sistem Estetika Monokrom Murni*
+* Mempertahankan token variabel CSS monokrom:
+  * **Light Mode:** `--bg-page: #fafafa;`, `--bg-surface: #ffffff;`, `--border-color: #e4e4e7;`, `--text-main: #18181b;`
+  * **Dark Mode (`body.dark-mode`):** `--bg-page: #09090b;`, `--bg-surface: #18181b;`, `--border-color: #3f3f46;`, `--text-main: #f4f4f5;`
+* **Zero Emojis:** Semua ikon antarmuka menggunakan garis geometris SVG.
+* Toolbar melayang bertumpuk 2 baris (Two-Tier Layout) kompak tanpa scrollbar horizontal.
 
-export interface FlowNode {
-  id: string;
-  type: NodeType;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  text: string;
-  fontSize: number;
-  fontFamily: string;
-  fontWeight: 'normal' | 'bold';
-  fontStyle: 'normal' | 'italic';
-  textDecoration: 'none' | 'underline';
-  textAlign: 'center' | 'left' | 'right';
-  imageUrl?: string;
-  pins: MagneticPin[];
-}
-```
+### C. `js/canvas.js` — *Canvas & Coordinate Engine*
+* Mengelola transformasi koordinat layar ke koordinat kanvas:
+  * `screenToWorld(clientX, clientY)`
+  * `worldToScreen(worldX, worldY)`
+* Mengatur tingkat `zoom` (0.2x hingga 3.5x via scroll mouse / pinch gesture) dan `pan` (drag dengan tombol tengah mouse atau drag canvas kosong).
+* Menggambar grid titik (*dotted grid*) monokrom dan kotak batas workspace kanvas ekspor.
 
-### B. Model Konektor Garis (`src/types/connector.ts`)
-```typescript
-export type LineStyle = 'straight' | 'orthogonal' | 'bezier';
+### D. `js/flow_engine.js` — *Shape, Connector, & Magnetics*
+* **Node Factory:** Membuat objek Node (Process / Kotak, Decision / Belah Ketupat, Terminator / Kapsul, Lingkaran, Parallelogram / Data I/O, Silinder / Database, Segitiga, dan Upload Gambar).
+* **Magnetic Snapping:** Setiap shape memiliki 4 titik pin magnetik (N, E, S, W) yang menghormati rotasi shape.
+* **Line Router:**
+  * Siku-siku (*orthogonal Manhattan*) dengan de-duplikasi zero-overshoot points.
+  * Kurva luwes (*bezier*).
+  * Garis lurus (*straight*).
+  * Ketebalan garis standar: `1.0px`, `1.5px`, `2.0px`, `2.5px`, `3.0px`, `4.0px`, `5.0px`.
+  * Opsi garis putus-putus (*dashed*, *dotted*) dan panah (*markerStart*, *markerEnd*).
 
-export interface FlowConnector {
-  id: string;
-  sourceNodeId: string;
-  sourcePinId: string;
-  targetNodeId: string;
-  targetPinId: string;
-  style: LineStyle;
-  strokeWidth: number; // 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0 px
-  dashed: boolean;
-  arrowStart: boolean;
-  arrowEnd: boolean;
-  label?: string;
-  handles?: Array<{ x: number; y: number }>; // Draggable intermediate points
-}
-```
+### E. `js/text_editor.js` — *Inline Text Editor*
+* Mengatur *live text editing* saat shape di-double click.
+* Posisi textarea langsung dihitung dari koordinat lokal node dengan *vertical centering* otomatis.
+* Pemecahan per-karakter kata panjang agar tidak keluar batas visual geometri chart.
+* Kontrol keyboard: `Enter` commit, `Shift+Enter` baris baru, `Escape` batalkan.
 
-### C. Model Proyek & Penyimpanan (`src/types/project.ts`)
-```typescript
-export interface FlowProject {
-  id: string;
-  name: string;
-  version: string;
-  updatedAt: string;
-  viewport: {
-    panX: number;
-    panY: number;
-    zoom: number;
-    gridSize: number;
-  };
-  nodes: FlowNode[];
-  connectors: FlowConnector[];
-}
-```
+### F. `js/projects.js` — *Project Manager & Safe Naming (Standar Mashimurelay)*
+* Persistensi multi-proyek di `localStorage` dengan kunci terstruktur: `minimalflow_projects_v2`.
+* Fitur: buat alur baru, duplikat, rename, delete (proteksi minimal 1 alur tersisa), muat alur contoh default (5 chart alur lengkap).
+* **Safe Filename Export:** Menghindari karakter terlarang sistem operasi (`\ / : * ? " < > |`) dan tanpa timestamp acak.
 
----
+### G. `js/exporter.js` — *Export Engine*
+* **Export .flow.json:** Menyimpan seluruh data diagram CAD.
+* **Export .svg:** Vektor SVG murni berdasarkan bounding box workspace.
+* **Export .png:** Render kanvas ke gambar raster 2x Retina (Transparan & Background Putih).
+* **Export .jpg:** Gambar JPEG 2x kualitas tinggi.
+* **Export .pdf:** Dokumen PDF instan via pustaka `jspdf.umd.min.js`.
+* **Salin ke Clipboard:** Menyalin gambar transparan langsung ke clipboard sistem operasi.
 
-## 5. Pemisahan Modul Penting dari Berkas Lama
-
-Saat mengekstrak kode dari `minimalflow.html`, ikuti pemetaan berikut:
-
-1. **Kanvas & Transformasi Matriks (`canvasRenderer.ts`):**
-   * Ekstrak fungsi `screenToCanvas(x, y)` dan `canvasToScreen(x, y)`.
-   * Isolasi penggambaran grid dot monokrom agar selalu sinkron dengan tingkat `zoom` (0.2x hingga 3.0x).
-2. **Konektor Magnetik (`magneticEngine.ts`):**
-   * Pindahkan logika snapping pin radius toleransi (biasanya ~15px).
-   * Tangani algoritma *ortho line routing* (garis siku otomatis) dan *bezier control point calculation*.
-3. **Live Text Editor (`InlineTextEditor.svelte`):**
-   * Gunakan koordinat lokal kanvas dengan *vertical centering* otomatis.
-   * Dengarkan tombol `Enter` untuk *commit*, `Shift+Enter` untuk baris baru, dan `Escape` untuk membatalkan.
-4. **Penyimpanan Lokal (`src/engine/storage.ts`):**
-   * Kunci `localStorage`: `minimalflow_projects_v2` dan `minimalflow_active_id`.
-   * Pasang mekanisme auto-save debounced (~500ms setelah perubahan terakhir).
-
----
-
-## 6. Prinsip Desain Estetika (Wajib Dipatuhi)
-
-* 🚫 **Zero Emojis:** Jangan pernah menggunakan emoji unicode pada UI atau kanvas. Seluruh simbol menggunakan ikon SVG monokrom geometris.
-* 🖤 **Palet Monokrom Murni:**
-  * Background Terang: `#fafafa` | Card: `#ffffff` | Border: `#e4e4e7` | Teks: `#18181b`
-  * Background Gelap: `#09090b` | Card: `#18181b` | Border: `#27272a` | Teks: `#f4f4f5`
-* 🔤 **Font Standar Studio:** Inter (UI), Fira Code (Technical/ID), Poppins (Headings).
-
----
-
-## 7. Instruksi Setup & Eksekusi Cepat
-
-Jalankan perintah berikut di terminal untuk menginisialisasi proyek baru:
-
-```bash
-# 1. Inisialisasi proyek Svelte + TypeScript via Vite
-npm create vite@latest minimalflow-studio -- --template svelte-ts
-
-# 2. Masuk ke direktori
-cd minimalflow-studio
-
-# 3. Instal dependensi pendukung
-npm install
-npm install jspdf
-
-# 4. Jalankan local development server
-npm run dev
-```
-
----
-*Dokumen ini dirancang sebagai acuan arsitektur definitif untuk merekonstruksi MinimalFlow menjadi web studio profesional modern.*
+### H. `js/app.js` — *Master Controller*
+* Inisialisasi seluruh komponen saat `DOMContentLoaded`.
+* Menangani keyboard shortcuts global:
+  * `Ctrl + Z` : Undo
+  * `Ctrl + Y` / `Ctrl + Shift + Z` : Redo
+  * `Ctrl + C` : Salin chart
+  * `Ctrl + V` : Tempel chart
+  * `Ctrl + D` : Duplikat chart
+  * `Delete` / `Backspace` : Hapus shape atau garis terpilih
+  * `Escape` : Batalkan penarikan garis aktif / deselect / tutup modal
+* Sinkronisasi status mode gelap/terang ke `localStorage`.

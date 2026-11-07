@@ -1,0 +1,55 @@
+flowchart TD
+    subgraph GURU ["GURU (Aplikasi Mashimurelay - Versi Windows PC)"]
+        G_start(["Mulai (Guru)"])
+        G_open["Buka Aplikasi di PC Windows / Meja Guru"]
+        G_lab["Akses Fitur Teacher Lab Mode"]
+        G_jobsheet["Susun Jobsheet & Skema Sirkuit Kelistrikan Bodi"]
+        G_lock["Atur Kunci Kanvas (Canvas Lock) & Batasan Komponen (Restricted Kit)"]
+        G_qr["Generate Kode QR Tugas Praktikum Luring (RFC 1950)"]
+        G_display["Tampilkan Kode QR di Layar Monitor / Proyektor Kelas"]
+        
+        G_report["Terima Laporan Praktikum Virtual Siswa (File PDF / Pindai QR)"]
+        G_eval{"Evaluasi & Penilaian Unjuk Kerja Virtual Siswa"}
+        G_revisi["Instruksi Bimbingan & Minta Siswa Merevisi Rangkaian"]
+        G_rekap["Rekapitulasi Nilai Kognitif & Keterampilan Praktik Virtual"]
+        G_selesai(["Selesai (Praktikum Tuntas)"])
+
+        G_start --> G_open
+        G_open --> G_lab
+        G_lab --> G_jobsheet
+        G_jobsheet --> G_lock
+        G_lock --> G_qr
+        G_qr --> G_display
+
+        G_report --> G_eval
+        G_eval -->|Perlu Perbaikan| G_revisi
+        G_eval -->|Lulus / Tervalidasi| G_rekap
+        G_rekap --> G_selesai
+    end
+
+    subgraph SISWA ["SISWA (Aplikasi Mashimurelay - Versi Android Smartphone)"]
+        S_start(["Mulai (Siswa)"])
+        S_open["Buka Aplikasi di Smartphone Android (Luring Penuh)"]
+        S_scan["Pindai Kode QR Tugas dari Layar Guru"]
+        S_kanvas["Kanvas Tugas Praktikum Terbuka di Smartphone"]
+        S_sop["Pelajari Panduan SOP K3 & Video Demonstrasi Sirkuit (Opsional)"]
+        S_rakit["Rakit & Simulasi Rangkaian Kelistrikan Bodi secara Virtual"]
+        S_uji["Uji Kelayakan Sirkuit Virtual (Indikator Lampu & Audio FX)"]
+        S_laporan["Generate Laporan Praktikum (Ekspor PDF Beretiket Resmi / QR Hasil)"]
+        S_serahkan["Serahkan Laporan Hasil Praktikum Virtual ke Guru"]
+        S_selesai(["Selesai (Kompetensi Tercapai)"])
+
+        S_start --> S_open
+        S_open --> S_scan
+        S_scan --> S_kanvas
+        S_kanvas --> S_sop
+        S_sop --> S_rakit
+        S_rakit --> S_uji
+        S_uji --> S_laporan
+        S_laporan --> S_serahkan
+    end
+
+    G_display -->|1. Pindai QR Tugas Luring| S_scan
+    S_serahkan -->|2. Kirim Laporan PDF / QR| G_report
+    G_revisi -->|3. Instruksi Perbaikan Rangkaian| S_rakit
+    G_rekap -->|4. Konfirmasi Ketuntasan Belajar| S_selesai

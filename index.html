@@ -3,40 +3,962 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MinimalFlow Studio</title>
-  <meta http-equiv="refresh" content="0; url=minimalflow-studio/">
-  <script>
-    window.location.replace("minimalflow-studio/");
-  </script>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #09090b;
-      color: #fafafa;
-    }
-    .card {
-      text-align: center;
-      padding: 2rem;
-    }
-    a {
-      color: #3b82f6;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <title>MinimalFlow Studio — Monochrome Flowchart Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="card">
-    <p>Membuka MinimalFlow Studio...</p>
-    <p><a href="minimalflow-studio/">Klik di sini jika tidak beralih otomatis</a></p>
+
+  <!-- ========================================================================
+       TOP HEADER & APPLICATION TOOLBAR
+       ======================================================================== -->
+  <header class="app-header">
+    <div id="btn-projects-menu" class="brand-section" role="button" tabindex="0" title="Kelola Multi-Proyek">
+      <div class="brand-logo-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--bg-surface)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      </div>
+      <div class="brand-name">
+        MinimalFlow Studio
+        <svg class="brand-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
+    <!-- Center Quick Actions: Undo/Redo & Workspace Orientation & Theme -->
+    <div class="top-toolbar">
+      <div class="toolbar-group">
+        <button id="btn-undo" class="btn-labeled" title="Undo (Ctrl+Z)" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          <span>Undo</span>
+        </button>
+        <button id="btn-redo" class="btn-labeled" title="Redo (Ctrl+Y)" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
+          <span>Redo</span>
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Workspace Boundary Preset & Orientation Switcher -->
+      <div class="toolbar-group">
+        <select id="select-workspace-preset" class="prop-select" style="font-size:12px; height:32px; font-weight:500;" title="Ukuran & Rasio Batas Workspace Kanvas">
+          <option value="16:9_landscape" selected>16:9 Landscape</option>
+          <option value="9:16_portrait">9:16 Portrait</option>
+          <option value="a4_landscape">A4 Landscape</option>
+          <option value="a4_portrait">A4 Portrait</option>
+          <option value="square">Persegi (Square)</option>
+        </select>
+
+        <button id="btn-toggle-orientation" class="btn-labeled" title="Putar Orientasi Kanvas (Landscape / Portrait)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/></svg>
+          <span id="label-orientation-text">Landscape</span>
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Delete & Clear -->
+      <div class="toolbar-group">
+        <button id="btn-delete" class="btn-labeled" title="Hapus Elemen Terpilih (Del / Backspace)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Hapus</span>
+        </button>
+        <button id="btn-clear-all" class="btn-labeled" title="Kosongkan Kanvas">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <span>Bersihkan</span>
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Dark Mode & Layers Panel Toggle Buttons -->
+      <div class="toolbar-group">
+        <button id="btn-theme-toggle" class="btn-icon" style="width:32px; height:32px; border:1px solid var(--border-color); border-radius:8px;" title="Ganti Mode Gelap / Terang">
+          <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg id="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button id="btn-toggle-layers-bar" class="btn-icon" style="width:32px; height:32px; border:1px solid var(--border-color); border-radius:8px;" title="Buka Panel Layer (Sisi Kanan)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Actions: Save/Open JSON & Export Dropdown -->
+    <div class="toolbar-group">
+      <input type="file" id="file-input-json" accept=".json,.flow" style="display:none;">
+      <button id="btn-open-json" class="btn-labeled" title="Buka File Project JSON">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Buka</span>
+      </button>
+
+      <div class="dropdown">
+        <button id="btn-export-dropdown" class="btn-labeled primary" style="font-weight:600; padding:0 12px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Ekspor</span>
+        </button>
+        <div id="export-menu" class="dropdown-menu">
+          <button class="dropdown-item" data-action="open-export-modal">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              <span>Ekspor Gambar (PNG / JPG)...</span>
+            </div>
+          </button>
+          <button class="dropdown-item" data-action="export-svg">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <span>Ekspor Vektor SVG</span>
+            </div>
+          </button>
+          <button class="dropdown-item" data-action="export-pdf">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              <span>Dokumen PDF (jsPDF)</span>
+            </div>
+          </button>
+          <div style="height:1px; background:var(--border-color); margin:4px 0;"></div>
+          <button class="dropdown-item" data-action="copy-clipboard">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span>Salin ke Clipboard</span>
+            </div>
+          </button>
+          <button class="dropdown-item" data-action="save-json">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span>Simpan Project JSON</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN WORKSPACE (SIDEBAR + SVG CANVAS)
+       ======================================================================== -->
+  <div class="workspace">
+    <!-- Sidebar Shapes Palette -->
+    <aside class="shapes-sidebar">
+      <div class="sidebar-header">BENTUK BAGAN</div>
+      <div class="shapes-grid">
+        <div class="shape-card" draggable="true" data-shape="rectangle" title="Tarik atau Klik untuk menambah">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 4 8 H 28 V 24 H 4 Z"/></svg>
+          <span>Proses</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="rounded" title="Tarik atau Klik untuk menambah">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 10 8 H 22 A 8 8 0 0 1 30 16 A 8 8 0 0 1 22 24 H 10 A 8 8 0 0 1 2 16 A 8 8 0 0 1 10 8 Z"/></svg>
+          <span>Terminator</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="diamond" title="Tarik atau Klik untuk menambah">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 16 6 L 28 16 L 16 26 L 4 16 Z"/></svg>
+          <span>Keputusan</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="circle" title="Tarik atau Klik untuk menambah">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="16" cy="16" r="10"/></svg>
+          <span>Lingkaran</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="parallelogram" title="Tarik atau Klik untuk menambah">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 8 8 L 28 8 L 24 24 L 4 24 Z"/></svg>
+          <span>Data I/O</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="cylinder" title="Tarik atau Klik untuk menambah">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 6 10 A 10 4 0 0 1 26 10 V 22 A 10 4 0 0 1 6 22 Z M 6 10 A 10 4 0 0 0 26 10"/></svg>
+          <span>Database</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="triangle" title="Tarik atau Klik untuk menambah">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 16 6 L 28 26 L 4 26 Z"/></svg>
+          <span>Segitiga</span>
+        </div>
+
+        <!-- Image Upload Shape Card -->
+        <div class="shape-card" id="card-upload-image" title="Unggah atau Tarik Gambar (PNG, JPG, SVG, WebP)">
+          <input type="file" id="file-input-image" accept="image/*,.svg" style="display:none;">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="4" y="6" width="24" height="20" rx="3"/>
+            <circle cx="10" cy="12" r="2"/>
+            <path d="M28 20 L21 13 L8 26"/>
+          </svg>
+          <span>Unggah Gambar</span>
+        </div>
+      </div>
+
+      <div class="sidebar-bottom-action">
+        <button id="btn-open-guide-modal" class="sidebar-guide-btn" title="Buka Panduan Lengkap & Pintasan Keyboard">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>Panduan Lengkap</span>
+          <svg class="guide-arrow-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Canvas Area -->
+    <main id="canvas-container" class="canvas-viewport">
+      <!-- Tap-to-Connect Banner -->
+      <div id="tap-connect-banner">
+        <span><strong>Mode Sambung:</strong> Klik pin pada chart tujuan...</span>
+        <button id="btn-cancel-tap-connect">Batal (Esc)</button>
+      </div>
+
+      <!-- Floating Context Toolbar (Node Properties - TWO-TIER STACKED COMPACT ROWS) -->
+      <div id="node-context-bar" class="context-bar">
+        <!-- Row 1: Typography & Margins -->
+        <div class="context-bar-row">
+          <span class="context-label">
+            <span id="node-bar-title">Node</span>
+          </span>
+          
+          <select id="prop-font-family" class="prop-select" title="Pilihan Font">
+            <option value="Poppins, sans-serif">Poppins (Sans)</option>
+            <option value="'Times New Roman', Times, serif">Times New Roman</option>
+            <option value="Cambria, Georgia, serif">Cambria</option>
+            <option value="'Book Antiqua', Palatino, serif">Book Antiqua</option>
+            <option value="Helvetica, Arial, sans-serif">Helvetica</option>
+            <option value="'Fira Code', monospace">Fira Code (Mono)</option>
+          </select>
+
+          <!-- Font Size Group -->
+          <div style="display:flex; align-items:center; gap:2px;" title="Ukuran Font (Ketik px langsung atau pilih)">
+            <input type="number" id="prop-font-size-num" class="prop-input-number" min="8" max="72" value="14" style="width:42px;" title="Ketik Ukuran Font (px)">
+            <select id="prop-font-size" class="prop-select" style="min-width:62px;" title="Pilihan Preset Ukuran Font">
+              <option value="10">10 px</option>
+              <option value="11">11 px</option>
+              <option value="12">12 px</option>
+              <option value="13">13 px</option>
+              <option value="14" selected>14 px</option>
+              <option value="15">15 px</option>
+              <option value="16">16 px</option>
+              <option value="18">18 px</option>
+              <option value="20">20 px</option>
+              <option value="24">24 px</option>
+              <option value="28">28 px</option>
+              <option value="32">32 px</option>
+            </select>
+          </div>
+
+          <!-- Bold, Italic, Underline Toggles -->
+          <div style="display:flex; align-items:center; gap:2px;">
+            <button id="btn-text-bold" class="btn-icon" style="width:26px; height:26px; font-weight:700; font-size:12px;" title="Tebal (Bold)">B</button>
+            <button id="btn-text-italic" class="btn-icon" style="width:26px; height:26px; font-style:italic; font-size:12px;" title="Miring (Italic)">I</button>
+            <button id="btn-text-underline" class="btn-icon" style="width:26px; height:26px; text-decoration:underline; font-size:12px;" title="Garis Bawah (Underline)">U</button>
+          </div>
+
+          <select id="prop-text-align" class="prop-select" title="Perataan Teks">
+            <option value="center">Tengah</option>
+            <option value="left">Kiri</option>
+            <option value="right">Kanan</option>
+          </select>
+
+          <!-- Margin Sliders & Number Input -->
+          <div class="prop-slider-group" title="Margin Kiri-Kanan ala Word (Ketik Piksel & Slider)">
+            <span>Pad-X</span>
+            <input type="number" id="prop-padding-x-num" class="prop-input-number" min="0" max="80" value="14" style="width:42px;" title="Ketik Margin X (px)">
+            <input type="range" id="prop-padding-x" min="0" max="80" step="1" value="14" style="width:40px;">
+          </div>
+
+          <div class="prop-slider-group" title="Margin Atas-Bawah (Ketik Piksel & Slider)">
+            <span>Pad-Y</span>
+            <input type="number" id="prop-padding-y-num" class="prop-input-number" min="0" max="60" value="10" style="width:42px;" title="Ketik Margin Y (px)">
+            <input type="range" id="prop-padding-y" min="0" max="60" step="1" value="10" style="width:40px;">
+          </div>
+        </div>
+
+        <!-- Row 2: Dimensions, Color Palette & Quick Actions -->
+        <div class="context-bar-row">
+          <!-- Dimension Inputs -->
+          <div class="prop-slider-group" title="Ukuran Chart (Lebar x Tinggi)">
+            <span>W</span>
+            <input type="number" id="prop-node-w" class="prop-input-number" min="10" max="1600" step="2">
+            <span>H</span>
+            <input type="number" id="prop-node-h" class="prop-input-number" min="10" max="1200" step="2">
+          </div>
+
+          <!-- Color Palette & Custom Picker -->
+          <div class="color-swatch-group" title="Pilihan Warna Chart">
+            <div class="color-swatch active" data-color="#ffffff" style="background:#ffffff;" title="Putih"></div>
+            <div class="color-swatch" data-color="#f4f4f5" style="background:#f4f4f5;" title="Abu Terang"></div>
+            <div class="color-swatch" data-color="#e0f2fe" style="background:#e0f2fe;" title="Soft Blue"></div>
+            <div class="color-swatch" data-color="#dcfce7" style="background:#dcfce7;" title="Soft Green"></div>
+            <div class="color-swatch" data-color="#fef3c7" style="background:#fef3c7;" title="Soft Amber"></div>
+            <div class="color-swatch" data-color="#ffe4e6" style="background:#ffe4e6;" title="Soft Rose"></div>
+            <div class="color-swatch" data-color="#18181b" style="background:#18181b;" title="Hitam Terbalik"></div>
+            <div class="color-swatch" data-color="transparent" style="background: repeating-conic-gradient(#bbb 0% 25%, #fff 0% 50%) 50% / 8px 8px;" title="Transparan"></div>
+            <div class="color-picker-wrapper" title="Pilih Warna Bebas (Hex Picker)">
+              <input type="color" id="prop-custom-color" value="#ffffff">
+            </div>
+          </div>
+
+          <!-- Layer Z-Order Quick Actions (Ikon Saja: Ke Bawah, Ke Atas, Paling Bawah, Paling Atas) -->
+          <div class="layer-order-group" style="display:flex; align-items:center; gap:2px; margin-left:10px;" title="Urutan Layer / Z-Order">
+            <button id="btn-layer-down" class="btn-icon" style="width:28px; height:28px;" title="Ke Bawah (Ctrl + [)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <button id="btn-layer-up" class="btn-icon" style="width:28px; height:28px;" title="Ke Atas (Ctrl + ])">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <button id="btn-layer-backmost" class="btn-icon" style="width:28px; height:28px;" title="Paling Bawah (Ctrl + Shift + [)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+            </button>
+            <button id="btn-layer-topmost" class="btn-icon" style="width:28px; height:28px;" title="Paling Atas (Ctrl + Shift + ])">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 11 12 6 17 11"/><polyline points="7 18 12 13 17 18"/></svg>
+            </button>
+            <div style="width:1px; height:18px; background:var(--border-color); margin:0 3px;"></div>
+            <button id="btn-toggle-layers-panel" class="btn-icon" style="width:28px; height:28px;" title="Buka Panel Daftar Layer (Sisi Kanan)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </button>
+            <div style="width:1px; height:18px; background:var(--border-color); margin:0 3px;"></div>
+            <button id="btn-align-center" class="btn-icon" style="width:28px; height:28px;" title="Ratakan Tengah Vertikal (Alt + C)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="2" x2="12" y2="22"></line>
+                <rect x="4" y="5" width="16" height="5" rx="1"></rect>
+                <rect x="6" y="14" width="12" height="5" rx="1"></rect>
+              </svg>
+            </button>
+            <button id="btn-align-middle" class="btn-icon" style="width:28px; height:28px;" title="Ratakan Tengah Horizontal (Alt + M)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <rect x="5" y="4" width="5" height="16" rx="1"></rect>
+                <rect x="14" y="6" width="5" height="12" rx="1"></rect>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div style="display:flex; align-items:center; gap:3px; margin-left:auto;">
+            <button id="btn-node-edit-text" class="btn-icon" style="width:28px; height:28px;" title="Edit Teks Langsung">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </button>
+            <button id="btn-node-rotate" class="btn-icon" style="width:28px; height:28px;" title="Putar Chart 90°">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            </button>
+            <button id="btn-node-lock" class="btn-icon" style="width:28px; height:28px;" title="Kunci Posisi Chart">
+              <svg id="icon-unlock" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+              <svg id="icon-lock" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Context Toolbar (Edge / Line Properties) -->
+      <div id="edge-context-bar" class="context-bar">
+        <div class="context-bar-row">
+          <span class="context-label">Garis</span>
+
+          <select id="prop-edge-type" class="prop-select" title="Jenis Jalur Garis">
+            <option value="step">Siku-siku (Orthogonal)</option>
+            <option value="bezier">Kurva Luwes (Bezier)</option>
+            <option value="straight">Garis Lurus (Straight)</option>
+          </select>
+
+          <select id="prop-edge-marker" class="prop-select" title="Arah Panah">
+            <option value="end">Panah Akhir</option>
+            <option value="both">Panah Dua Arah</option>
+            <option value="none">Tanpa Panah</option>
+          </select>
+
+          <!-- Extended thickness options up to 5px -->
+          <select id="prop-edge-width" class="prop-select" title="Ketebalan Garis">
+            <option value="1">1.0 px</option>
+            <option value="1.5" selected>1.5 px</option>
+            <option value="2">2.0 px</option>
+            <option value="2.5">2.5 px</option>
+            <option value="3">3.0 px</option>
+            <option value="4">4.0 px</option>
+            <option value="5">5.0 px</option>
+          </select>
+
+          <select id="prop-edge-dash" class="prop-select" title="Gaya Garis">
+            <option value="solid">Solid (Utuh)</option>
+            <option value="dashed">Dashed (Putus-putus)</option>
+            <option value="dotted">Dotted (Titik-titik)</option>
+          </select>
+
+          <button id="btn-reset-handle" class="btn-labeled" style="height:28px; padding:0 8px; font-size:11px;" title="Kembalikan jalur garis ke posisi tengah otomatis">
+            Reset Belokan
+          </button>
+        </div>
+      </div>
+
+      <!-- Main SVG Rendering Canvas -->
+      <svg id="canvas-svg">
+        <defs>
+          <!-- Grid Pattern -->
+          <pattern id="dot-grid" width="24" height="24" patternUnits="userSpaceOnUse">
+            <circle cx="1.5" cy="1.5" r="1.2" fill="var(--grid-dot-color)" opacity="0.45" />
+          </pattern>
+
+          <!-- Marker End Arrow -->
+          <marker id="arrow-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path id="arrow-end-path" d="M 0 1.5 L 10 5 L 0 8.5 z" fill="currentColor" />
+          </marker>
+          <!-- Marker Start Arrow -->
+          <marker id="arrow-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path id="arrow-start-path" d="M 10 1.5 L 0 5 L 10 8.5 z" fill="currentColor" />
+          </marker>
+        </defs>
+
+        <!-- Background rects -->
+        <rect id="bg-rect" width="100%" height="100%" fill="var(--canvas-bg)" />
+        <rect id="grid-rect" width="100%" height="100%" fill="url(#dot-grid)" />
+
+        <!-- Viewport Group for Zooming & Panning -->
+        <g id="viewport" transform="translate(0, 0) scale(1)">
+          <!-- Workspace Boundary Visual Indicator (Landscape & Portrait Frame) -->
+          <g id="layer-workspace-boundary">
+            <rect id="workspace-boundary-rect" x="40" y="40" width="1600" height="900" rx="8" />
+            <text id="workspace-boundary-label" class="workspace-boundary-label" x="50" y="30">BATAS WORKSPACE KANVAS EKSPOR (1600 x 900 px - LANDSCAPE)</text>
+          </g>
+
+          <g id="layer-edges"></g>
+          <g id="layer-nodes"></g>
+          <g id="layer-draft"></g>
+          <g id="layer-overlays">
+            <g id="overlay-pins"></g>
+            <g id="overlay-handles"></g>
+            <g id="overlay-selection"></g>
+          </g>
+        </g>
+      </svg>
+
+      <!-- In-place Transparent Live Text Editor -->
+      <textarea id="inline-text-editor" rows="1" spellcheck="false"></textarea>
+
+      <!-- Right-Click Context Menu (Pure clean typography & vector) -->
+      <div id="app-context-menu">
+        <button class="context-menu-item" data-action="edit-text">
+          <span>Edit Teks</span>
+          <span class="shortcut">DblClick</span>
+        </button>
+        <div class="context-menu-divider"></div>
+        <button class="context-menu-item" data-action="copy">
+          <span>Salin (Copy)</span>
+          <span class="shortcut">Ctrl+C</span>
+        </button>
+        <button class="context-menu-item" data-action="paste">
+          <span>Tempel (Paste)</span>
+          <span class="shortcut">Ctrl+V</span>
+        </button>
+        <button class="context-menu-item" data-action="duplicate">
+          <span>Duplikat</span>
+          <span class="shortcut">Ctrl+D</span>
+        </button>
+        <div class="context-menu-divider"></div>
+        <button class="context-menu-item" data-action="align-center">
+          <span>Ratakan Tengah</span>
+          <span class="shortcut">Alt+C</span>
+        </button>
+        <button class="context-menu-item" data-action="toggle-lock">
+          <span id="menu-lock-text">Kunci Posisi</span>
+          <span class="shortcut">Ctrl+L</span>
+        </button>
+        <div class="context-menu-divider"></div>
+        <button class="context-menu-item" data-action="group">
+          <span>Gabung Grup</span>
+          <span class="shortcut">Ctrl+G</span>
+        </button>
+        <button class="context-menu-item" data-action="ungroup">
+          <span>Pisah Grup</span>
+          <span class="shortcut">Ctrl+Shift+G</span>
+        </button>
+        <div class="context-menu-divider"></div>
+        <button class="context-menu-item" data-action="delete" style="color:#ef4444;">
+          <span>Hapus</span>
+          <span class="shortcut">Del</span>
+        </button>
+      </div>
+
+      <!-- Bottom View Controls (Zoom) -->
+      <div class="view-controls">
+        <button id="btn-zoom-out" class="btn-icon" title="Zoom Out (Ctrl + Scroll Down)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <span id="zoom-text" class="zoom-level-text">100%</span>
+        <button id="btn-zoom-in" class="btn-icon" title="Zoom In (Ctrl + Scroll Up)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button id="btn-zoom-reset" class="btn-icon" title="Reset Zoom 100%">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </main>
+
+    <!-- Right Sidebar Layers Panel -->
+    <aside id="layers-panel" class="layers-sidebar">
+      <div class="layers-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <span style="font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">SUSUNAN LAYER</span>
+        </div>
+        <button id="btn-layers-close" class="btn-icon" style="width:24px; height:24px;" title="Tutup Panel Layer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Quick Reorder Toolbar inside Panel -->
+      <div class="layers-toolbar">
+        <button id="btn-side-layer-down" class="btn-icon" style="width:28px; height:28px;" title="Ke Bawah (Ctrl + [)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button id="btn-side-layer-up" class="btn-icon" style="width:28px; height:28px;" title="Ke Atas (Ctrl + ])">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+        <button id="btn-side-layer-backmost" class="btn-icon" style="width:28px; height:28px;" title="Paling Bawah (Ctrl + Shift + [)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+        </button>
+        <button id="btn-side-layer-topmost" class="btn-icon" style="width:28px; height:28px;" title="Paling Atas (Ctrl + Shift + ])">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 11 12 6 17 11"/><polyline points="7 18 12 13 17 18"/></svg>
+        </button>
+      </div>
+
+      <!-- Layer Items List -->
+      <div id="layers-list-container" class="layers-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </aside>
   </div>
+
+  <!-- Toast Notification Message -->
+  <div id="toast">Diagram berhasil diperbarui!</div>
+
+  <!-- Projects Management Modal (Pure Modern Layout) -->
+  <div id="projects-modal-backdrop" class="modal-backdrop">
+    <div id="projects-modal" class="modal-dialog" style="width:520px; max-width:92vw; border-radius:12px; overflow:hidden;">
+      <div class="modal-header" style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <h2 class="modal-title" style="font-family:var(--font-heading); font-size:16px; font-weight:700;">Daftar Proyek Workflow</h2>
+        </div>
+        <button id="btn-close-projects-modal" class="btn-icon" style="width:32px; height:32px; border-radius:8px;" title="Tutup Dialog">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div style="display:flex; gap:8px; padding:16px 20px 0;">
+        <input type="text" id="input-new-project-name" class="prop-input-number" style="flex:1; height:36px; text-align:left; padding:0 12px; font-size:13px; border-radius:6px;" placeholder="Ketik nama alur baru...">
+        <button id="btn-create-new-project" class="btn-labeled primary" style="height:36px; padding:0 14px; border-radius:6px; font-weight:600;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Buat Proyek</span>
+        </button>
+      </div>
+
+      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; padding:14px 20px 4px;">
+        TERSIMPAN (<span id="projects-count-label">1 PROYEK</span>)
+      </div>
+
+      <div id="projects-list-container" class="projects-list" style="padding:4px 20px 14px; max-height:46vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+        <!-- Dynamic Project Cards Rendered via JS -->
+      </div>
+
+      <div style="padding:12px 20px 14px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:var(--bg-subtle);">
+        <button id="btn-reset-demo-workflow" class="btn-labeled" style="font-size:11.5px; height:28px;" title="Kembalikan diagram alur default 5-node">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <span>Muat Alur Contoh (Reset Alur Default)</span>
+        </button>
+        <span style="font-size:11px; color:var(--text-muted);">Tersimpan Otomatis di LocalStorage</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dual-Mode JSON Import & Live Compiler Modal -->
+  <div id="json-import-modal-backdrop" class="modal-backdrop">
+    <div id="json-import-modal" class="modal-dialog" style="width:720px; max-width:94vw; border-radius:12px; overflow:hidden;">
+      <div class="modal-header" style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <div>
+            <h2 class="modal-title" style="font-family:var(--font-heading); font-size:15px; font-weight:700;">Impor & Kompilasi Diagram Universal</h2>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Mendukung JSON MinimalFlow, Modul Trainer Mashimurelay, Script Mermaid (.mmd), & JSON Alur Umum</div>
+          </div>
+        </div>
+        <button id="btn-close-json-modal" class="btn-icon" style="width:32px; height:32px; border-radius:8px;" title="Tutup Dialog">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Segmented Modal Tabs: Code vs AI Vision -->
+      <div style="display:flex; border-bottom:1px solid var(--border-color); background:var(--bg-subtle); padding:0 20px;">
+        <button type="button" id="tab-btn-code" class="modal-tab-btn active" style="padding:10px 16px; font-size:12.5px; font-weight:600; border:none; background:none; cursor:pointer; display:flex; align-items:center; gap:6px; border-bottom:2px solid var(--text-main); color:var(--text-main);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          <span>Kode / Berkas (.json / .mmd)</span>
+        </button>
+        <button type="button" id="tab-btn-vision" class="modal-tab-btn" style="padding:10px 16px; font-size:12.5px; font-weight:500; border:none; background:none; cursor:pointer; display:flex; align-items:center; gap:6px; border-bottom:2px solid transparent; color:var(--text-muted);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          <span>AI Vision Scanner (Foto / Screenshot)</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: CODE & FILE IMPORTER VIEW -->
+      <div id="view-tab-code" style="display:flex; flex-direction:column; flex:1;">
+        <div style="padding:12px 20px 0; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <div id="json-import-status" class="status-badge status-idle">Menunggu kode JSON / MMD atau lepaskan berkas...</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="file" id="file-input-json-modal" accept=".json,.flow,.mmd,.mermaid,.txt,application/json,text/plain" style="display:none;">
+            <button id="btn-browse-json-file" class="btn-labeled" style="height:30px; font-size:11.5px; padding:0 10px;" title="Pilih berkas JSON atau MMD dari komputer">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Pilih Berkas (.json / .mmd)</span>
+            </button>
+            <button id="btn-format-json" class="btn-labeled" style="height:30px; font-size:11.5px; padding:0 10px;" title="Rapikan indentasi JSON / Kode (Beautify)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>
+              <span>Rapikan Format</span>
+            </button>
+            <button id="btn-clear-json" class="btn-labeled" style="height:30px; font-size:11.5px; padding:0 8px;" title="Kosongkan editor">
+              <span>Bersihkan</span>
+            </button>
+          </div>
+        </div>
+
+        <div style="padding:12px 20px; flex:1;">
+          <div id="json-editor-container" class="json-editor-box">
+            <textarea id="input-json-raw" spellcheck="false" placeholder="// Tempel berkas JSON (MinimalFlow / Mashimurelay) atau skrip Mermaid (.mmd) di sini...&#10;&#10;// Contoh Diagram Mermaid:&#10;flowchart TD&#10;  BAT[&quot;Baterai 12V (Pin 30)&quot;] --&gt; FUS1[&quot;Sekring 30A&quot;]&#10;  FUS1 --&gt; SW1[&quot;Sakelar Utama&quot;]&#10;&#10;// Atau Berkas Modul Trainer Mashimurelay (JSON)&#10;// Atau Skema Native MinimalFlow"></textarea>
+            
+            <!-- Dropzone Reactive Overlay -->
+            <div id="json-dropzone-overlay" class="json-dropzone">
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <strong style="font-size:14px; margin-top:6px;">Lepaskan Berkas .json atau .mmd di Sini</strong>
+              <span style="font-size:12px; color:var(--text-muted);">Sistem akan otomatis mendeteksi format & mengonversi alur secara instan</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: AI VISION SCANNER VIEW (CLEAN HERO DROPZONE + COLLAPSIBLE CONFIG) -->
+      <div id="view-tab-vision" style="display:none; flex-direction:column; flex:1; padding:16px 20px;">
+        <!-- Vision Image Dropzone (Hero Area) -->
+        <input type="file" id="file-input-vision" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none;">
+        <div id="vision-dropzone-box" style="border:2px dashed var(--border-color); border-radius:10px; padding:28px 20px; text-align:center; background:var(--bg-surface); cursor:pointer; transition:all .2s; min-height:180px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <div id="vision-dropzone-empty" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--text-muted);">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            <strong style="font-size:14px;">Tarik & Lepaskan Gambar Diagram di Sini</strong>
+            <span style="font-size:12px; color:var(--text-muted); max-width:440px;">Mendukung Screenshot alur, Foto sketsa papan tulis, atau Diagram PDF (PNG, JPG, WebP)</span>
+            <button type="button" id="btn-browse-vision-img" class="btn-labeled" style="height:30px; font-size:11.5px; margin-top:6px; padding:0 14px;">Pilih Gambar dari Komputer</button>
+          </div>
+
+          <div id="vision-dropzone-preview" style="display:none; flex-direction:column; align-items:center; gap:8px;">
+            <img id="vision-preview-img" src="" alt="Pratinjau Diagram" style="max-height:140px; max-width:100%; border-radius:6px; border:1px solid var(--border-color); object-fit:contain;">
+            <div id="vision-file-info" style="font-size:11.5px; color:var(--text-main); font-weight:600;"></div>
+            <button type="button" id="btn-change-vision-img" class="btn-labeled" style="height:26px; font-size:11px; padding:0 8px;">Ganti Gambar</button>
+          </div>
+        </div>
+
+        <!-- Vision Status Banner & Progress -->
+        <div id="vision-status-banner" style="margin-top:12px; padding:8px 12px; border-radius:6px; font-size:12px; display:none; align-items:center; gap:8px;"></div>
+
+        <!-- Controls Row: Engine Status Indicator + Action Button -->
+        <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div id="vision-engine-indicator" style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-muted);">
+            <span id="vision-status-dot" style="width:8px; height:8px; border-radius:50%; background:var(--text-muted); display:inline-block;"></span>
+            <span id="vision-status-summary">Memeriksa status engine...</span>
+          </div>
+
+          <button id="btn-run-vision-scan" class="btn-labeled primary" style="height:36px; font-size:12.5px; font-weight:600; padding:0 18px; display:inline-flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
+            <span>Pindai Gambar & Rekonstruksi Diagram</span>
+          </button>
+        </div>
+
+        <!-- Collapsible API Configuration Drawer (Subtle, Non-Intrusive) -->
+        <details id="details-gemini-config" style="margin-top:12px; border:1px solid var(--border-color); border-radius:8px; padding:8px 14px; background:var(--bg-subtle);">
+          <summary style="cursor:pointer; font-size:11.5px; font-weight:600; color:var(--text-muted); display:flex; align-items:center; justify-content:space-between; user-select:none;">
+            <span style="display:flex; align-items:center; gap:6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Pengaturan Kunci API (Opsional)</span>
+            </span>
+            <span id="gemini-key-status" class="status-badge status-idle" style="font-size:10.5px; padding:2px 8px;">Kunci Belum Diatur</span>
+          </summary>
+          <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:11px; color:var(--text-muted);">Google Gemini API Key:</span>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:var(--text-muted); text-decoration:underline;">Dapatkan Kunci Gratis di Google AI Studio ↗</a>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <input type="password" id="input-gemini-api-key" placeholder="Tempel kunci AIzaSy... di sini" style="flex:1; height:30px; padding:0 8px; border:1px solid var(--border-color); border-radius:6px; font-size:11.5px; background:var(--bg-surface); color:var(--text-main);">
+              <button id="btn-save-gemini-key" class="btn-labeled" style="height:30px; font-size:11px; padding:0 12px; font-weight:600;">Simpan Kunci</button>
+              <button id="btn-toggle-key-visibility" class="btn-labeled" style="height:30px; width:30px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="Lihat/Sembunyikan Kunci">
+                <svg id="icon-eye-toggle" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div style="font-size:10px; color:var(--text-muted);">Kunci disimpan aman secara lokal di browser Anda (LocalStorage) dan tidak dikirim ke server pihak ketiga.</div>
+          </div>
+        </details>
+      </div>
+
+      <div style="padding:12px 20px 14px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:var(--bg-subtle);">
+        <button id="btn-cancel-json-modal" class="btn-labeled" style="height:32px; font-size:12px;">Batal</button>
+        <div style="display:flex; gap:8px;">
+          <button id="btn-apply-json-merge" class="btn-labeled" style="height:32px; font-size:12px; font-weight:600;" title="Tambahkan diagram baru ke alur kanvas aktif tanpa menghapus node lama">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Gabungkan (Merge)</span>
+          </button>
+          <button id="btn-apply-json-replace" class="btn-labeled primary" style="height:32px; font-size:12px; font-weight:600;" title="Kompilasi dan gantikan seluruh alur kanvas dengan diagram JSON ini">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Kompilasi & Terapkan (Gantikan)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pengaturan Ekspor Gambar (Opsi B: Format & Kualitas Multiplier) -->
+  <div id="export-image-modal-backdrop" class="modal-backdrop">
+    <div id="export-image-modal" class="modal-dialog" style="width:480px; max-width:92vw; border-radius:12px; overflow:hidden;">
+      <!-- Header -->
+      <div class="modal-header" style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; background:var(--bg-surface);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:34px; height:34px; border-radius:8px; background:var(--bg-subtle); display:flex; align-items:center; justify-content:center; color:var(--text-main);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title" style="font-family:var(--font-heading); font-size:16px; font-weight:700; color:var(--text-main);">Ekspor Gambar</h2>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:1px;">Pilih format dan tingkat resolusi gambar kanvas</div>
+          </div>
+        </div>
+        <button id="btn-close-export-modal" class="btn-icon" style="width:32px; height:32px; border-radius:8px;" title="Tutup (Esc)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Body Content -->
+      <div style="padding:20px; display:flex; flex-direction:column; gap:18px; background:var(--bg-surface);">
+        
+        <!-- Format Selection -->
+        <div>
+          <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); display:block; margin-bottom:8px;">PILIH FORMAT GAMBAR</label>
+          <div class="export-format-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+            <button type="button" class="export-format-card active" data-format="png-trans">
+              <div class="format-card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <span class="format-card-title">PNG Transparan</span>
+              <span class="format-card-sub">Latar tembus pandang</span>
+            </button>
+
+            <button type="button" class="export-format-card" data-format="png-white">
+              <div class="format-card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor" fill-opacity="0.1"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <span class="format-card-title">PNG Solid</span>
+              <span class="format-card-sub">Latar sesuai tema</span>
+            </button>
+
+            <button type="button" class="export-format-card" data-format="jpg">
+              <div class="format-card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+              </div>
+              <span class="format-card-title">JPG Kualitas Tinggi</span>
+              <span class="format-card-sub">Berkas terkompresi</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scale / Quality Selection -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted);">SKALA KUALITAS / RESOLUSI</label>
+            <span id="export-scale-badge" style="font-size:11px; font-weight:600; color:var(--text-main);">2x (Retina HD)</span>
+          </div>
+          <div class="export-scale-row" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;">
+            <button type="button" class="export-scale-btn" data-scale="1">
+              <span style="font-weight:700; font-size:13px;">1x</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">Standar Web</span>
+            </button>
+            <button type="button" class="export-scale-btn active" data-scale="2">
+              <span style="font-weight:700; font-size:13px;">2x</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">Retina HD</span>
+            </button>
+            <button type="button" class="export-scale-btn" data-scale="3">
+              <span style="font-weight:700; font-size:13px;">3x</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">Ultra HD</span>
+            </button>
+            <button type="button" class="export-scale-btn" data-scale="4">
+              <span style="font-weight:700; font-size:13px;">4x</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">Print-Ready</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Dimension Preview Info Box -->
+        <div style="border:1px solid var(--border-color); border-radius:8px; padding:12px 14px; background:var(--bg-subtle); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted);">RESOLUSI HASIL EKSPOR</div>
+            <div id="export-dim-preview" style="font-family:'Fira Code', monospace; font-size:16px; font-weight:700; color:var(--text-main); margin-top:2px;">3200 × 1800 px</div>
+          </div>
+          <div style="text-align:right;">
+            <div id="export-aspect-preview" style="font-size:11px; color:var(--text-muted);">Workspace: 16:9</div>
+            <div id="export-size-estimate" style="font-size:11px; font-weight:600; color:var(--text-main); margin-top:2px;">~450 KB – 1.2 MB</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons -->
+      <div style="padding:14px 20px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:var(--bg-subtle);">
+        <button id="btn-cancel-export-modal" class="btn-labeled" style="height:34px; font-size:12px; padding:0 16px;">Batal</button>
+        <button id="btn-do-download-image" class="btn-labeled primary" style="height:34px; font-size:12.5px; font-weight:600; padding:0 20px; display:inline-flex; align-items:center; gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Unduh Gambar Sekarang</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panduan Lengkap & Pintasan Keyboard Modal (Floating Center Overlay) -->
+  <div id="guide-modal-backdrop" class="modal-backdrop">
+    <div id="guide-modal" class="modal-dialog" style="width:720px; max-width:94vw; max-height:88vh; border-radius:12px; overflow:hidden;">
+      <!-- Header -->
+      <div class="modal-header" style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; background:var(--bg-surface);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:34px; height:34px; border-radius:8px; background:var(--bg-subtle); display:flex; align-items:center; justify-content:center; color:var(--text-main);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title" style="font-family:var(--font-heading); font-size:16px; font-weight:700; color:var(--text-main);">Panduan Lengkap & Pintasan Keyboard</h2>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:1px;">Dokumentasi pengoperasian studio, gestur kanvas, dan shortcut MinimalFlow</div>
+          </div>
+        </div>
+        <button id="btn-close-guide-modal" class="btn-icon" style="width:32px; height:32px; border-radius:8px;" title="Tutup Panduan (Esc)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Scrollable Content Body -->
+      <div style="padding:20px; overflow-y:auto; max-height:calc(88vh - 125px); display:flex; flex-direction:column; gap:20px;">
+        
+        <!-- Section 1: Alur Kerja & Kanvas -->
+        <div>
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <span>Alur Kerja & Pengoperasian Kanvas</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
+            <div class="guide-card">
+              <div class="guide-card-title">Tambah & Hubungkan Chart</div>
+              <div class="guide-card-desc">Tarik bentuk dari panel kiri ke kanvas. Klik <strong>titik pin bulat</strong> pada chart sumber, lalu klik pin chart tujuan untuk menyambungkan garis panah (<em>Tap-to-Connect</em>).</div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-title">Edit Teks Langsung</div>
+              <div class="guide-card-desc"><strong>Double-click</strong> pada teks chart untuk mengetik langsung seperti di Word. Atur ukuran font, ketebalan, dan perataan teks melalui floating bar di atas kanvas.</div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-title">Unggah Gambar & Logo</div>
+              <div class="guide-card-desc">Drag & drop file PNG, JPG, atau SVG langsung dari komputer ke atas kanvas, atau klik kartu <strong>Unggah Gambar</strong> pada panel kiri.</div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-title">Navigasi Kamera (Pan & Zoom)</div>
+              <div class="guide-card-desc">Scroll roda mouse untuk <strong>Zoom In/Out</strong>. Tahan <strong>Spacebar + Drag</strong> (atau klik roda tengah mouse) untuk menggeser pandangan kanvas tanpa memindahkan chart.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Manipulasi Ukuran & Posisi -->
+        <div>
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            <span>Manipulasi Ukuran, Transformasi, & Tata Letak</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
+            <div class="guide-card">
+              <div class="guide-card-title">Handle 8 Arah (Sudut & Sisi)</div>
+              <div class="guide-card-desc">Tarik salah satu dari 4 handle tepi (atas, bawah, kiri, kanan) untuk memanjangkan chart ke satu arah saja tanpa mengubah dimensi lainnya.</div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-title">Perbesar Simetris (Tahan Alt)</div>
+              <div class="guide-card-desc">Tahan tombol <span class="kbd-badge">Alt</span> saat menarik handle untuk memperbesar/memanjangkan chart secara simetris dari titik tengah tanpa menggeser posisi pusatnya.</div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-title">Geser Presisi (Tombol Panah)</div>
+              <div class="guide-card-desc">Gunakan tombol panah keyboard (<span class="kbd-badge">↑</span> <span class="kbd-badge">↓</span> <span class="kbd-badge">←</span> <span class="kbd-badge">→</span>) untuk menggeser chart sejauh 5px, atau tahan <span class="kbd-badge">Shift</span> untuk geser cepat 20px.</div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-title">Ratakan Tengah Vertikal</div>
+              <div class="guide-card-desc">Pilih minimal 2 chart (tahan Shift saat klik / drag seleksi), lalu tekan <span class="kbd-badge">Alt + C</span> untuk menyelaraskan seluruh chart ke sumbu tengah alur.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Daftar Lengkap Pintasan Keyboard -->
+        <div>
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+            <span>Daftar Pintasan Keyboard (Shortcuts Cheat Sheet)</span>
+          </div>
+          <div class="shortcuts-grid">
+            <div class="shortcut-row"><span>Batalkan Perubahan (Undo)</span><span class="kbd-badge">Ctrl + Z</span></div>
+            <div class="shortcut-row"><span>Ulangi Perubahan (Redo)</span><span class="kbd-badge">Ctrl + Y / Ctrl+Shift+Z</span></div>
+            <div class="shortcut-row"><span>Salin Chart (Copy)</span><span class="kbd-badge">Ctrl + C</span></div>
+            <div class="shortcut-row"><span>Tempel di Tengah Layar (Paste)</span><span class="kbd-badge">Ctrl + V</span></div>
+            <div class="shortcut-row"><span>Duplikat Chart Terpilih</span><span class="kbd-badge">Ctrl + D</span></div>
+            <div class="shortcut-row"><span>Pilih Semua Chart</span><span class="kbd-badge">Ctrl + A</span></div>
+            <div class="shortcut-row"><span>Gabung Chart ke Grup</span><span class="kbd-badge">Ctrl + G</span></div>
+            <div class="shortcut-row"><span>Pisahkan Grup</span><span class="kbd-badge">Ctrl + Shift + G</span></div>
+            <div class="shortcut-row"><span>Kunci / Buka Kunci Chart</span><span class="kbd-badge">Ctrl + L</span></div>
+            <div class="shortcut-row"><span>Ratakan Tengah Vertikal</span><span class="kbd-badge">Alt + C</span></div>
+            <div class="shortcut-row"><span>Ratakan Tengah Horizontal</span><span class="kbd-badge">Alt + M</span></div>
+            <div class="shortcut-row"><span>Layer: Naik 1 Tingkat</span><span class="kbd-badge">Ctrl + ]</span></div>
+            <div class="shortcut-row"><span>Layer: Turun 1 Tingkat</span><span class="kbd-badge">Ctrl + [</span></div>
+            <div class="shortcut-row"><span>Layer: Paling Atas</span><span class="kbd-badge">Ctrl + Shift + ]</span></div>
+            <div class="shortcut-row"><span>Layer: Paling Bawah</span><span class="kbd-badge">Ctrl + Shift + [</span></div>
+            <div class="shortcut-row"><span>Hapus Chart / Garis Terpilih</span><span class="kbd-badge">Delete / Backspace</span></div>
+            <div class="shortcut-row"><span>Geser Kanvas Bebas (Pan)</span><span class="kbd-badge">Space + Drag / Klik Roda</span></div>
+            <div class="shortcut-row"><span>Batalkan Sambungan / Seleksi</span><span class="kbd-badge">Escape</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div style="padding:12px 20px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:var(--bg-subtle);">
+        <span style="font-size:11.5px; color:var(--text-muted);">Tip: Tekan tombol Esc untuk menutup panduan ini kapan saja.</span>
+        <button id="btn-close-guide-footer" class="btn-labeled primary" style="height:30px; padding:0 16px; font-size:12px;">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODULAR VANILLA JAVASCRIPT PIPELINE (ZERO BUILDER, INSTANT EXECUTION)
+       ======================================================================== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="js/canvas.js"></script>
+  <script src="js/flow_engine.js"></script>
+  <script src="js/text_editor.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/exporter.js"></script>
+  <script src="js/adapter.js"></script>
+  <script src="js/vision_scanner.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
