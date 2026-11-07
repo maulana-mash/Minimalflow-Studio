@@ -35,6 +35,7 @@ window.MinimalFlow = window.MinimalFlow || {};
   function serializeEditorHtml(html) {
     if (!html) return "";
     let res = String(html)
+      .replace(/<(div|p)>\s*<br\s*\/?>\s*<\/\1>/gi, "\n")
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/^<div>/i, "")
       .replace(/<\/div><div>/gi, "\n")
@@ -455,9 +456,8 @@ window.MinimalFlow = window.MinimalFlow || {};
 
       // Enter langsung atau Shift + Enter: Langsung buat baris baru di bawahnya
       if (e.key === "Enter") {
-        e.preventDefault();
-        document.execCommand("insertLineBreak");
-        onLiveInput();
+        // Biarkan browser native menangani Enter sehingga kursor 100% berada di baris baru dengan fokus aktif
+        setTimeout(onLiveInput, 0);
         return;
       }
 

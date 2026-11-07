@@ -553,10 +553,10 @@ window.MinimalFlow = window.MinimalFlow || {};
       saveSnapshot();
       renderAll();
     }, () => {
-      FlowEngine.renderNodes(dom.layerNodes, AppState.document, AppState.ui, (nId) => {
-        selectSingleNode(nId, false);
-        openInlineEditor(nId);
-      });
+      // Re-render edges and overlays when node expands dynamically while typing.
+      // Strictly avoid calling renderNodes because that wipes out the active editor!
+      FlowEngine.renderEdges(dom.layerEdges, AppState.document, AppState.ui);
+      FlowEngine.renderOverlays(dom.overlaySelection, AppState.document, AppState.ui);
     });
   }
 
