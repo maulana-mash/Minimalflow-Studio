@@ -47,8 +47,6 @@ window.MinimalFlow = window.MinimalFlow || {};
     propFontSizeNum: document.getElementById("prop-font-size-num"),
     propPaddingX: document.getElementById("prop-padding-x"),
     propPaddingXNum: document.getElementById("prop-padding-x-num"),
-    propPaddingY: document.getElementById("prop-padding-y"),
-    propPaddingYNum: document.getElementById("prop-padding-y-num"),
     propCustomColor: document.getElementById("prop-custom-color"),
     btnTextAlignLeft: document.getElementById("btn-text-align-left"),
     btnTextAlignCenter: document.getElementById("btn-text-align-center"),
@@ -487,11 +485,17 @@ window.MinimalFlow = window.MinimalFlow || {};
           }
 
           const padXVal = node.text.paddingX !== undefined ? node.text.paddingX : 14;
-          const padYVal = node.text.paddingY !== undefined ? node.text.paddingY : 10;
-          if (dom.propPaddingX) dom.propPaddingX.value = padXVal;
           if (dom.propPaddingXNum) dom.propPaddingXNum.value = padXVal;
-          if (dom.propPaddingY) dom.propPaddingY.value = padYVal;
-          if (dom.propPaddingYNum) dom.propPaddingYNum.value = padYVal;
+          if (dom.propPaddingX) {
+            dom.propPaddingX.value = String(padXVal);
+            if (!dom.propPaddingX.value) {
+              const opt = document.createElement("option");
+              opt.value = String(padXVal);
+              opt.textContent = `${padXVal} px`;
+              dom.propPaddingX.appendChild(opt);
+              dom.propPaddingX.value = String(padXVal);
+            }
+          }
 
           dom.btnTextBold.classList.toggle("active", !!node.text.bold);
           dom.btnTextItalic.classList.toggle("active", !!node.text.italic);
@@ -2401,52 +2405,30 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
   });
 
-  dom.propPaddingX.addEventListener("input", (e) => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node && node.text) {
-      const val = parseInt(e.target.value) || 0;
-      node.text.paddingX = val;
-      if (dom.propPaddingXNum) dom.propPaddingXNum.value = val;
-      renderAll();
-    }
-  });
-  dom.propPaddingX.addEventListener("change", () => saveSnapshot());
+  if (dom.propPaddingX) {
+    dom.propPaddingX.addEventListener("change", (e) => {
+      const node = AppState.document.nodes[AppState.ui.selectedId];
+      if (node && node.text) {
+        saveSnapshot();
+        const val = parseInt(e.target.value) || 0;
+        node.text.paddingX = val;
+        if (dom.propPaddingXNum) dom.propPaddingXNum.value = val;
+        renderAll();
+      }
+    });
+  }
 
   if (dom.propPaddingXNum) {
     dom.propPaddingXNum.addEventListener("input", (e) => {
       const node = AppState.document.nodes[AppState.ui.selectedId];
       if (node && node.text) {
-        const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+        const val = Math.max(0, Math.min(120, parseInt(e.target.value) || 0));
         node.text.paddingX = val;
-        if (dom.propPaddingX) dom.propPaddingX.value = val;
+        if (dom.propPaddingX) dom.propPaddingX.value = String(val);
         renderAll();
       }
     });
     dom.propPaddingXNum.addEventListener("change", () => saveSnapshot());
-  }
-
-  dom.propPaddingY.addEventListener("input", (e) => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node && node.text) {
-      const val = parseInt(e.target.value) || 0;
-      node.text.paddingY = val;
-      if (dom.propPaddingYNum) dom.propPaddingYNum.value = val;
-      renderAll();
-    }
-  });
-  dom.propPaddingY.addEventListener("change", () => saveSnapshot());
-
-  if (dom.propPaddingYNum) {
-    dom.propPaddingYNum.addEventListener("input", (e) => {
-      const node = AppState.document.nodes[AppState.ui.selectedId];
-      if (node && node.text) {
-        const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-        node.text.paddingY = val;
-        if (dom.propPaddingY) dom.propPaddingY.value = val;
-        renderAll();
-      }
-    });
-    dom.propPaddingYNum.addEventListener("change", () => saveSnapshot());
   }
 
   // Batch Scaling Helpers

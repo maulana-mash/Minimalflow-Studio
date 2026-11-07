@@ -289,17 +289,24 @@
             <span id="text-color-bar" class="color-indicator-bar" style="width:18px; height:3px; background:#000000; border-radius:1px;"></span>
           </button>
 
-          <!-- Margin Sliders & Number Input -->
-          <div class="prop-slider-group" title="Margin Kiri-Kanan ala Word (Ketik Piksel & Slider)">
-            <span>Pad-X</span>
-            <input type="number" id="prop-padding-x-num" class="prop-input-number" min="0" max="80" value="14" style="width:42px;" title="Ketik Margin X (px)">
-            <input type="range" id="prop-padding-x" min="0" max="80" step="1" value="14" style="width:40px;">
-          </div>
-
-          <div class="prop-slider-group" title="Margin Atas-Bawah (Ketik Piksel & Slider)">
-            <span>Pad-Y</span>
-            <input type="number" id="prop-padding-y-num" class="prop-input-number" min="0" max="60" value="10" style="width:42px;" title="Ketik Margin Y (px)">
-            <input type="range" id="prop-padding-y" min="0" max="60" step="1" value="10" style="width:40px;">
+          <!-- Margin Sisi Kiri-Kanan (Pad-X) Format Persis seperti Ukuran Font -->
+          <div style="display:flex; align-items:center; gap:2px;" title="Margin Sisi Kiri-Kanan / Pad-X (Ketik px langsung atau pilih preset)">
+            <span style="font-size:11px; font-weight:600; color:var(--text-muted); padding-left:2px;">Pad-X</span>
+            <input type="number" id="prop-padding-x-num" class="prop-input-number" min="0" max="100" value="14" style="width:40px;" title="Ketik Margin Kiri-Kanan (px)">
+            <select id="prop-padding-x" class="prop-select" style="min-width:62px;" title="Pilihan Preset Margin Kiri-Kanan">
+              <option value="4">4 px</option>
+              <option value="8">8 px</option>
+              <option value="10">10 px</option>
+              <option value="12">12 px</option>
+              <option value="14" selected>14 px</option>
+              <option value="16">16 px</option>
+              <option value="18">18 px</option>
+              <option value="20">20 px</option>
+              <option value="24">24 px</option>
+              <option value="28">28 px</option>
+              <option value="32">32 px</option>
+              <option value="40">40 px</option>
+            </select>
           </div>
 
           <!-- Pin / Lock Toolbar Button (Fitur Kunci Toolbar agar Tidak Selalu Hilang) -->

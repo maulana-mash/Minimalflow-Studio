@@ -234,7 +234,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     const verticalAlign = (node.text && node.text.verticalAlign) || "middle";
     const totalTextHeight = lines.length * lineHeight;
     let availableHeight = height - paddingY * 2;
-    let startY = paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
+    let startY = 0;
 
     // Centering vertikal khusus tabung database agar tidak menabrak elips atas
     if (node.type === "cylinder") {
@@ -243,7 +243,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (verticalAlign === "top") {
         startY = ry + paddingY + fontSize * 0.85;
       } else if (verticalAlign === "bottom") {
-        startY = Math.max(ry + paddingY + fontSize * 0.8, height - paddingY - totalTextHeight + fontSize * 0.85);
+        startY = height - paddingY - totalTextHeight + fontSize * 0.85;
       } else {
         startY = ry + paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
       }
@@ -251,13 +251,13 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (verticalAlign === "top") {
         startY = paddingY + fontSize * 0.85;
       } else if (verticalAlign === "bottom") {
-        startY = Math.max(paddingY + fontSize * 0.8, height - paddingY - totalTextHeight + fontSize * 0.85);
+        startY = height - paddingY - totalTextHeight + fontSize * 0.85;
       } else {
-        startY = paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
+        startY = (height - totalTextHeight) / 2 + fontSize * 0.85;
       }
     }
 
-    if (startY < paddingY + fontSize * 0.8) {
+    if (verticalAlign === "top" && startY < paddingY + fontSize * 0.8) {
       startY = paddingY + fontSize * 0.8;
     }
 

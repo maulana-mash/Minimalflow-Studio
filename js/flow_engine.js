@@ -406,9 +406,21 @@ window.MinimalFlow = window.MinimalFlow || {};
 
           // Hanya render teks jika ada isi nyata, hindari mencetak watermark/placeholder "Insert text"
           if (!isPh && rawContent.length > 0) {
+            // Clip-Path agar teks tidak menembus kotak pembatas atas dan bawah chart
+            const clipId = `clip-node-text-${id}`;
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+            clipPath.setAttribute("id", clipId);
+            const clipShape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            clipShape.setAttribute("d", getShapePath(node.type, node.width, node.height));
+            clipPath.appendChild(clipShape);
+            defs.appendChild(clipPath);
+            g.appendChild(defs);
+
             const layout = textEditorModule.layoutNodeText(node);
             const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
             textEl.setAttribute("id", `node-text-${id}`);
+            textEl.setAttribute("clip-path", `url(#${clipId})`);
             textEl.setAttribute("x", layout.xPos);
             textEl.setAttribute("y", layout.startY);
             textEl.setAttribute("text-anchor", layout.anchor);
