@@ -782,6 +782,15 @@ main.canvas-viewport.space-pan {
   display: block;
   user-select: text;
   -webkit-user-select: text;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.node-seamless-editor:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.4;
+  pointer-events: none;
+  display: inline-block;
 }
 
 .node-seamless-editor::placeholder {

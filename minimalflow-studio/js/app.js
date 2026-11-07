@@ -1813,7 +1813,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (AppState.ui.mode === "EDITING_TEXT") return;
 
     // Spacebar Panning Shortcut (Hold Space to Pan Canvas)
-    if (e.code === "Space" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+    if (e.code === "Space" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA" && !document.activeElement?.isContentEditable) {
       e.preventDefault();
       AppState.ui.isSpacePressed = true;
       dom.container.classList.add("space-pan");
@@ -2141,14 +2141,17 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   if (dom.btnTextBold) {
     dom.btnTextBold.addEventListener("mousedown", (e) => {
-      const activeTextarea = document.querySelector(".node-seamless-editor");
-      if (activeTextarea) e.preventDefault();
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) e.preventDefault();
     });
     dom.btnTextBold.addEventListener("click", () => {
-      const activeTextarea = document.querySelector(".node-seamless-editor");
-      if (activeTextarea) {
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) {
         if (window.MinimalFlow && window.MinimalFlow.TextEditor) {
-          window.MinimalFlow.TextEditor.toggleSelectionFormatting(activeTextarea, "**");
+          window.MinimalFlow.TextEditor.toggleSelectionFormatting(activeEditor, "bold");
+        } else {
+          document.execCommand("bold", false, null);
+          activeEditor.dispatchEvent(new Event("input"));
         }
         return;
       }
@@ -2163,14 +2166,17 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   if (dom.btnTextItalic) {
     dom.btnTextItalic.addEventListener("mousedown", (e) => {
-      const activeTextarea = document.querySelector(".node-seamless-editor");
-      if (activeTextarea) e.preventDefault();
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) e.preventDefault();
     });
     dom.btnTextItalic.addEventListener("click", () => {
-      const activeTextarea = document.querySelector(".node-seamless-editor");
-      if (activeTextarea) {
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) {
         if (window.MinimalFlow && window.MinimalFlow.TextEditor) {
-          window.MinimalFlow.TextEditor.toggleSelectionFormatting(activeTextarea, "*");
+          window.MinimalFlow.TextEditor.toggleSelectionFormatting(activeEditor, "italic");
+        } else {
+          document.execCommand("italic", false, null);
+          activeEditor.dispatchEvent(new Event("input"));
         }
         return;
       }

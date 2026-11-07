@@ -20,10 +20,44 @@ window.MinimalFlow = window.MinimalFlow || {};
     return measureCtx;
   }
 
-  // Parse inline Markdown / HTML tags into styled spans
+  function cleanMarkdownToHtml(str) {
+    if (!str) return "";
+    let s = String(str);
+    // Convert ***text*** -> <b><i>text</i></b>
+    s = s.replace(/\*\*\*([^*]+)\*\*\*/g, "<b><i>$1</i></b>");
+    // Convert **text** -> <b>text</b>
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+    // Convert *text* -> <i>text</i>
+    s = s.replace(/\*([^*]+)\*/g, "<i>$1</i>");
+    return s;
+  }
+
+  function serializeEditorHtml(html) {
+    if (!html) return "";
+    let res = String(html)
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/div><div>/gi, "\n")
+      .replace(/<div>/gi, "\n")
+      .replace(/<\/div>/gi, "")
+      .replace(/<\/p><p>/gi, "\n")
+      .replace(/<p>/gi, "")
+      .replace(/<\/p>/gi, "")
+      .replace(/&nbsp;/g, " ");
+
+    res = res.replace(/<strong\b[^>]*>/gi, "<b>").replace(/<\/strong>/gi, "</b>");
+    res = res.replace(/<em\b[^>]*>/gi, "<i>").replace(/<\/em>/gi, "</i>");
+    res = res.replace(/<b>\s*<\/b>/gi, "").replace(/<i>\s*<\/i>/gi, "");
+
+    return res.trim();
+  }
+
+  // Parse inline Markdown / HTML tags into styled spans (100% clean, ZERO asterisks)
   function parseInlineSpans(str, defaultBold = false, defaultItalic = false) {
     if (!str) return [];
-    const regex = /(\*\*\*(.*?)\*\*\*|<b><i>(.*?)<\/i><\/b>|<i><b>(.*?)<\/b><\/i>|\*\*(.*?)\*\*|<b>(.*?)<\/b>|\*(.*?)\*|<i>(.*?)<\/i>)/gi;
+    // Otomatis bersihkan tanda bintang markdown warisan menjadi tag visual murni
+    str = cleanMarkdownToHtml(str);
+
+    const regex = /(<b><i>([\s\S]*?)<\/i><\/b>|<i><b>([\s\S]*?)<\/b><\/i>|<b>([\s\S]*?)<\/b>|<strong>([\s\S]*?)<\/strong>|<i>([\s\S]*?)<\/i>|<em>([\s\S]*?)<\/em>)/gi;
     const tokens = [];
     let lastIndex = 0;
     let match;
@@ -38,15 +72,12 @@ window.MinimalFlow = window.MinimalFlow || {};
       }
 
       const full = match[0];
-      if (full.startsWith("***") || match[2] !== undefined || match[3] !== undefined) {
-        const content = (match[1] && match[1].startsWith("***")) ? match[1].slice(3, -3) : (match[2] || match[3] || "");
-        tokens.push({ text: content, bold: true, italic: true });
-      } else if (full.startsWith("**") || match[5] !== undefined) {
-        const content = (match[1] && match[1].startsWith("**")) ? match[1].slice(2, -2) : (match[4] || match[5] || "");
-        tokens.push({ text: content, bold: true, italic: defaultItalic });
-      } else if (full.startsWith("*") || match[7] !== undefined) {
-        const content = (match[1] && match[1].startsWith("*")) ? match[1].slice(1, -1) : (match[6] || match[7] || "");
-        tokens.push({ text: content, bold: defaultBold, italic: true });
+      if (match[2] !== undefined || match[3] !== undefined) {
+        tokens.push({ text: match[2] || match[3], bold: true, italic: true });
+      } else if (match[4] !== undefined || match[5] !== undefined) {
+        tokens.push({ text: match[4] || match[5], bold: true, italic: defaultItalic });
+      } else if (match[6] !== undefined || match[7] !== undefined) {
+        tokens.push({ text: match[6] || match[7], bold: defaultBold, italic: true });
       }
 
       lastIndex = regex.lastIndex;
@@ -261,33 +292,40 @@ window.MinimalFlow = window.MinimalFlow || {};
     fo.setAttribute("width", String(node.width));
     fo.setAttribute("height", String(node.height));
 
-    const textarea = document.createElement("textarea");
-    textarea.className = "node-seamless-editor";
-    textarea.setAttribute("spellcheck", "false");
+    // Gunakan contenteditable DIV agar menghasilkan pemformatan visual murni seperti Word (tanpa bintang **)
+    const editor = document.createElement("div");
+    editor.className = "node-seamless-editor";
+    editor.contentEditable = "true";
+    editor.setAttribute("spellcheck", "false");
+    editor.setAttribute("role", "textbox");
+    editor.setAttribute("aria-multiline", "true");
 
     const isDark = doc.theme === "dark";
     const FlowEngine = window.MinimalFlow && window.MinimalFlow.FlowEngine;
     const isBgDark = (FlowEngine && FlowEngine.isDarkColor) ? FlowEngine.isDarkColor(node.style.fill) : isDark;
     const textColor = node.text.color || (isBgDark ? "#ffffff" : "#18181b");
 
-    textarea.style.fontFamily = node.text.fontFamily || "Poppins, sans-serif";
-    textarea.style.fontSize = `${node.text.fontSize || 14}px`;
-    textarea.style.fontWeight = node.text.bold ? "700" : "500";
-    textarea.style.fontStyle = node.text.italic ? "italic" : "normal";
-    textarea.style.textDecoration = node.text.underline ? "underline" : "none";
-    textarea.style.textAlign = node.text.align || "center";
-    textarea.style.color = textColor;
-    textarea.style.caretColor = textColor;
-    textarea.style.lineHeight = `${(node.text.fontSize || 14) * 1.35}px`;
+    editor.style.fontFamily = node.text.fontFamily || "Poppins, sans-serif";
+    editor.style.fontSize = `${node.text.fontSize || 14}px`;
+    editor.style.fontWeight = node.text.bold ? "700" : "500";
+    editor.style.fontStyle = node.text.italic ? "italic" : "normal";
+    editor.style.textDecoration = node.text.underline ? "underline" : "none";
+    editor.style.textAlign = node.text.align || "center";
+    editor.style.color = textColor;
+    editor.style.caretColor = textColor;
+    editor.style.lineHeight = `${(node.text.fontSize || 14) * 1.35}px`;
 
-    const isPh = !node.text.content || node.text.content.trim().toLowerCase() === "insert text";
-    textarea.value = isPh ? "" : (node.text.content || "");
-    textarea.placeholder = "Ketik teks di sini...";
+    const rawContent = (node.text.content || "").trim();
+    const isPh = !rawContent || rawContent.toLowerCase() === "insert text" || !!node.text.isPlaceholder;
+
+    // Bersihkan sintaks markdown bintang menjadi HTML visual murni
+    const initialHtml = isPh ? "" : cleanMarkdownToHtml(node.text.content || "");
+    editor.innerHTML = initialHtml;
+    editor.setAttribute("data-placeholder", "Ketik teks di sini...");
 
     function adjustPadding() {
-      const lineHeight = (node.text.fontSize || 14) * 1.35;
-      const lines = (textarea.value || "").split("\n");
-      const totalH = lines.length * lineHeight;
+      const layout = layoutNodeText(node);
+      const totalH = layout.totalTextHeight || (node.text.fontSize || 14) * 1.35;
       let padTop = Math.max(0, (node.height - totalH) / 2);
       if (node.type === "cylinder") {
         const ry = Math.min(node.height * 0.22, 18);
@@ -301,14 +339,14 @@ window.MinimalFlow = window.MinimalFlow || {};
       } else if (node.type === "triangle") {
         safePadX += Math.min(node.width * 0.25, 30);
       }
-      textarea.style.paddingTop = `${Math.round(padTop)}px`;
-      textarea.style.paddingLeft = `${Math.round(safePadX)}px`;
-      textarea.style.paddingRight = `${Math.round(safePadX)}px`;
-      textarea.style.paddingBottom = "0px";
+      editor.style.paddingTop = `${Math.round(padTop)}px`;
+      editor.style.paddingLeft = `${Math.round(safePadX)}px`;
+      editor.style.paddingRight = `${Math.round(safePadX)}px`;
+      editor.style.paddingBottom = "0px";
     }
 
     adjustPadding();
-    fo.appendChild(textarea);
+    fo.appendChild(editor);
     nodeGroupEl.appendChild(fo);
 
     // Bersihkan artifak seleksi teks bawaan browser
@@ -318,17 +356,17 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     // Isolasi event mouse agar pengetikan dan drag teks tidak bocor ke kanvas
     const stopPropagation = (e) => e.stopPropagation();
-    textarea.addEventListener("mousedown", stopPropagation);
-    textarea.addEventListener("mousemove", stopPropagation);
-    textarea.addEventListener("mouseup", stopPropagation);
-    textarea.addEventListener("click", stopPropagation);
-    textarea.addEventListener("dblclick", stopPropagation);
-    textarea.addEventListener("wheel", stopPropagation);
+    editor.addEventListener("mousedown", stopPropagation);
+    editor.addEventListener("mousemove", stopPropagation);
+    editor.addEventListener("mouseup", stopPropagation);
+    editor.addEventListener("click", stopPropagation);
+    editor.addEventListener("dblclick", stopPropagation);
+    editor.addEventListener("wheel", stopPropagation);
 
     function onLiveInput() {
-      const val = textarea.value;
+      const val = serializeEditorHtml(editor.innerHTML);
       node.text.content = val;
-      node.text.isPlaceholder = !val.trim();
+      node.text.isPlaceholder = !editor.textContent.trim();
       adjustPadding();
 
       const layout = layoutNodeText(node);
@@ -345,7 +383,16 @@ window.MinimalFlow = window.MinimalFlow || {};
       }
     }
 
-    textarea.addEventListener("input", onLiveInput);
+    editor.addEventListener("input", onLiveInput);
+
+    // Handle paste untuk membersihkan styling luar yang tidak diinginkan
+    editor.addEventListener("paste", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+      document.execCommand("insertText", false, text);
+      onLiveInput();
+    });
 
     let isFinished = false;
     function finishEditing() {
@@ -357,12 +404,12 @@ window.MinimalFlow = window.MinimalFlow || {};
       activeEditingNodeId = null;
       activeEditingFinishFn = null;
 
-      const val = textarea.value.trim();
-      if (!val || val.toLowerCase() === "insert text") {
+      const rawText = editor.textContent.trim();
+      if (!rawText || rawText.toLowerCase() === "insert text") {
         node.text.content = "";
         node.text.isPlaceholder = false;
       } else {
-        node.text.content = val;
+        node.text.content = serializeEditorHtml(editor.innerHTML);
         node.text.isPlaceholder = false;
       }
 
@@ -375,23 +422,23 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     activeEditingFinishFn = finishEditing;
-    textarea.addEventListener("blur", finishEditing);
+    editor.addEventListener("blur", finishEditing);
 
-    textarea.addEventListener("keydown", (e) => {
-      e.stopPropagation(); // Shortcut keyboard seperti Delete / Ctrl+A bekerja lokal pada textarea, bukan kanvas
+    editor.addEventListener("keydown", (e) => {
+      e.stopPropagation(); // Shortcut keyboard seperti Delete / Ctrl+A bekerja lokal pada editor, bukan kanvas
 
-      // Ctrl + B: Tebal (Bold) untuk teks yang disorot
+      // Ctrl + B: Tebal (Bold) visual murni seperti di Word
       if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B" || e.code === "KeyB")) {
         e.preventDefault();
-        toggleSelectionFormatting(textarea, "**");
+        document.execCommand("bold", false, null);
         onLiveInput();
         return;
       }
 
-      // Ctrl + I: Miring (Italic) untuk teks yang disorot
+      // Ctrl + I: Miring (Italic) visual murni seperti di Word
       if ((e.ctrlKey || e.metaKey) && (e.key === "i" || e.key === "I" || e.code === "KeyI")) {
         e.preventDefault();
-        toggleSelectionFormatting(textarea, "*");
+        document.execCommand("italic", false, null);
         onLiveInput();
         return;
       }
@@ -399,68 +446,40 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         finishEditing();
+      } else if (e.key === "Enter" && e.shiftKey) {
+        e.preventDefault();
+        document.execCommand("insertLineBreak");
+        onLiveInput();
       } else if (e.key === "Escape") {
         e.preventDefault();
-        textarea.value = node.text.content;
         finishEditing();
       }
     });
 
-    // Delayed focus & select text
+    // Delayed focus & caret positioning
     setTimeout(() => {
       if (uiState.mode === "EDITING_TEXT" && activeEditingNodeId === nodeId) {
-        textarea.focus();
-        if (textarea.value) {
-          textarea.select();
+        editor.focus();
+        if (window.getSelection && document.createRange) {
+          const range = document.createRange();
+          range.selectNodeContents(editor);
+          if (!isPh) {
+            range.collapse(false); // Letakkan kursor di akhir teks jika sudah ada isi
+          }
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
         }
       }
-    }, 25);
+    }, 30);
   }
 
-  function toggleSelectionFormatting(textarea, marker) {
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const val = textarea.value;
-    const mLen = marker.length;
-
-    if (start === end) {
-      textarea.value = val.slice(0, start) + marker + marker + val.slice(end);
-      textarea.selectionStart = start + mLen;
-      textarea.selectionEnd = start + mLen;
-      textarea.dispatchEvent(new Event("input"));
-      return;
+  function toggleSelectionFormatting(editor, marker) {
+    const cmd = (marker === "**" || marker === "bold") ? "bold" : "italic";
+    document.execCommand(cmd, false, null);
+    if (editor && typeof editor.dispatchEvent === "function") {
+      editor.dispatchEvent(new Event("input"));
     }
-
-    const selectedText = val.slice(start, end);
-
-    // Cek apakah teks yang disorot sudah ber-marker di dalamnya
-    if (selectedText.startsWith(marker) && selectedText.endsWith(marker) && selectedText.length >= mLen * 2) {
-      const unwrapped = selectedText.slice(mLen, -mLen);
-      textarea.value = val.slice(0, start) + unwrapped + val.slice(end);
-      textarea.selectionStart = start;
-      textarea.selectionEnd = start + unwrapped.length;
-      textarea.dispatchEvent(new Event("input"));
-      return;
-    }
-
-    // Cek apakah marker berada tepat di luar batas teks yang disorot
-    if (start >= mLen && end + mLen <= val.length &&
-        val.slice(start - mLen, start) === marker &&
-        val.slice(end, end + mLen) === marker) {
-      textarea.value = val.slice(0, start - mLen) + selectedText + val.slice(end + mLen);
-      textarea.selectionStart = start - mLen;
-      textarea.selectionEnd = end - mLen;
-      textarea.dispatchEvent(new Event("input"));
-      return;
-    }
-
-    // Bungkus teks yang disorot
-    const wrapped = marker + selectedText + marker;
-    textarea.value = val.slice(0, start) + wrapped + val.slice(end);
-    textarea.selectionStart = start;
-    textarea.selectionEnd = start + wrapped.length;
-    textarea.dispatchEvent(new Event("input"));
   }
 
   exports.TextEditor = {
@@ -468,7 +487,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     open: openInlineEditor,
     close: closeInlineEditor,
     toggleSelectionFormatting,
-    parseInlineSpans
+    parseInlineSpans,
+    cleanMarkdownToHtml,
+    serializeEditorHtml
   };
 
 })(window.MinimalFlow);
