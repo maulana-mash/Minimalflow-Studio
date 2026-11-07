@@ -1,0 +1,24 @@
+# ==============================================================================
+# Netlify Configuration for MinimalFlow Studio
+# ==============================================================================
+
+[build]
+  # Direktori yang dipublikasikan langsung ke web
+  publish = "minimalflow-studio"
+
+  # Tanpa langkah build karena aplikasi berbasis murni Vanilla Web Standards
+  command = ""
+
+# Single Page Application fallback rewrite
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Pengaturan Header Keamanan Standar
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

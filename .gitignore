@@ -25,7 +25,8 @@ dist/
 dist-ssr/
 *.local
 
-# IDE & OS System files
+# IDE, Netlify & OS System files
+.netlify/
 .vscode/
 .idea/
 .DS_Store
