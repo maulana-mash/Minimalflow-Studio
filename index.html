@@ -254,22 +254,39 @@
             <button id="btn-text-underline" class="btn-icon" style="width:26px; height:26px; text-decoration:underline; font-size:12px;" title="Garis Bawah (Underline)">U</button>
           </div>
 
-          <select id="prop-text-align" class="prop-select" title="Perataan Teks Horizontal">
-            <option value="center">Horiz: Tengah</option>
-            <option value="left">Horiz: Kiri</option>
-            <option value="right">Horiz: Kanan</option>
-          </select>
+          <!-- Word-Style Horizontal Text Alignment Buttons (Gambar 1) -->
+          <div class="btn-group-segmented" title="Perataan Teks Horizontal ala Word (Align Left, Center, Right)">
+            <button id="btn-text-align-left" class="btn-icon" style="width:26px; height:26px;" title="Rata Kiri (Align Left)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="14" y2="12"/><line x1="3" y1="18" x2="19" y2="18"/></svg>
+            </button>
+            <button id="btn-text-align-center" class="btn-icon active" style="width:26px; height:26px;" title="Rata Tengah (Align Center)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+            </button>
+            <button id="btn-text-align-right" class="btn-icon" style="width:26px; height:26px;" title="Rata Kanan (Align Right)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="5" y1="18" x2="21" y2="18"/></svg>
+            </button>
+          </div>
 
-          <select id="prop-text-valign" class="prop-select" title="Perataan Vertikal Teks ala Word (Align Text)">
-            <option value="middle">Vert: Tengah (Middle)</option>
-            <option value="top">Vert: Atas (Top)</option>
-            <option value="bottom">Vert: Bawah (Bottom)</option>
-          </select>
+          <!-- Word-Style Vertical Text Alignment Buttons (Gambar 1 & 2) -->
+          <div class="btn-group-segmented" title="Perataan Teks Vertikal ala Word (Align Text Top, Middle, Bottom)">
+            <button id="btn-text-valign-top" class="btn-icon" style="width:26px; height:26px;" title="Rata Atas (Align Text Top)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="7" x2="17" y2="7"/><line x1="7" y1="10" x2="14" y2="10"/></svg>
+            </button>
+            <button id="btn-text-valign-middle" class="btn-icon active" style="width:26px; height:26px;" title="Rata Tengah Vertikal (Align Text Middle)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="11" x2="17" y2="11"/><line x1="7" y1="14" x2="14" y2="14"/></svg>
+            </button>
+            <button id="btn-text-valign-bottom" class="btn-icon" style="width:26px; height:26px;" title="Rata Bawah (Align Text Bottom)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="14" x2="17" y2="14"/><line x1="7" y1="17" x2="14" y2="17"/></svg>
+            </button>
+          </div>
 
           <!-- Word-Style Text Color Button (Huruf A dengan strip warna di bawahnya) -->
-          <button id="btn-text-color-picker" class="btn-icon word-color-btn" style="width:28px; height:26px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;" title="Warna Font Teks ala Word">
-            <span style="font-weight:700; font-size:13px; font-family:'Times New Roman', serif; line-height:1;">A</span>
-            <span id="text-color-bar" class="color-indicator-bar" style="width:16px; height:3px; background:#000000; border-radius:1px;"></span>
+          <button id="btn-text-color-picker" class="btn-icon word-color-btn" style="height:26px; padding:2px 5px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;" title="Warna Font Teks ala Word (Font Color)">
+            <div style="display:flex; align-items:center; gap:2px;">
+              <span style="font-weight:700; font-size:13px; font-family:'Times New Roman', serif; line-height:1;">A</span>
+              <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <span id="text-color-bar" class="color-indicator-bar" style="width:18px; height:3px; background:#000000; border-radius:1px;"></span>
           </button>
 
           <!-- Margin Sliders & Number Input -->
@@ -284,6 +301,17 @@
             <input type="number" id="prop-padding-y-num" class="prop-input-number" min="0" max="60" value="10" style="width:42px;" title="Ketik Margin Y (px)">
             <input type="range" id="prop-padding-y" min="0" max="60" step="1" value="10" style="width:40px;">
           </div>
+
+          <!-- Pin / Lock Toolbar Button (Fitur Kunci Toolbar agar Tidak Selalu Hilang) -->
+          <div style="margin-left:auto; display:flex; align-items:center;">
+            <button id="btn-pin-toolbar" class="btn-icon" style="width:26px; height:26px;" title="Kunci Toolbar (Tetap Terbuka saat Klik Kanvas)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="17" x2="12" y2="22"/>
+                <path d="M5 17h14l-2-6H7l-2 6z"/>
+                <path d="M9 11V4a3 3 0 0 1 6 0v7"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Row 2: Dimensions, Color Palette & Quick Actions -->
@@ -296,26 +324,55 @@
             <input type="number" id="prop-node-h" class="prop-input-number" min="10" max="1200" step="2">
           </div>
 
-          <!-- Multi-Select Batch Scale Buttons -->
-          <div style="display:flex; align-items:center; gap:2px;" title="Perbesar / Perkecil Seluruh Chart Terpilih Sekaligus">
-            <button id="btn-scale-down-all" class="btn-icon" style="width:24px; height:26px; font-weight:700; font-size:12px;" title="Perkecil Semua Terpilih (-15%)">−</button>
-            <button id="btn-scale-up-all" class="btn-icon" style="width:24px; height:26px; font-weight:700; font-size:12px;" title="Perbesar Semua Terpilih (+15%)">+</button>
-            <button id="btn-equalize-size" class="btn-icon" style="width:24px; height:26px;" title="Samakan Ukuran Seluruh Chart Terpilih">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6h4M14 6v4"/></svg>
+          <!-- Word-Style Batch Scale Buttons (Gambar 2 - Ikon Bersih & Jelas) -->
+          <div style="display:flex; align-items:center; gap:2px;" title="Skala Dimensi Seluruh Chart Terpilih Sekaligus">
+            <button id="btn-scale-down-all" class="btn-icon" style="width:26px; height:26px;" title="Perkecil Semua Terpilih (-15%)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 14 10 14 10 20"/>
+                <polyline points="20 10 14 10 14 4"/>
+                <line x1="14" y1="10" x2="21" y2="3"/>
+                <line x1="3" y1="21" x2="10" y2="14"/>
+              </svg>
+            </button>
+            <button id="btn-scale-up-all" class="btn-icon" style="width:26px; height:26px;" title="Perbesar Semua Terpilih (+15%)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"/>
+                <polyline points="9 21 3 21 3 15"/>
+                <line x1="21" y1="3" x2="14" y2="10"/>
+                <line x1="3" y1="21" x2="10" y2="14"/>
+              </svg>
+            </button>
+            <button id="btn-equalize-size" class="btn-icon" style="width:26px; height:26px;" title="Samakan Dimensi Seluruh Chart Terpilih (Sesuai Chart Pertama)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <line x1="7" y1="16" x2="17" y2="16"/>
+                <line x1="7" y1="20" x2="17" y2="20"/>
+              </svg>
             </button>
           </div>
 
-          <!-- Word-Style Shape Fill & Border Color Pickers -->
+          <!-- Word-Style Shape Fill & Border Color Pickers (Gambar 2 - Format Ribbon Word) -->
           <div style="display:flex; align-items:center; gap:3px;">
-            <button id="btn-fill-color-picker" class="btn-icon word-color-btn" style="height:26px; display:inline-flex; align-items:center; gap:4px; padding:0 6px;" title="Warna Latar Chart ala Word (Shape Fill)">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 11l-8-8-8.5 8.5a2.12 2.12 0 0 0 0 3l5.5 5.5a2.12 2.12 0 0 0 3 0L19 11z"/><path d="M5 2l5 5"/><path d="M2 13h15"/></svg>
-              <span id="fill-color-bar" class="color-indicator-bar" style="width:14px; height:12px; background:#ffffff; border:1px solid #71717a; border-radius:2px;"></span>
-              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <button id="btn-fill-color-picker" class="btn-icon word-color-btn" style="height:26px; padding:2px 5px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;" title="Warna Isi Chart ala Word (Shape Fill)">
+              <div style="display:flex; align-items:center; gap:2px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 11l-8-8-8.5 8.5a2.12 2.12 0 0 0 0 3l5.5 5.5a2.12 2.12 0 0 0 3 0L19 11z"/>
+                  <path d="M5 2l5 5"/>
+                  <path d="M2 13h15"/>
+                </svg>
+                <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <span id="fill-color-bar" class="color-indicator-bar" style="width:18px; height:3px; background:#ffffff; border:1px solid #71717a; border-radius:1px;"></span>
             </button>
-            <button id="btn-stroke-color-picker" class="btn-icon word-color-btn" style="height:26px; display:inline-flex; align-items:center; gap:4px; padding:0 6px;" title="Warna Garis Tepi Chart ala Word (Shape Outline)">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-              <span id="stroke-color-bar" class="color-indicator-bar" style="width:14px; height:12px; background:#18181b; border:1px solid #71717a; border-radius:2px;"></span>
-              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <button id="btn-stroke-color-picker" class="btn-icon word-color-btn" style="height:26px; padding:2px 5px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;" title="Warna Garis Tepi Chart ala Word (Shape Outline)">
+              <div style="display:flex; align-items:center; gap:2px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 2"/>
+                </svg>
+                <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <span id="stroke-color-bar" class="color-indicator-bar" style="width:18px; height:3px; background:#18181b; border:1px solid #71717a; border-radius:1px;"></span>
             </button>
           </div>
 
@@ -1000,11 +1057,18 @@
         <button id="btn-close-guide-footer" class="btn-labeled primary" style="height:30px; padding:0 16px; font-size:12px;">Tutup</button>
       </div>
     </div>
+  </div>
+
   <!-- Word-Style Theme Colors & Standard Colors Palette Popover (Gambar 3) -->
   <div id="word-color-picker-popover">
     <button id="btn-word-color-auto" class="btn-word-automatic">
       <span id="word-color-auto-box" style="width:16px; height:16px; background:#000000; border:1px solid #71717a; border-radius:2px; display:inline-block;"></span>
       <span id="word-color-auto-text">Automatic (Hitam Kontras)</span>
+    </button>
+
+    <button id="btn-word-color-none" class="btn-word-automatic">
+      <span style="width:16px; height:16px; border:1px solid #71717a; border-radius:2px; display:inline-flex; align-items:center; justify-content:center; background:repeating-conic-gradient(#bbb 0% 25%, #fff 0% 50%) 50% / 6px 6px;"></span>
+      <span>Tanpa Warna (Transparan)</span>
     </button>
 
     <div>

@@ -50,7 +50,13 @@ window.MinimalFlow = window.MinimalFlow || {};
     propPaddingY: document.getElementById("prop-padding-y"),
     propPaddingYNum: document.getElementById("prop-padding-y-num"),
     propCustomColor: document.getElementById("prop-custom-color"),
-    propTextVAlign: document.getElementById("prop-text-valign"),
+    btnTextAlignLeft: document.getElementById("btn-text-align-left"),
+    btnTextAlignCenter: document.getElementById("btn-text-align-center"),
+    btnTextAlignRight: document.getElementById("btn-text-align-right"),
+    btnTextValignTop: document.getElementById("btn-text-valign-top"),
+    btnTextValignMiddle: document.getElementById("btn-text-valign-middle"),
+    btnTextValignBottom: document.getElementById("btn-text-valign-bottom"),
+    btnPinToolbar: document.getElementById("btn-pin-toolbar"),
     btnTextColorPicker: document.getElementById("btn-text-color-picker"),
     textColorBar: document.getElementById("text-color-bar"),
     btnScaleDownAll: document.getElementById("btn-scale-down-all"),
@@ -66,6 +72,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     wordThemeColorsGrid: document.getElementById("word-theme-colors-grid"),
     wordStandardColorsRow: document.getElementById("word-standard-colors-row"),
     btnWordColorAuto: document.getElementById("btn-word-color-auto"),
+    btnWordColorNone: document.getElementById("btn-word-color-none"),
     wordColorAutoBox: document.getElementById("word-color-auto-box"),
     wordColorAutoText: document.getElementById("word-color-auto-text"),
     btnWordMoreColors: document.getElementById("btn-word-more-colors"),
@@ -188,7 +195,8 @@ window.MinimalFlow = window.MinimalFlow || {};
       lastClickTime: 0,
       lastClickNodeId: null,
       hasMovedNode: false,
-      isSpacePressed: false
+      isSpacePressed: false,
+      isToolbarPinned: false
     }
   };
 
@@ -464,11 +472,16 @@ window.MinimalFlow = window.MinimalFlow || {};
             }
           }
 
-          document.getElementById("prop-text-align").value = node.text.align;
+          const align = node.text.align || "center";
+          if (dom.btnTextAlignLeft) dom.btnTextAlignLeft.classList.toggle("active", align === "left");
+          if (dom.btnTextAlignCenter) dom.btnTextAlignCenter.classList.toggle("active", align === "center");
+          if (dom.btnTextAlignRight) dom.btnTextAlignRight.classList.toggle("active", align === "right");
 
-          if (dom.propTextVAlign) {
-            dom.propTextVAlign.value = node.text.verticalAlign || "middle";
-          }
+          const valign = node.text.verticalAlign || "middle";
+          if (dom.btnTextValignTop) dom.btnTextValignTop.classList.toggle("active", valign === "top");
+          if (dom.btnTextValignMiddle) dom.btnTextValignMiddle.classList.toggle("active", valign === "middle");
+          if (dom.btnTextValignBottom) dom.btnTextValignBottom.classList.toggle("active", valign === "bottom");
+
           if (dom.textColorBar) {
             dom.textColorBar.style.background = node.text.color || (AppState.document.theme === "dark" ? "#fafafa" : "#18181b");
           }
@@ -493,6 +506,11 @@ window.MinimalFlow = window.MinimalFlow || {};
         }
         if (dom.strokeColorBar) {
           dom.strokeColorBar.style.background = node.style.stroke || (AppState.document.theme === "dark" ? "#f4f4f5" : "#18181b");
+        }
+
+        if (dom.btnPinToolbar) {
+          dom.btnPinToolbar.classList.toggle("pinned", !!AppState.ui.isToolbarPinned);
+          dom.btnPinToolbar.classList.toggle("active", !!AppState.ui.isToolbarPinned);
         }
 
         if (dom.btnAlignMenu) {
@@ -542,7 +560,11 @@ window.MinimalFlow = window.MinimalFlow || {};
       }
     }
 
-    dom.nodeBar.classList.remove("show");
+    if (AppState.ui.isToolbarPinned) {
+      dom.nodeBar.classList.add("show");
+    } else {
+      dom.nodeBar.classList.remove("show");
+    }
     dom.edgeBar.classList.remove("show");
   }
 
@@ -1333,7 +1355,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (e.target.closest("#app-context-menu")) return;
     closeContextMenu();
 
-    if (e.target.closest("header") || e.target.closest("aside") || e.target.closest(".context-bar") || e.target.closest(".view-controls") || e.target.closest("#tap-connect-banner")) {
+    if (e.target.closest("header") || e.target.closest("aside") || e.target.closest(".context-bar") || e.target.closest(".view-controls") || e.target.closest("#tap-connect-banner") || e.target.closest("#word-color-picker-popover") || e.target.closest(".word-color-btn") || e.target.closest(".context-dropdown-menu") || e.target.closest(".modal-backdrop") || e.target.closest(".modal-dialog")) {
       return;
     }
 
@@ -2301,10 +2323,24 @@ window.MinimalFlow = window.MinimalFlow || {};
     dom.propFontSizeNum.addEventListener("change", () => saveSnapshot());
   }
 
-  document.getElementById("prop-text-align").addEventListener("change", (e) => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node && node.text) { saveSnapshot(); node.text.align = e.target.value; renderAll(); }
-  });
+  function setTextAlign(align) {
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && n.text);
+    if (nodes.length > 0) {
+      saveSnapshot();
+      nodes.forEach(n => { n.text.align = align; });
+      if (dom.btnTextAlignLeft) dom.btnTextAlignLeft.classList.toggle("active", align === "left");
+      if (dom.btnTextAlignCenter) dom.btnTextAlignCenter.classList.toggle("active", align === "center");
+      if (dom.btnTextAlignRight) dom.btnTextAlignRight.classList.toggle("active", align === "right");
+      renderAll();
+    }
+  }
+
+  if (dom.btnTextAlignLeft) dom.btnTextAlignLeft.addEventListener("click", () => setTextAlign("left"));
+  if (dom.btnTextAlignCenter) dom.btnTextAlignCenter.addEventListener("click", () => setTextAlign("center"));
+  if (dom.btnTextAlignRight) dom.btnTextAlignRight.addEventListener("click", () => setTextAlign("right"));
 
   if (dom.btnTextBold) {
     dom.btnTextBold.addEventListener("mousedown", (e) => {
@@ -2609,8 +2645,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     const rect = triggerEl.getBoundingClientRect();
-    dom.wordColorPickerPopover.style.top = `${rect.bottom + window.scrollY + 6}px`;
-    dom.wordColorPickerPopover.style.left = `${Math.max(10, Math.min(window.innerWidth - 250, rect.left + window.scrollX - 40))}px`;
+    dom.wordColorPickerPopover.style.position = "fixed";
+    dom.wordColorPickerPopover.style.top = `${rect.bottom + 6}px`;
+    dom.wordColorPickerPopover.style.left = `${Math.max(10, Math.min(window.innerWidth - 260, rect.left - 20))}px`;
     dom.wordColorPickerPopover.classList.add("show");
   }
 
@@ -2636,15 +2673,15 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     if (activeWordColorTarget === "fill") {
       nodes.forEach(n => { n.style.fill = color; });
-      if (dom.fillColorBar) dom.fillColorBar.style.background = color;
+      if (dom.fillColorBar) dom.fillColorBar.style.background = color === "transparent" ? "none" : color;
       showToast(`Warna latar diubah`);
     } else if (activeWordColorTarget === "stroke") {
       nodes.forEach(n => { n.style.stroke = color; });
-      if (dom.strokeColorBar) dom.strokeColorBar.style.background = color;
+      if (dom.strokeColorBar) dom.strokeColorBar.style.background = color === "transparent" ? "none" : color;
       showToast(`Warna garis tepi diubah`);
     } else if (activeWordColorTarget === "textColor") {
       nodes.forEach(n => { if (n.text) n.text.color = color; });
-      if (dom.textColorBar) dom.textColorBar.style.background = color;
+      if (dom.textColorBar) dom.textColorBar.style.background = color === "transparent" ? "#000000" : color;
       showToast(`Warna teks diubah`);
     }
 
@@ -2685,6 +2722,12 @@ window.MinimalFlow = window.MinimalFlow || {};
       } else {
         applyWordChosenColor(isDark ? "#f4f4f5" : "#18181b");
       }
+    });
+  }
+
+  if (dom.btnWordColorNone) {
+    dom.btnWordColorNone.addEventListener("click", () => {
+      applyWordChosenColor("transparent");
     });
   }
 
@@ -2739,17 +2782,42 @@ window.MinimalFlow = window.MinimalFlow || {};
   if (dom.btnScaleUpAll) dom.btnScaleUpAll.addEventListener("click", () => scaleSelectedNodes(1.15));
   if (dom.btnEqualizeSize) dom.btnEqualizeSize.addEventListener("click", () => equalizeSelectedNodesSize());
 
-  // Text Vertical Alignment
-  if (dom.propTextVAlign) {
-    dom.propTextVAlign.addEventListener("change", (e) => {
-      const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
-        ? Array.from(AppState.ui.selectedNodeIds)
-        : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
-      const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && n.text);
-      if (nodes.length > 0) {
-        saveSnapshot();
-        nodes.forEach(n => { n.text.verticalAlign = e.target.value; });
-        renderAll();
+  // Text Vertical Alignment Buttons (Top, Middle, Bottom)
+  function setTextValign(valign) {
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && n.text);
+    if (nodes.length > 0) {
+      saveSnapshot();
+      nodes.forEach(n => { n.text.verticalAlign = valign; });
+      if (dom.btnTextValignTop) dom.btnTextValignTop.classList.toggle("active", valign === "top");
+      if (dom.btnTextValignMiddle) dom.btnTextValignMiddle.classList.toggle("active", valign === "middle");
+      if (dom.btnTextValignBottom) dom.btnTextValignBottom.classList.toggle("active", valign === "bottom");
+      renderAll();
+    }
+  }
+
+  if (dom.btnTextValignTop) dom.btnTextValignTop.addEventListener("click", () => setTextValign("top"));
+  if (dom.btnTextValignMiddle) dom.btnTextValignMiddle.addEventListener("click", () => setTextValign("middle"));
+  if (dom.btnTextValignBottom) dom.btnTextValignBottom.addEventListener("click", () => setTextValign("bottom"));
+
+  // Toolbar Pin / Lock Toggle Handler
+  if (dom.btnPinToolbar) {
+    dom.btnPinToolbar.addEventListener("click", () => {
+      AppState.ui.isToolbarPinned = !AppState.ui.isToolbarPinned;
+      dom.btnPinToolbar.classList.toggle("pinned", AppState.ui.isToolbarPinned);
+      dom.btnPinToolbar.classList.toggle("active", AppState.ui.isToolbarPinned);
+      dom.btnPinToolbar.setAttribute(
+        "title",
+        AppState.ui.isToolbarPinned ? "Lepas Kunci Toolbar (Otomatis Sembunyi)" : "Kunci Toolbar (Tetap Terbuka saat Klik Kanvas)"
+      );
+      if (AppState.ui.isToolbarPinned) {
+        dom.nodeBar.classList.add("show");
+        showToast("Toolbar dikunci (tetap terbuka)");
+      } else {
+        showToast("Kunci toolbar dilepas");
+        updatePropertiesBar();
       }
     });
   }
