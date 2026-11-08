@@ -1170,6 +1170,8 @@ body.is-tap-connecting .pin-circle {
 
 .resize-handle.nw, .resize-handle.se { cursor: nwse-resize; }
 .resize-handle.ne, .resize-handle.sw { cursor: nesw-resize; }
+.resize-handle.n, .resize-handle.s { cursor: ns-resize; }
+.resize-handle.w, .resize-handle.e { cursor: ew-resize; }
 
 /* Shift + Drag Rubberband Selection Marquee */
 .marquee-selection-box {

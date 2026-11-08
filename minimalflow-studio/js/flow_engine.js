@@ -604,14 +604,22 @@ window.MinimalFlow = window.MinimalFlow || {};
         { id: "nw", x: 0, y: 0 },
         { id: "ne", x: node.width, y: 0 },
         { id: "sw", x: 0, y: node.height },
-        { id: "se", x: node.width, y: node.height }
+        { id: "se", x: node.width, y: node.height },
+        { id: "n",  x: node.width / 2, y: 0 },
+        { id: "s",  x: node.width / 2, y: node.height },
+        { id: "w",  x: 0, y: node.height / 2 },
+        { id: "e",  x: node.width, y: node.height / 2 }
       ];
 
       const titleMap = {
-        nw: "Tarik pin pojok untuk mengubah panjang & lebar (Tahan Alt untuk simetris dari tengah)",
-        ne: "Tarik pin pojok untuk mengubah panjang & lebar (Tahan Alt untuk simetris dari tengah)",
-        se: "Tarik pin pojok untuk mengubah panjang & lebar (Tahan Alt untuk simetris dari tengah)",
-        sw: "Tarik pin pojok untuk mengubah panjang & lebar (Tahan Alt untuk simetris dari tengah)"
+        nw: "Tarik untuk mengubah ukuran (Tahan Alt untuk simetris dari tengah)",
+        ne: "Tarik untuk mengubah ukuran (Tahan Alt untuk simetris dari tengah)",
+        se: "Tarik untuk mengubah ukuran (Tahan Alt untuk simetris dari tengah)",
+        sw: "Tarik untuk mengubah ukuran (Tahan Alt untuk simetris dari tengah)",
+        n:  "Tarik untuk memanjangkan ke atas (Tahan Alt untuk atas & bawah simetris)",
+        s:  "Tarik untuk memanjangkan ke bawah (Tahan Alt untuk bawah & atas simetris)",
+        w:  "Tarik untuk melebarkan ke kiri (Tahan Alt untuk kiri & kanan simetris)",
+        e:  "Tarik untuk melebarkan ke kanan (Tahan Alt untuk kanan & kiri simetris)"
       };
 
       // Garis bounding box seleksi tipis 1px putus-putus mengelilingi chart tanpa menutupi outline asli
