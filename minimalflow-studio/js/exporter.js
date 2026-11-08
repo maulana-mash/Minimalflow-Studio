@@ -30,6 +30,13 @@ window.MinimalFlow = window.MinimalFlow || {};
     clone.querySelectorAll(".pin-circle")?.forEach(el => el.remove());
     clone.querySelectorAll(".edge-handle")?.forEach(el => el.remove());
     clone.querySelectorAll(".edge-hit-area")?.forEach(el => el.remove());
+    // Hapus seluruh indikator visual editor kanvas (ikon gembok terkunci) agar hasil ekspor murni diagram
+    clone.querySelectorAll(".node-lock-indicator, [data-lock-indicator]")?.forEach(el => el.remove());
+    clone.querySelectorAll(".node-group > g").forEach(g => {
+      if (g.querySelector('rect[x="3"][y="11"]') || g.classList.contains("node-lock-indicator")) {
+        g.remove();
+      }
+    });
 
     // Hapus seluruh teks placeholder "Insert text" agar hasil ekspor gambar murni bersih
     clone.querySelectorAll("#layer-elements text, #layer-nodes text, .node-group text").forEach(textEl => {

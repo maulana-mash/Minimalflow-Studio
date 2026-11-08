@@ -494,6 +494,9 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     if (node.locked && !node.isContainer) {
       const lockG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      lockG.setAttribute("class", "node-lock-indicator");
+      lockG.setAttribute("data-lock-indicator", "true");
+      lockG.style.pointerEvents = "none";
       lockG.setAttribute("transform", `translate(${node.width - 20}, 6) scale(0.65)`);
       lockG.innerHTML = `
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="none" stroke="${isDark ? '#f4f4f5' : '#18181b'}" stroke-width="2"/>
