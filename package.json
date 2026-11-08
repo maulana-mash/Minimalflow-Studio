@@ -1,0 +1,21 @@
+{
+  "name": "minimalflow-studio",
+  "version": "1.0.0",
+  "description": "Aplikasi web editor flowchart dan diagram alur berdesain monokrom",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "flowchart",
+    "diagram",
+    "editor",
+    "vanilla-js"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
