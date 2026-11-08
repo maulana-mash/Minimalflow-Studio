@@ -135,9 +135,13 @@ window.MinimalFlow = window.MinimalFlow || {};
           handlePos: H
         };
       }
+      let targetX = P2.x;
+      let targetY = P2.y;
+      if (Math.abs(P1.x - P2.x) < 5) targetX = P1.x;
+      if (Math.abs(P1.y - P2.y) < 5) targetY = P1.y;
       return {
-        pathD: `M ${P1.x} ${P1.y} L ${P2.x} ${P2.y}`,
-        handlePos: { x: midX, y: midY }
+        pathD: `M ${P1.x} ${P1.y} L ${targetX} ${targetY}`,
+        handlePos: { x: (P1.x + targetX) / 2, y: (P1.y + targetY) / 2 }
       };
     }
 
@@ -174,39 +178,59 @@ window.MinimalFlow = window.MinimalFlow || {};
     let handlePos = { x: 0, y: 0 };
 
     if (isSourceH && isTargetH) {
-      let defaultXm = (S1.x + S2.x) / 2;
-      if (n1.x > 0 && n2.x > 0) defaultXm = Math.max(S1.x, S2.x) + 24;
-      if (n1.x < 0 && n2.x < 0) defaultXm = Math.min(S1.x, S2.x) - 24;
+      // Auto-snap horizontal alignment: if vertical distance < 5px and no custom handle offset
+      if (Math.abs(P1.y - P2.y) < 5 && Math.abs(offset.dy) < 2) {
+        const midX = (P1.x + P2.x) / 2;
+        handlePos = { x: midX + offset.dx, y: P1.y };
+        rawPoints = [
+          P1,
+          { x: P2.x, y: P1.y }
+        ];
+      } else {
+        let defaultXm = (S1.x + S2.x) / 2;
+        if (n1.x > 0 && n2.x > 0) defaultXm = Math.max(S1.x, S2.x) + 24;
+        if (n1.x < 0 && n2.x < 0) defaultXm = Math.min(S1.x, S2.x) - 24;
 
-      const xm = defaultXm + offset.dx;
-      const ym = (S1.y + S2.y) / 2 + offset.dy;
-      handlePos = { x: xm, y: ym };
+        const xm = defaultXm + offset.dx;
+        const ym = (S1.y + S2.y) / 2 + offset.dy;
+        handlePos = { x: xm, y: ym };
 
-      rawPoints = [
-        P1,
-        S1,
-        { x: xm, y: S1.y },
-        { x: xm, y: S2.y },
-        S2,
-        P2
-      ];
+        rawPoints = [
+          P1,
+          S1,
+          { x: xm, y: S1.y },
+          { x: xm, y: S2.y },
+          S2,
+          P2
+        ];
+      }
     } else if (!isSourceH && !isTargetH) {
-      let defaultYm = (S1.y + S2.y) / 2;
-      if (n1.y > 0 && n2.y > 0) defaultYm = Math.max(S1.y, S2.y) + 24;
-      if (n1.y < 0 && n2.y < 0) defaultYm = Math.min(S1.y, S2.y) - 24;
+      // Auto-snap vertical alignment: if horizontal distance < 5px and no custom handle offset
+      if (Math.abs(P1.x - P2.x) < 5 && Math.abs(offset.dx) < 2) {
+        const midY = (P1.y + P2.y) / 2;
+        handlePos = { x: P1.x, y: midY + offset.dy };
+        rawPoints = [
+          P1,
+          { x: P1.x, y: P2.y }
+        ];
+      } else {
+        let defaultYm = (S1.y + S2.y) / 2;
+        if (n1.y > 0 && n2.y > 0) defaultYm = Math.max(S1.y, S2.y) + 24;
+        if (n1.y < 0 && n2.y < 0) defaultYm = Math.min(S1.y, S2.y) - 24;
 
-      const ym = defaultYm + offset.dy;
-      const xm = (S1.x + S2.x) / 2 + offset.dx;
-      handlePos = { x: xm, y: ym };
+        const ym = defaultYm + offset.dy;
+        const xm = (S1.x + S2.x) / 2 + offset.dx;
+        handlePos = { x: xm, y: ym };
 
-      rawPoints = [
-        P1,
-        S1,
-        { x: S1.x, y: ym },
-        { x: S2.x, y: ym },
-        S2,
-        P2
-      ];
+        rawPoints = [
+          P1,
+          S1,
+          { x: S1.x, y: ym },
+          { x: S2.x, y: ym },
+          S2,
+          P2
+        ];
+      }
     } else if (isSourceH && !isTargetH) {
       const xm = S2.x + offset.dx;
       const ym = S1.y + offset.dy;
@@ -314,20 +338,20 @@ window.MinimalFlow = window.MinimalFlow || {};
     };
   }
 
-  function createEdgeData(sourceNodeId, sourcePin, targetNodeId, targetPin, isDark = false) {
+  function createEdgeData(sourceNodeId, sourcePin, targetNodeId, targetPin, isDark = false, defaults = {}) {
     const edgeId = "edge_" + Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
     return {
       id: edgeId,
-      type: "step",
+      type: defaults.type || "step",
       source: { nodeId: sourceNodeId, pin: sourcePin },
       target: { nodeId: targetNodeId, pin: targetPin },
       handleOffset: { dx: 0, dy: 0 },
       style: {
         stroke: isDark ? "#f4f4f5" : "#18181b",
-        strokeWidth: 1.5,
-        dashed: "solid",
-        markerStart: "none",
-        markerEnd: "arrow"
+        strokeWidth: defaults.strokeWidth !== undefined ? defaults.strokeWidth : 1.5,
+        dashed: defaults.dashed || "solid",
+        markerStart: defaults.markerStart || "none",
+        markerEnd: defaults.markerEnd !== undefined ? defaults.markerEnd : "arrow"
       }
     };
   }
@@ -546,6 +570,19 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (edge.style.markerStart === "arrow") path.setAttribute("marker-start", "url(#arrow-start)");
 
       g.appendChild(path);
+
+      // Invisible wide hit-area stroke (exactly 8px per user specification) for effortless arrow selection
+      const hitPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      hitPath.setAttribute("class", "edge-hit-area");
+      hitPath.setAttribute("d", pathD);
+      hitPath.setAttribute("fill", "none");
+      hitPath.setAttribute("stroke", "transparent");
+      hitPath.setAttribute("stroke-width", "8");
+      hitPath.setAttribute("stroke-linecap", "round");
+      hitPath.setAttribute("stroke-linejoin", "round");
+      hitPath.style.cursor = "pointer";
+      hitPath.style.pointerEvents = "stroke";
+      g.appendChild(hitPath);
 
       // Render edge label badge if label is provided
       if (edge.label && String(edge.label).trim()) {

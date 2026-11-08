@@ -103,6 +103,25 @@ window.MinimalFlow = window.MinimalFlow || {};
     btnSideLayerUp: document.getElementById("btn-side-layer-up"),
     btnSideLayerBackmost: document.getElementById("btn-side-layer-backmost"),
     btnSideLayerTopmost: document.getElementById("btn-side-layer-topmost"),
+    dualToolbar: document.getElementById("dual-floating-toolbar-wrapper"),
+    btnEdgeTypeDropdown: document.getElementById("btn-edge-type-dropdown"),
+    menuEdgeTypeDropdown: document.getElementById("menu-edge-type-dropdown"),
+    iconEdgeTypeSvg: document.getElementById("icon-edge-type-svg"),
+    btnEdgeMarkerDropdown: document.getElementById("btn-edge-marker-dropdown"),
+    menuEdgeMarkerDropdown: document.getElementById("menu-edge-marker-dropdown"),
+    iconEdgeMarkerSvg: document.getElementById("icon-edge-marker-svg"),
+    btnEdgeWidthDropdown: document.getElementById("btn-edge-width-dropdown"),
+    menuEdgeWidthDropdown: document.getElementById("menu-edge-width-dropdown"),
+    btnEdgeDashDropdown: document.getElementById("btn-edge-dash-dropdown"),
+    menuEdgeDashDropdown: document.getElementById("menu-edge-dash-dropdown"),
+    iconEdgeDashSvg: document.getElementById("icon-edge-dash-svg"),
+    btnResetHandle: document.getElementById("btn-reset-handle"),
+    btnEdgeApplyAll: document.getElementById("btn-edge-apply-all"),
+    btnEdgeSetDefault: document.getElementById("btn-edge-set-default"),
+    btnLayerTabNodes: document.getElementById("btn-layer-tab-nodes"),
+    btnLayerTabEdges: document.getElementById("btn-layer-tab-edges"),
+    layerCountNodes: document.getElementById("layer-count-nodes"),
+    layerCountEdges: document.getElementById("layer-count-edges"),
     nodeBarTitle: document.getElementById("node-bar-title"),
     btnTextBold: document.getElementById("btn-text-bold"),
     btnTextItalic: document.getElementById("btn-text-italic"),
@@ -177,11 +196,27 @@ window.MinimalFlow = window.MinimalFlow || {};
   const activeProj = projectManager.getActiveProject();
   const AppState = {
     document: activeProj ? JSON.parse(JSON.stringify(activeProj.document)) : Projects.getDefaultDocument(),
+    defaults: {
+      edge: (() => {
+        try {
+          const saved = localStorage.getItem("minimalflow_edge_defaults");
+          if (saved) return JSON.parse(saved);
+        } catch (e) {}
+        return {
+          type: "step",
+          strokeWidth: 1.5,
+          dashed: "solid",
+          markerStart: "none",
+          markerEnd: "arrow"
+        };
+      })()
+    },
     ui: {
       mode: "IDLE",
       selectedType: null,
       selectedId: null,
       selectedNodeIds: new Set(),
+      layerFilterTab: "nodes",
       activePin: null,
       draftWire: null,
       pendingPinSource: null,
@@ -466,14 +501,103 @@ window.MinimalFlow = window.MinimalFlow || {};
     updateSelectionVisuals();
   }
 
+  function updateEdgeTypeIcon(type) {
+    if (!dom.btnEdgeTypeDropdown) return;
+    const container = dom.btnEdgeTypeDropdown.querySelector("#icon-edge-type-container") || dom.btnEdgeTypeDropdown;
+    if (type === "bezier") {
+      container.innerHTML = '<svg id="icon-edge-type-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19C10 19 10 5 20 5"/><polyline points="16 2 20 5 17 9"/></svg>';
+    } else if (type === "straight") {
+      container.innerHTML = '<svg id="icon-edge-type-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="4"/><polyline points="14 4 20 4 20 10"/></svg>';
+    } else {
+      container.innerHTML = '<svg id="icon-edge-type-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v14h14"/><polyline points="15 15 19 19 15 23"/></svg>';
+    }
+    if (dom.menuEdgeTypeDropdown) {
+      dom.menuEdgeTypeDropdown.querySelectorAll(".dropdown-item").forEach(item => {
+        item.classList.toggle("active", item.dataset.value === type);
+      });
+    }
+  }
+
+  function updateEdgeMarkerIcon(markerVal) {
+    if (!dom.btnEdgeMarkerDropdown) return;
+    const container = dom.btnEdgeMarkerDropdown.querySelector("#icon-edge-marker-container") || dom.btnEdgeMarkerDropdown;
+    if (markerVal === "both") {
+      container.innerHTML = '<svg id="icon-edge-marker-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 3 12 9 18"/><line x1="3" y1="12" x2="21" y2="12"/><polyline points="15 6 21 12 15 18"/></svg>';
+    } else if (markerVal === "none") {
+      container.innerHTML = '<svg id="icon-edge-marker-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/></svg>';
+    } else {
+      container.innerHTML = '<svg id="icon-edge-marker-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>';
+    }
+    if (dom.menuEdgeMarkerDropdown) {
+      dom.menuEdgeMarkerDropdown.querySelectorAll(".dropdown-item").forEach(item => {
+        item.classList.toggle("active", item.dataset.value === markerVal);
+      });
+    }
+  }
+
+  function updateEdgeWidthSelection(wVal) {
+    if (!dom.menuEdgeWidthDropdown) return;
+    const num = parseFloat(wVal) || 1.5;
+    dom.menuEdgeWidthDropdown.querySelectorAll(".dropdown-item").forEach(item => {
+      const itemNum = parseFloat(item.dataset.value);
+      item.classList.toggle("active", Math.abs(itemNum - num) < 0.05);
+    });
+  }
+
+  function updateEdgeDashIcon(dashVal) {
+    if (!dom.btnEdgeDashDropdown) return;
+    const container = dom.btnEdgeDashDropdown.querySelector("#icon-edge-dash-container") || dom.btnEdgeDashDropdown;
+    if (dashVal === "dashed") {
+      container.innerHTML = '<svg id="icon-edge-dash-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-dasharray="4 3"/></svg>';
+    } else if (dashVal === "dotted") {
+      container.innerHTML = '<svg id="icon-edge-dash-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12" stroke-width="2.5" stroke-dasharray="2 3"/></svg>';
+    } else {
+      container.innerHTML = '<svg id="icon-edge-dash-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12" stroke-width="2"/></svg>';
+    }
+    if (dom.menuEdgeDashDropdown) {
+      dom.menuEdgeDashDropdown.querySelectorAll(".dropdown-item").forEach(item => {
+        item.classList.toggle("active", item.dataset.value === dashVal);
+      });
+    }
+  }
+
+  function closeEdgeDropdowns() {
+    if (dom.menuEdgeTypeDropdown) dom.menuEdgeTypeDropdown.classList.remove("show");
+    if (dom.menuEdgeMarkerDropdown) dom.menuEdgeMarkerDropdown.classList.remove("show");
+    if (dom.menuEdgeWidthDropdown) dom.menuEdgeWidthDropdown.classList.remove("show");
+    if (dom.menuEdgeDashDropdown) dom.menuEdgeDashDropdown.classList.remove("show");
+  }
+
+  function syncEdgeBarUI(edgeOrDefaults) {
+    if (!edgeOrDefaults) return;
+    const type = edgeOrDefaults.type || "step";
+    const markerVal = (edgeOrDefaults.style?.markerStart === "arrow" && edgeOrDefaults.style?.markerEnd === "arrow") ||
+                      (edgeOrDefaults.markerStart === "arrow" && edgeOrDefaults.markerEnd === "arrow") ? "both" :
+                      (edgeOrDefaults.style?.markerEnd === "arrow" || edgeOrDefaults.markerEnd === "arrow") ? "end" : "none";
+    const wVal = String(edgeOrDefaults.style?.strokeWidth !== undefined ? edgeOrDefaults.style.strokeWidth : (edgeOrDefaults.strokeWidth !== undefined ? edgeOrDefaults.strokeWidth : 1.5));
+    const dashVal = edgeOrDefaults.style?.dashed || edgeOrDefaults.dashed || "solid";
+
+    updateEdgeTypeIcon(type);
+    updateEdgeMarkerIcon(markerVal);
+    updateEdgeWidthSelection(wVal);
+    updateEdgeDashIcon(dashVal);
+  }
+
   function updatePropertiesBar() {
-    if (AppState.ui.selectedType === "node" && (AppState.ui.selectedId || (AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0))) {
+    const isNodeSelected = AppState.ui.selectedType === "node" && (AppState.ui.selectedId || (AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0));
+    const isEdgeSelected = AppState.ui.selectedType === "edge" && AppState.ui.selectedId && AppState.document.edges[AppState.ui.selectedId];
+
+    if (isNodeSelected) {
+      if (dom.dualToolbar) dom.dualToolbar.classList.add("show");
+      if (dom.nodeBar) dom.nodeBar.classList.remove("disabled-pod");
+      if (dom.edgeBar) dom.edgeBar.classList.add("disabled-pod");
+
+      // Sinkronisasi ikon panel panah dengan nilai default agar tetap rapi saat mengabu
+      syncEdgeBarUI(AppState.defaults?.edge || {});
+
       const primaryId = AppState.ui.selectedId || Array.from(AppState.ui.selectedNodeIds)[0];
       const node = AppState.document.nodes[primaryId];
       if (node) {
-        dom.nodeBar.classList.add("show");
-        dom.edgeBar.classList.remove("show");
-
         const selectedCount = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 1 ? AppState.ui.selectedNodeIds.size : 1;
         const allLocked = selectedCount > 1
           ? Array.from(AppState.ui.selectedNodeIds).every(id => AppState.document.nodes[id]?.locked)
@@ -589,34 +713,32 @@ window.MinimalFlow = window.MinimalFlow || {};
         if (!matched && node.style.fill && node.style.fill.startsWith("#") && dom.propCustomColor) {
           dom.propCustomColor.value = node.style.fill;
         }
-        return;
       }
+      return;
     }
 
-    if (AppState.ui.selectedType === "edge" && AppState.ui.selectedId) {
+    if (isEdgeSelected) {
+      if (dom.dualToolbar) dom.dualToolbar.classList.add("show");
+      if (dom.nodeBar) dom.nodeBar.classList.add("disabled-pod");
+      if (dom.edgeBar) dom.edgeBar.classList.remove("disabled-pod");
+
       const edge = AppState.document.edges[AppState.ui.selectedId];
       if (edge) {
-        dom.edgeBar.classList.add("show");
-        dom.nodeBar.classList.remove("show");
-
-        document.getElementById("prop-edge-type").value = edge.type;
-        const markerVal = edge.style.markerStart === "arrow" && edge.style.markerEnd === "arrow" ? "both" :
-                          edge.style.markerEnd === "arrow" ? "end" : "none";
-        document.getElementById("prop-edge-marker").value = markerVal;
-        
-        const wVal = String(edge.style.strokeWidth !== undefined ? edge.style.strokeWidth : 1.5);
-        document.getElementById("prop-edge-width").value = wVal;
-        document.getElementById("prop-edge-dash").value = edge.style.dashed || "solid";
-        return;
+        syncEdgeBarUI(edge);
       }
+      return;
     }
 
     if (AppState.ui.isToolbarPinned) {
-      dom.nodeBar.classList.add("show");
+      if (dom.dualToolbar) dom.dualToolbar.classList.add("show");
+      if (dom.nodeBar) dom.nodeBar.classList.add("disabled-pod");
+      if (dom.edgeBar) dom.edgeBar.classList.add("disabled-pod");
     } else {
-      dom.nodeBar.classList.remove("show");
+      if (dom.dualToolbar) dom.dualToolbar.classList.remove("show");
+      if (dom.nodeBar) dom.nodeBar.classList.add("disabled-pod");
+      if (dom.edgeBar) dom.edgeBar.classList.add("disabled-pod");
     }
-    dom.edgeBar.classList.remove("show");
+    closeEdgeDropdowns();
   }
 
   // Tap-to-Connect Workflow
@@ -641,7 +763,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     saveSnapshot();
     const isDark = AppState.document.theme === "dark";
-    const newEdge = FlowEngine.createEdgeData(src.nodeId, src.pin, targetNodeId, targetPin, isDark);
+    const newEdge = FlowEngine.createEdgeData(src.nodeId, src.pin, targetNodeId, targetPin, isDark, AppState.defaults?.edge || {});
     AppState.document.edges[newEdge.id] = newEdge;
 
     cancelTapConnect();
@@ -1115,6 +1237,75 @@ window.MinimalFlow = window.MinimalFlow || {};
     showToast(labelMap[direction] || "Urutan layer diperbarui");
   }
 
+  function reorderSelectedEdges(direction) {
+    const selectedId = AppState.ui.selectedType === "edge" ? AppState.ui.selectedId : null;
+    if (!selectedId || !AppState.document.edges[selectedId]) {
+      showToast("Pilih panah terlebih dahulu untuk mengubah urutan layer");
+      return;
+    }
+
+    const edgeIds = Object.keys(AppState.document.edges);
+    let newOrder = [...edgeIds];
+    const currentIndex = newOrder.indexOf(selectedId);
+    if (currentIndex === -1) return;
+
+    if (direction === "topmost") {
+      newOrder = newOrder.filter(id => id !== selectedId);
+      newOrder.push(selectedId);
+    } else if (direction === "backmost") {
+      newOrder = newOrder.filter(id => id !== selectedId);
+      newOrder.unshift(selectedId);
+    } else if (direction === "forward") {
+      if (currentIndex < newOrder.length - 1) {
+        const temp = newOrder[currentIndex];
+        newOrder[currentIndex] = newOrder[currentIndex + 1];
+        newOrder[currentIndex + 1] = temp;
+      }
+    } else if (direction === "backward") {
+      if (currentIndex > 0) {
+        const temp = newOrder[currentIndex];
+        newOrder[currentIndex] = newOrder[currentIndex - 1];
+        newOrder[currentIndex - 1] = temp;
+      }
+    }
+
+    const isSame = edgeIds.every((id, idx) => id === newOrder[idx]);
+    if (isSame) {
+      if (direction === "forward" || direction === "topmost") {
+        showToast("Panah sudah berada di posisi paling atas");
+      } else {
+        showToast("Panah sudah berada di posisi paling bawah");
+      }
+      return;
+    }
+
+    saveSnapshot();
+    const newEdges = {};
+    newOrder.forEach(id => {
+      newEdges[id] = AppState.document.edges[id];
+    });
+    AppState.document.edges = newEdges;
+
+    renderAll();
+    updateLayerPanel();
+
+    const labelMap = {
+      forward: "Panah naik 1 tingkat (Ctrl + ])",
+      backward: "Panah turun 1 tingkat (Ctrl + [)",
+      topmost: "Panah dipindah ke paling atas (Ctrl + Shift + ])",
+      backmost: "Panah dipindah ke paling bawah (Ctrl + Shift + [)"
+    };
+    showToast(labelMap[direction] || "Urutan panah diperbarui");
+  }
+
+  function handleLayerReorder(direction) {
+    if (AppState.ui.selectedType === "edge" || (AppState.ui.layerFilterTab === "edges" && AppState.ui.selectedType !== "node")) {
+      reorderSelectedEdges(direction);
+    } else {
+      reorderSelectedNodes(direction);
+    }
+  }
+
   function alignSelectedNodesCenter() {
     let ids = [];
     if (AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0) {
@@ -1245,9 +1436,66 @@ window.MinimalFlow = window.MinimalFlow || {};
   function updateLayerPanel() {
     if (!dom.layersListContainer) return;
 
-    const nodes = AppState.document.nodes;
+    const nodes = AppState.document.nodes || {};
+    const edges = AppState.document.edges || {};
     const nodeIds = Object.keys(nodes);
+    const edgeIds = Object.keys(edges);
 
+    if (dom.layerCountNodes) dom.layerCountNodes.textContent = String(nodeIds.length);
+    if (dom.layerCountEdges) dom.layerCountEdges.textContent = String(edgeIds.length);
+    if (dom.btnLayerTabNodes) dom.btnLayerTabNodes.classList.toggle("active", AppState.ui.layerFilterTab !== "edges");
+    if (dom.btnLayerTabEdges) dom.btnLayerTabEdges.classList.toggle("active", AppState.ui.layerFilterTab === "edges");
+
+    if (AppState.ui.layerFilterTab === "edges") {
+      // TAB ARROW: Tampilkan daftar panah (Urutan: paling atas / render terakhir di paling awal list)
+      if (edgeIds.length === 0) {
+        dom.layersListContainer.innerHTML = '<div style="padding:24px 12px; text-align:center; color:var(--text-muted); font-size:11px;">Belum ada panah di kanvas</div>';
+        return;
+      }
+
+      const sortedEdgeIds = [...edgeIds].reverse();
+      dom.layersListContainer.innerHTML = "";
+
+      sortedEdgeIds.forEach(id => {
+        const edge = edges[id];
+        if (!edge) return;
+
+        const isSelected = AppState.ui.selectedType === "edge" && AppState.ui.selectedId === id;
+        const item = document.createElement("div");
+        item.className = `layer-item${isSelected ? " selected" : ""}`;
+        item.dataset.id = id;
+
+        const srcNode = nodes[edge.source?.nodeId];
+        const tgtNode = nodes[edge.target?.nodeId];
+        const getNodeLabel = (n) => {
+          if (!n) return "Node";
+          const raw = (n.text?.content || "").replace(/<[^>]*>/g, "").trim();
+          return raw ? raw.split("\n")[0] : getShapeDefaultLabel(n.type);
+        };
+        const srcLabel = getNodeLabel(srcNode);
+        const tgtLabel = getNodeLabel(tgtNode);
+        const edgeLabel = edge.label ? edge.label : `${srcLabel} → ${tgtLabel}`;
+
+        item.innerHTML = `
+          <div class="layer-icon" title="Panah Penghubung">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="12" x2="20" y2="12"/>
+              <polyline points="14 6 20 12 14 18"/>
+            </svg>
+          </div>
+          <div class="layer-name" title="${escapeHtml(edgeLabel)}">${escapeHtml(edgeLabel)}</div>
+        `;
+
+        item.addEventListener("click", () => {
+          selectItem("edge", id);
+        });
+
+        dom.layersListContainer.appendChild(item);
+      });
+      return;
+    }
+
+    // TAB CHART: Tampilkan daftar chart (Urutan zIndex tertinggi di paling atas list)
     if (nodeIds.length === 0) {
       dom.layersListContainer.innerHTML = '<div style="padding:24px 12px; text-align:center; color:var(--text-muted); font-size:11px;">Belum ada chart di kanvas</div>';
       return;
@@ -2148,7 +2396,8 @@ window.MinimalFlow = window.MinimalFlow || {};
         const newEdge = FlowEngine.createEdgeData(
           draft.sourceNodeId, draft.sourcePin,
           AppState.ui.activePin.nodeId, AppState.ui.activePin.pin,
-          isDark
+          isDark,
+          AppState.defaults?.edge || {}
         );
         AppState.document.edges[newEdge.id] = newEdge;
         selectItem("edge", newEdge.id);
@@ -2386,9 +2635,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     if ((e.ctrlKey || e.metaKey) && isBracketLeft) {
       e.preventDefault();
       if (e.shiftKey) {
-        reorderSelectedNodes("backmost");
+        handleLayerReorder("backmost");
       } else {
-        reorderSelectedNodes("backward");
+        handleLayerReorder("backward");
       }
       return;
     }
@@ -2399,9 +2648,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     if ((e.ctrlKey || e.metaKey) && isBracketRight) {
       e.preventDefault();
       if (e.shiftKey) {
-        reorderSelectedNodes("topmost");
+        handleLayerReorder("topmost");
       } else {
-        reorderSelectedNodes("forward");
+        handleLayerReorder("forward");
       }
       return;
     }
@@ -3201,6 +3450,12 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (dom.menuAlignDropdown && !dom.menuAlignDropdown.contains(e.target) && !e.target.closest("#btn-align-menu")) {
       dom.menuAlignDropdown.classList.remove("show");
     }
+    if (!e.target.closest("#btn-edge-type-dropdown") && !e.target.closest("#menu-edge-type-dropdown") &&
+        !e.target.closest("#btn-edge-marker-dropdown") && !e.target.closest("#menu-edge-marker-dropdown") &&
+        !e.target.closest("#btn-edge-width-dropdown") && !e.target.closest("#menu-edge-width-dropdown") &&
+        !e.target.closest("#btn-edge-dash-dropdown") && !e.target.closest("#menu-edge-dash-dropdown")) {
+      closeEdgeDropdowns();
+    }
   });
 
   // Format Painter (Salin Gaya ala Canva & Word: 1x Klik = 1x Pakai, Klik Ganda = Berkelanjutan)
@@ -3401,10 +3656,10 @@ window.MinimalFlow = window.MinimalFlow || {};
   });
 
   // Layer Z-Order Controls Wiring (Floating Toolbar & Sidebar)
-  if (dom.btnLayerDown) dom.btnLayerDown.addEventListener("click", () => reorderSelectedNodes("backward"));
-  if (dom.btnLayerUp) dom.btnLayerUp.addEventListener("click", () => reorderSelectedNodes("forward"));
-  if (dom.btnLayerBackmost) dom.btnLayerBackmost.addEventListener("click", () => reorderSelectedNodes("backmost"));
-  if (dom.btnLayerTopmost) dom.btnLayerTopmost.addEventListener("click", () => reorderSelectedNodes("topmost"));
+  if (dom.btnLayerDown) dom.btnLayerDown.addEventListener("click", () => handleLayerReorder("backward"));
+  if (dom.btnLayerUp) dom.btnLayerUp.addEventListener("click", () => handleLayerReorder("forward"));
+  if (dom.btnLayerBackmost) dom.btnLayerBackmost.addEventListener("click", () => handleLayerReorder("backmost"));
+  if (dom.btnLayerTopmost) dom.btnLayerTopmost.addEventListener("click", () => handleLayerReorder("topmost"));
   if (dom.btnToggleLayersPanel) dom.btnToggleLayersPanel.addEventListener("click", toggleLayersPanel);
   if (dom.btnAlignCenter) dom.btnAlignCenter.addEventListener("click", alignSelectedNodesCenter);
   if (dom.btnAlignMiddle) dom.btnAlignMiddle.addEventListener("click", alignSelectedNodesMiddle);
@@ -3416,10 +3671,24 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (dom.btnToggleLayersPanel) dom.btnToggleLayersPanel.classList.remove("active");
   });
 
-  if (dom.btnSideLayerDown) dom.btnSideLayerDown.addEventListener("click", () => reorderSelectedNodes("backward"));
-  if (dom.btnSideLayerUp) dom.btnSideLayerUp.addEventListener("click", () => reorderSelectedNodes("forward"));
-  if (dom.btnSideLayerBackmost) dom.btnSideLayerBackmost.addEventListener("click", () => reorderSelectedNodes("backmost"));
-  if (dom.btnSideLayerTopmost) dom.btnSideLayerTopmost.addEventListener("click", () => reorderSelectedNodes("topmost"));
+  if (dom.btnSideLayerDown) dom.btnSideLayerDown.addEventListener("click", () => handleLayerReorder("backward"));
+  if (dom.btnSideLayerUp) dom.btnSideLayerUp.addEventListener("click", () => handleLayerReorder("forward"));
+  if (dom.btnSideLayerBackmost) dom.btnSideLayerBackmost.addEventListener("click", () => handleLayerReorder("backmost"));
+  if (dom.btnSideLayerTopmost) dom.btnSideLayerTopmost.addEventListener("click", () => handleLayerReorder("topmost"));
+
+  // Layer Panel Filter Tabs (Chart vs Panah)
+  if (dom.btnLayerTabNodes) {
+    dom.btnLayerTabNodes.addEventListener("click", () => {
+      AppState.ui.layerFilterTab = "nodes";
+      updateLayerPanel();
+    });
+  }
+  if (dom.btnLayerTabEdges) {
+    dom.btnLayerTabEdges.addEventListener("click", () => {
+      AppState.ui.layerFilterTab = "edges";
+      updateLayerPanel();
+    });
+  }
 
   document.querySelectorAll(".color-swatch").forEach(swatch => {
     swatch.addEventListener("click", () => {
@@ -3435,37 +3704,191 @@ window.MinimalFlow = window.MinimalFlow || {};
     });
   }
 
-  // Edge Property Bar Controls
-  document.getElementById("prop-edge-type").addEventListener("change", (e) => {
-    const edge = AppState.document.edges[AppState.ui.selectedId];
-    if (edge) { saveSnapshot(); edge.type = e.target.value; renderAll(); }
-  });
-  document.getElementById("prop-edge-marker").addEventListener("change", (e) => {
-    const edge = AppState.document.edges[AppState.ui.selectedId];
-    if (edge) {
-      saveSnapshot();
-      const val = e.target.value;
-      edge.style.markerStart = val === "both" ? "arrow" : "none";
-      edge.style.markerEnd = val === "none" ? "none" : "arrow";
-      renderAll();
+  // Edge / Arrow Property Bar Controls (SVG Icon Buttons & Popover Dropdowns)
+  function toggleEdgeDropdown(menuEl, e) {
+    if (e) e.stopPropagation();
+    const willShow = !menuEl.classList.contains("show");
+    closeEdgeDropdowns();
+    if (dom.menuAlignDropdown) dom.menuAlignDropdown.classList.remove("show");
+    closeWordColorPicker();
+    if (willShow) {
+      menuEl.classList.add("show");
     }
-  });
-  document.getElementById("prop-edge-width").addEventListener("change", (e) => {
-    const edge = AppState.document.edges[AppState.ui.selectedId];
-    if (edge) {
+  }
+
+  if (dom.btnEdgeTypeDropdown && dom.menuEdgeTypeDropdown) {
+    dom.btnEdgeTypeDropdown.addEventListener("click", (e) => toggleEdgeDropdown(dom.menuEdgeTypeDropdown, e));
+    dom.menuEdgeTypeDropdown.querySelectorAll(".dropdown-item").forEach(item => {
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const val = item.dataset.value;
+        const edge = AppState.document.edges[AppState.ui.selectedId];
+        if (edge) {
+          saveSnapshot();
+          edge.type = val;
+          renderAll();
+          updatePropertiesBar();
+        }
+        if (AppState.defaults?.edge) {
+          AppState.defaults.edge.type = val;
+        }
+        closeEdgeDropdowns();
+      });
+    });
+  }
+
+  if (dom.btnEdgeMarkerDropdown && dom.menuEdgeMarkerDropdown) {
+    dom.btnEdgeMarkerDropdown.addEventListener("click", (e) => toggleEdgeDropdown(dom.menuEdgeMarkerDropdown, e));
+    dom.menuEdgeMarkerDropdown.querySelectorAll(".dropdown-item").forEach(item => {
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const val = item.dataset.value;
+        const edge = AppState.document.edges[AppState.ui.selectedId];
+        if (edge) {
+          saveSnapshot();
+          edge.style = edge.style || {};
+          edge.style.markerStart = val === "both" ? "arrow" : "none";
+          edge.style.markerEnd = val === "none" ? "none" : "arrow";
+          renderAll();
+          updatePropertiesBar();
+        }
+        if (AppState.defaults?.edge) {
+          AppState.defaults.edge.markerStart = val === "both" ? "arrow" : "none";
+          AppState.defaults.edge.markerEnd = val === "none" ? "none" : "arrow";
+        }
+        closeEdgeDropdowns();
+      });
+    });
+  }
+
+  if (dom.btnEdgeWidthDropdown && dom.menuEdgeWidthDropdown) {
+    dom.btnEdgeWidthDropdown.addEventListener("click", (e) => toggleEdgeDropdown(dom.menuEdgeWidthDropdown, e));
+    dom.menuEdgeWidthDropdown.querySelectorAll(".dropdown-item").forEach(item => {
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const val = parseFloat(item.dataset.value) || 1.5;
+        const edge = AppState.document.edges[AppState.ui.selectedId];
+        if (edge) {
+          saveSnapshot();
+          edge.style = edge.style || {};
+          edge.style.strokeWidth = val;
+          renderAll();
+          updatePropertiesBar();
+        }
+        if (AppState.defaults?.edge) {
+          AppState.defaults.edge.strokeWidth = val;
+        }
+        closeEdgeDropdowns();
+      });
+    });
+  }
+
+  if (dom.btnEdgeDashDropdown && dom.menuEdgeDashDropdown) {
+    dom.btnEdgeDashDropdown.addEventListener("click", (e) => toggleEdgeDropdown(dom.menuEdgeDashDropdown, e));
+    dom.menuEdgeDashDropdown.querySelectorAll(".dropdown-item").forEach(item => {
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const val = item.dataset.value || "solid";
+        const edge = AppState.document.edges[AppState.ui.selectedId];
+        if (edge) {
+          saveSnapshot();
+          edge.style = edge.style || {};
+          edge.style.dashed = val;
+          renderAll();
+          updatePropertiesBar();
+        }
+        if (AppState.defaults?.edge) {
+          AppState.defaults.edge.dashed = val;
+        }
+        closeEdgeDropdowns();
+      });
+    });
+  }
+
+  if (dom.btnResetHandle) {
+    dom.btnResetHandle.addEventListener("click", () => {
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge) {
+        saveSnapshot();
+        edge.handleOffset = { dx: 0, dy: 0 };
+        renderAll();
+        showToast("Belokan panah di-reset");
+      }
+    });
+  }
+
+  if (dom.btnEdgeApplyAll) {
+    dom.btnEdgeApplyAll.addEventListener("click", () => {
+      const edgeKeys = Object.keys(AppState.document.edges || {});
+      if (edgeKeys.length === 0) {
+        showToast("Tidak ada panah di kanvas");
+        return;
+      }
       saveSnapshot();
-      edge.style.strokeWidth = parseFloat(e.target.value) || 1.5;
+      let template = null;
+      if (AppState.ui.selectedType === "edge" && AppState.ui.selectedId && AppState.document.edges[AppState.ui.selectedId]) {
+        const selEdge = AppState.document.edges[AppState.ui.selectedId];
+        template = {
+          type: selEdge.type || "step",
+          strokeWidth: selEdge.style?.strokeWidth !== undefined ? selEdge.style.strokeWidth : 1.5,
+          dashed: selEdge.style?.dashed || "solid",
+          markerStart: selEdge.style?.markerStart || "none",
+          markerEnd: selEdge.style?.markerEnd || "arrow"
+        };
+      } else {
+        template = AppState.defaults?.edge || {
+          type: "step",
+          strokeWidth: 1.5,
+          dashed: "solid",
+          markerStart: "none",
+          markerEnd: "arrow"
+        };
+      }
+
+      edgeKeys.forEach(eId => {
+        const ed = AppState.document.edges[eId];
+        if (ed) {
+          ed.type = template.type;
+          ed.style = ed.style || {};
+          ed.style.strokeWidth = template.strokeWidth;
+          ed.style.dashed = template.dashed;
+          ed.style.markerStart = template.markerStart;
+          ed.style.markerEnd = template.markerEnd;
+        }
+      });
       renderAll();
-    }
-  });
-  document.getElementById("prop-edge-dash").addEventListener("change", (e) => {
-    const edge = AppState.document.edges[AppState.ui.selectedId];
-    if (edge) { saveSnapshot(); edge.style.dashed = e.target.value; renderAll(); }
-  });
-  document.getElementById("btn-reset-handle").addEventListener("click", () => {
-    const edge = AppState.document.edges[AppState.ui.selectedId];
-    if (edge) { saveSnapshot(); edge.handleOffset = { dx: 0, dy: 0 }; renderAll(); showToast("Jalur di-reset"); }
-  });
+      showToast(`Format panah berhasil diterapkan ke semua (${edgeKeys.length}) panah`);
+    });
+  }
+
+  if (dom.btnEdgeSetDefault) {
+    dom.btnEdgeSetDefault.addEventListener("click", () => {
+      let defaults = null;
+      if (AppState.ui.selectedType === "edge" && AppState.ui.selectedId && AppState.document.edges[AppState.ui.selectedId]) {
+        const selEdge = AppState.document.edges[AppState.ui.selectedId];
+        defaults = {
+          type: selEdge.type || "step",
+          strokeWidth: selEdge.style?.strokeWidth !== undefined ? selEdge.style.strokeWidth : 1.5,
+          dashed: selEdge.style?.dashed || "solid",
+          markerStart: selEdge.style?.markerStart || "none",
+          markerEnd: selEdge.style?.markerEnd || "arrow"
+        };
+      } else {
+        defaults = AppState.defaults?.edge || {
+          type: "step",
+          strokeWidth: 1.5,
+          dashed: "solid",
+          markerStart: "none",
+          markerEnd: "arrow"
+        };
+      }
+      AppState.defaults.edge = defaults;
+      try {
+        localStorage.setItem("minimalflow_edge_defaults", JSON.stringify(defaults));
+      } catch (err) {}
+      showToast("Gaya panah disimpan sebagai default panah baru");
+    });
+  }
 
   // Export Menu Controller
   const exportBtn = document.getElementById("btn-export-dropdown");
