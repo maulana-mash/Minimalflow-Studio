@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- MinimalFlow Studio — Refined Vector Logo Mark -->
+  <!-- Pilar Kiri (Tinggi Sedang: Basis Awal) -->
+  <path d="M 12,82 A 5,5 0 0,0 17,87 L 27,87 A 5,5 0 0,0 32,82 L 32,32 L 17,21.5 L 17,25 A 2,2 0 0,1 15,27 L 12,27 Z" fill="currentColor"/>
+  <!-- Pilar Tengah (Tinggi Pendek: Lembah 'M') -->
+  <path d="M 40,82 A 5,5 0 0,0 45,87 L 55,87 A 5,5 0 0,0 60,82 L 60,48 L 45,37.5 L 45,41 A 2,2 0 0,1 43,43 L 40,43 Z" fill="currentColor"/>
+  <!-- Pilar Kanan (Tinggi Puncak: Pertumbuhan / Alur Maju) -->
+  <path d="M 68,82 A 5,5 0 0,0 73,87 L 83,87 A 5,5 0 0,0 88,82 L 88,22 L 73,11.5 L 73,15 A 2,2 0 0,1 71,17 L 68,17 Z" fill="currentColor"/>
+</svg>
