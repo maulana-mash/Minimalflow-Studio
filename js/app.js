@@ -1346,6 +1346,13 @@ window.MinimalFlow = window.MinimalFlow || {};
       }
     });
 
+    const idSetX = new Set(ids);
+    Object.values(AppState.document.edges || {}).forEach(ed => {
+      if (idSetX.has(ed.source?.nodeId) && idSetX.has(ed.target?.nodeId)) {
+        if (ed.handleOffset) ed.handleOffset.dx = 0;
+      }
+    });
+
     renderAll();
     showToast(`${ids.length} chart diratakan ke tengah (Alt + C)`);
   }
@@ -1387,6 +1394,13 @@ window.MinimalFlow = window.MinimalFlow || {};
       const node = AppState.document.nodes[id];
       if (node && !node.locked) {
         node.y = Math.round(commonCenterY - node.height / 2);
+      }
+    });
+
+    const idSetY = new Set(ids);
+    Object.values(AppState.document.edges || {}).forEach(ed => {
+      if (idSetY.has(ed.source?.nodeId) && idSetY.has(ed.target?.nodeId)) {
+        if (ed.handleOffset) ed.handleOffset.dy = 0;
       }
     });
 
@@ -2297,9 +2311,28 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (edge) {
         const dx = world.x - AppState.ui.dragStartPos.x;
         const dy = world.y - AppState.ui.dragStartPos.y;
+
+        const sourceNode = AppState.document.nodes[edge.source?.nodeId];
+        const targetNode = AppState.document.nodes[edge.target?.nodeId];
+        const n1 = sourceNode ? FlowEngine.getNodePinNormal(edge.source.pin, sourceNode.rotation || 0) : { x: 0, y: 0 };
+        const n2 = targetNode ? FlowEngine.getNodePinNormal(edge.target.pin, targetNode.rotation || 0) : { x: 0, y: 0 };
+        const isSourceH = Math.abs(n1.x) > Math.abs(n1.y);
+        const isTargetH = Math.abs(n2.x) > Math.abs(n2.y);
+
+        let newDx = Math.round(AppState.ui.handleInitialOffset.dx + dx);
+        let newDy = Math.round(AppState.ui.handleInitialOffset.dy + dy);
+
+        if (edge.type === "step") {
+          if (isSourceH && isTargetH) {
+            newDy = 0; // Jalur siku vertikal hanya dapat digeser ke kiri/kanan
+          } else if (!isSourceH && !isTargetH) {
+            newDx = 0; // Jalur siku horizontal hanya dapat digeser ke atas/bawah
+          }
+        }
+
         edge.handleOffset = {
-          dx: Math.round(AppState.ui.handleInitialOffset.dx + dx),
-          dy: Math.round(AppState.ui.handleInitialOffset.dy + dy)
+          dx: newDx,
+          dy: newDy
         };
         renderAll();
       }
@@ -3193,6 +3226,17 @@ window.MinimalFlow = window.MinimalFlow || {};
       }
       showToast("Bagi Rata Jarak Vertikal");
     }
+
+    const alignedNodeIds = new Set(nodes.map(n => n.id));
+    Object.values(AppState.document.edges || {}).forEach(ed => {
+      if (alignedNodeIds.has(ed.source?.nodeId) && alignedNodeIds.has(ed.target?.nodeId)) {
+        if (type === "middle" || type === "top" || type === "bottom") {
+          if (ed.handleOffset) ed.handleOffset.dy = 0;
+        } else if (type === "center" || type === "left" || type === "right") {
+          if (ed.handleOffset) ed.handleOffset.dx = 0;
+        }
+      }
+    });
 
     renderAll();
   }

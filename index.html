@@ -505,16 +505,18 @@
           </div>
         </div>
 
-        <!-- POD KANAN: Arrow / Line Properties (Compact Pure SVG Icons + Dropdown Popovers) -->
+        <!-- POD KANAN: Arrow / Line Properties (2-Tier Compact Stacked Pod matching Chart Pod) -->
         <div id="edge-context-bar" class="context-bar context-bar-pod">
-          <div class="context-bar-row" style="align-items:center; gap:4px;">
-            <span class="context-label" style="font-size:11px; font-weight:700; color:var(--text-muted); padding-right:4px; border-right:1px solid var(--border-color);">PANAH</span>
+          <!-- Row 1: Arrow Routing, Marker & Reset Belokan -->
+          <div class="context-bar-row" style="align-items:center; gap:3px;">
+            <span class="context-label" style="font-size:11px; font-weight:700; color:var(--text-muted); padding-right:3px;">PANAH</span>
+            <div style="width:1px; height:16px; background:var(--border-color); margin:0 1px;"></div>
 
             <!-- 1. Ikon Sudut / Routing Dropdown -->
             <div class="dropdown-wrapper">
-              <button id="btn-edge-type-dropdown" class="btn-icon dropdown-trigger" style="width:28px; height:28px;" title="Jenis Sudut / Belokan Jalur (Siku, Kurva, Lurus)">
+              <button id="btn-edge-type-dropdown" class="btn-icon dropdown-trigger" style="width:26px; height:26px;" title="Jenis Sudut / Belokan Jalur (Siku, Kurva, Lurus)">
                 <span id="icon-edge-type-container" style="display:flex; align-items:center; justify-content:center;">
-                  <svg id="icon-edge-type-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg id="icon-edge-type-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 5v14h14"/>
                     <polyline points="15 15 19 19 15 23"/>
                   </svg>
@@ -538,9 +540,9 @@
 
             <!-- 2. Ikon Ujung Panah / Marker Dropdown (Dynamic SVG Icon) -->
             <div class="dropdown-wrapper">
-              <button id="btn-edge-marker-dropdown" class="btn-icon dropdown-trigger" style="width:28px; height:28px;" title="Ujung Panah (Panah Akhir, Dua Arah, Tanpa Panah)">
+              <button id="btn-edge-marker-dropdown" class="btn-icon dropdown-trigger" style="width:26px; height:26px;" title="Ujung Panah (Panah Akhir, Dua Arah, Tanpa Panah)">
                 <span id="icon-edge-marker-container" style="display:flex; align-items:center; justify-content:center;">
-                  <svg id="icon-edge-marker-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg id="icon-edge-marker-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="4" y1="12" x2="20" y2="12"/>
                     <polyline points="14 6 20 12 14 18"/>
                   </svg>
@@ -562,10 +564,21 @@
               </div>
             </div>
 
-            <!-- 3. Ikon Ukuran / Ketebalan Garis Dropdown -->
+            <!-- 3. Ikon Reset Belokan -->
+            <button id="btn-reset-handle" class="btn-icon" style="width:26px; height:26px;" title="Reset Belokan Jalur Garis ke Posisi Semula">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Row 2: Stroke Width, Line Style & Bulk Actions -->
+          <div class="context-bar-row" style="align-items:center; gap:3px;">
+            <!-- 4. Ikon Ukuran / Ketebalan Garis Dropdown -->
             <div class="dropdown-wrapper">
-              <button id="btn-edge-width-dropdown" class="btn-icon dropdown-trigger" style="width:28px; height:28px;" title="Ketebalan Garis (1.0 - 5.0 px)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+              <button id="btn-edge-width-dropdown" class="btn-icon dropdown-trigger" style="width:26px; height:26px;" title="Ketebalan Garis (1.0 - 5.0 px)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
                   <line x1="3" y1="6" x2="21" y2="6" stroke-width="1.2"/>
                   <line x1="3" y1="12" x2="21" y2="12" stroke-width="2.2"/>
                   <line x1="3" y1="18" x2="21" y2="18" stroke-width="3.5"/>
@@ -582,11 +595,11 @@
               </div>
             </div>
 
-            <!-- 4. Ikon Gaya Garis Dropdown (Solid, Putus-putus, Titik-titik) -->
+            <!-- 5. Ikon Gaya Garis Dropdown (Solid, Putus-putus, Titik-titik) -->
             <div class="dropdown-wrapper">
-              <button id="btn-edge-dash-dropdown" class="btn-icon dropdown-trigger" style="width:28px; height:28px;" title="Gaya Garis (Solid, Putus-putus, Titik-titik)">
+              <button id="btn-edge-dash-dropdown" class="btn-icon dropdown-trigger" style="width:26px; height:26px;" title="Gaya Garis (Solid, Putus-putus, Titik-titik)">
                 <span id="icon-edge-dash-container" style="display:flex; align-items:center; justify-content:center;">
-                  <svg id="icon-edge-dash-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                  <svg id="icon-edge-dash-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
                     <line x1="3" y1="12" x2="21" y2="12" stroke-width="2"/>
                   </svg>
                 </span>
@@ -607,18 +620,10 @@
               </div>
             </div>
 
-            <!-- 5. Ikon Reset Belokan -->
-            <button id="btn-reset-handle" class="btn-icon" style="width:28px; height:28px;" title="Reset Belokan Jalur Garis ke Posisi Semula">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                <path d="M3 3v5h5"/>
-              </svg>
-            </button>
-
-            <div style="width:1px; height:18px; background:var(--border-color); margin:0 2px;"></div>
+            <div style="width:1px; height:16px; background:var(--border-color); margin:0 2px;"></div>
 
             <!-- 6. Bulk: Terapkan ke Semua Panah -->
-            <button id="btn-edge-apply-all" class="btn-icon" style="width:28px; height:28px;" title="Terapkan Format Ini ke Semua Panah di Kanvas">
+            <button id="btn-edge-apply-all" class="btn-icon" style="width:26px; height:26px;" title="Terapkan Format Ini ke Semua Panah di Kanvas">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 12h16"/>
                 <polyline points="14 6 20 12 14 18"/>
@@ -628,7 +633,7 @@
             </button>
 
             <!-- 7. Bulk: Jadikan Default untuk Panah Baru -->
-            <button id="btn-edge-set-default" class="btn-icon" style="width:28px; height:28px;" title="Jadikan Gaya Ini Sebagai Default Panah Baru">
+            <button id="btn-edge-set-default" class="btn-icon" style="width:26px; height:26px;" title="Jadikan Gaya Ini Sebagai Default Panah Baru">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
               </svg>

@@ -178,10 +178,10 @@ window.MinimalFlow = window.MinimalFlow || {};
     let handlePos = { x: 0, y: 0 };
 
     if (isSourceH && isTargetH) {
-      // Auto-snap horizontal alignment: if vertical distance < 5px and no custom handle offset
-      if (Math.abs(P1.y - P2.y) < 5 && Math.abs(offset.dy) < 2) {
+      // Auto-snap horizontal alignment: if vertical distance < 10px, snap to perfectly straight horizontal
+      if (Math.abs(P1.y - P2.y) < 10) {
         const midX = (P1.x + P2.x) / 2;
-        handlePos = { x: midX + offset.dx, y: P1.y };
+        handlePos = { x: midX + (offset.dx || 0), y: P1.y };
         rawPoints = [
           P1,
           { x: P2.x, y: P1.y }
@@ -192,8 +192,8 @@ window.MinimalFlow = window.MinimalFlow || {};
         if (n1.x < 0 && n2.x < 0) defaultXm = Math.min(S1.x, S2.x) - 24;
 
         const xm = defaultXm + offset.dx;
-        const ym = (S1.y + S2.y) / 2 + offset.dy;
-        handlePos = { x: xm, y: ym };
+        // Handle pos SELALU terkunci tepat pada garis siku vertikal (tidak lepas ke bawah/atas)
+        handlePos = { x: xm, y: (P1.y + P2.y) / 2 };
 
         rawPoints = [
           P1,
@@ -205,10 +205,10 @@ window.MinimalFlow = window.MinimalFlow || {};
         ];
       }
     } else if (!isSourceH && !isTargetH) {
-      // Auto-snap vertical alignment: if horizontal distance < 5px and no custom handle offset
-      if (Math.abs(P1.x - P2.x) < 5 && Math.abs(offset.dx) < 2) {
+      // Auto-snap vertical alignment: if horizontal distance < 10px, snap to perfectly straight vertical
+      if (Math.abs(P1.x - P2.x) < 10) {
         const midY = (P1.y + P2.y) / 2;
-        handlePos = { x: P1.x, y: midY + offset.dy };
+        handlePos = { x: P1.x, y: midY + (offset.dy || 0) };
         rawPoints = [
           P1,
           { x: P1.x, y: P2.y }
@@ -219,8 +219,8 @@ window.MinimalFlow = window.MinimalFlow || {};
         if (n1.y < 0 && n2.y < 0) defaultYm = Math.min(S1.y, S2.y) - 24;
 
         const ym = defaultYm + offset.dy;
-        const xm = (S1.x + S2.x) / 2 + offset.dx;
-        handlePos = { x: xm, y: ym };
+        // Handle pos SELALU terkunci tepat pada garis siku horizontal (tidak lepas ke kiri/kanan)
+        handlePos = { x: (P1.x + P2.x) / 2, y: ym };
 
         rawPoints = [
           P1,
@@ -627,6 +627,17 @@ window.MinimalFlow = window.MinimalFlow || {};
       handle.setAttribute("r", 4.5);
       handle.setAttribute("data-edge-id", id);
       handle.setAttribute("title", "Tarik untuk membelokkan jalur garis / Double-click untuk reset");
+      if (edge.type === "step") {
+        const n1 = getNodePinNormal(edge.source.pin, sourceNode.rotation || 0);
+        const n2 = getNodePinNormal(edge.target.pin, targetNode.rotation || 0);
+        const isSourceH = Math.abs(n1.x) > Math.abs(n1.y);
+        const isTargetH = Math.abs(n2.x) > Math.abs(n2.y);
+        if (isSourceH && isTargetH) handle.style.cursor = "ew-resize";
+        else if (!isSourceH && !isTargetH) handle.style.cursor = "ns-resize";
+        else handle.style.cursor = "move";
+      } else {
+        handle.style.cursor = "move";
+      }
       g.appendChild(handle);
 
       layerEdgesEl.appendChild(g);
