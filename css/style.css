@@ -654,14 +654,111 @@ main.canvas-viewport.space-pan {
   transform: none !important;
   display: flex !important;
   pointer-events: auto;
-  transition: opacity 0.2s ease, filter 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* Pod yang sedang tidak aktif / mengabu (Solid 100% Opacity, agak gelap/mengabu, tidak tembus pandang) */
 .context-bar-pod.disabled-pod {
-  opacity: 0.38 !important;
-  pointer-events: none !important;
-  filter: grayscale(0.5);
-  cursor: not-allowed;
+  opacity: 1 !important;
+  background: #ebebee !important;
+  border-color: #d4d4d8 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  cursor: default;
+}
+
+body.dark-mode .context-bar-pod.disabled-pod {
+  background: #1c1c1f !important;
+  border-color: #2e2e34 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.context-bar-pod.disabled-pod .context-bar-row {
+  pointer-events: none;
+}
+
+/* Biarkan tombol Pin Toolbar tetap bisa di-klik untuk melepas pin kapan saja */
+.context-bar-pod.disabled-pod #btn-pin-toolbar {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.context-bar-pod.disabled-pod #btn-pin-toolbar svg {
+  stroke: currentColor !important;
+}
+
+.context-bar-pod.disabled-pod #btn-pin-toolbar:not(.pinned) {
+  background: #ffffff !important;
+  border: 1px solid #d4d4d8 !important;
+  color: var(--text-main) !important;
+}
+
+body.dark-mode .context-bar-pod.disabled-pod #btn-pin-toolbar:not(.pinned) {
+  background: #27272a !important;
+  border: 1px solid #3f3f46 !important;
+  color: var(--text-main) !important;
+}
+
+/* Mengabu untuk seluruh teks, label, dan kontrol di dalam pod yang tidak aktif */
+.context-bar-pod.disabled-pod .context-label,
+.context-bar-pod.disabled-pod .prop-select,
+.context-bar-pod.disabled-pod .prop-input-number,
+.context-bar-pod.disabled-pod .btn-icon,
+.context-bar-pod.disabled-pod .prop-slider-group,
+.context-bar-pod.disabled-pod span {
+  color: var(--text-subtle) !important;
+  border-color: #d4d4d8 !important;
+}
+
+body.dark-mode .context-bar-pod.disabled-pod .context-label,
+body.dark-mode .context-bar-pod.disabled-pod .prop-select,
+body.dark-mode .context-bar-pod.disabled-pod .prop-input-number,
+body.dark-mode .context-bar-pod.disabled-pod .btn-icon,
+body.dark-mode .context-bar-pod.disabled-pod .prop-slider-group,
+body.dark-mode .context-bar-pod.disabled-pod span {
+  color: var(--text-muted) !important;
+  border-color: #2e2e34 !important;
+}
+
+.context-bar-pod.disabled-pod .prop-select,
+.context-bar-pod.disabled-pod .prop-input-number {
+  background: #dedee2 !important;
+  color: #71717a !important;
+}
+
+body.dark-mode .context-bar-pod.disabled-pod .prop-select,
+body.dark-mode .context-bar-pod.disabled-pod .prop-input-number {
+  background: #151518 !important;
+  color: #71717a !important;
+}
+
+.context-bar-pod.disabled-pod .btn-icon:not(#btn-pin-toolbar) {
+  background: transparent !important;
+  color: #8e8e93 !important;
+  border-color: transparent !important;
+}
+
+.context-bar-pod.disabled-pod svg:not(#btn-pin-toolbar svg) {
+  stroke: #8e8e93 !important;
+}
+
+body.dark-mode .context-bar-pod.disabled-pod .btn-icon:not(#btn-pin-toolbar) {
+  color: #636366 !important;
+}
+
+body.dark-mode .context-bar-pod.disabled-pod svg:not(#btn-pin-toolbar svg) {
+  stroke: #636366 !important;
+}
+
+.context-bar-pod.disabled-pod div[style*="background:var(--border-color)"] {
+  background: #d4d4d8 !important;
+}
+
+body.dark-mode .context-bar-pod.disabled-pod div[style*="background:var(--border-color)"] {
+  background: #2e2e34 !important;
+}
+
+.context-bar-pod.disabled-pod .color-indicator-bar {
+  opacity: 0.35 !important;
 }
 
 .edge-hit-area {

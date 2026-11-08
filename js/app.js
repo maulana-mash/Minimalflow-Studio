@@ -584,6 +584,11 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   function updatePropertiesBar() {
+    if (dom.btnPinToolbar) {
+      dom.btnPinToolbar.classList.toggle("pinned", !!AppState.ui.isToolbarPinned);
+      dom.btnPinToolbar.classList.toggle("active", !!AppState.ui.isToolbarPinned);
+    }
+
     const isNodeSelected = AppState.ui.selectedType === "node" && (AppState.ui.selectedId || (AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0));
     const isEdgeSelected = AppState.ui.selectedType === "edge" && AppState.ui.selectedId && AppState.document.edges[AppState.ui.selectedId];
 
@@ -733,6 +738,8 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (dom.dualToolbar) dom.dualToolbar.classList.add("show");
       if (dom.nodeBar) dom.nodeBar.classList.add("disabled-pod");
       if (dom.edgeBar) dom.edgeBar.classList.add("disabled-pod");
+      if (dom.nodeBarTitle) dom.nodeBarTitle.textContent = "Node";
+      syncEdgeBarUI(AppState.defaults?.edge || {});
     } else {
       if (dom.dualToolbar) dom.dualToolbar.classList.remove("show");
       if (dom.nodeBar) dom.nodeBar.classList.add("disabled-pod");
