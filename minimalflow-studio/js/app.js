@@ -55,6 +55,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     btnTextValignMiddle: document.getElementById("btn-text-valign-middle"),
     btnTextValignBottom: document.getElementById("btn-text-valign-bottom"),
     btnPinToolbar: document.getElementById("btn-pin-toolbar"),
+    btnFormatPainter: document.getElementById("btn-format-painter"),
     btnTextColorPicker: document.getElementById("btn-text-color-picker"),
     textColorBar: document.getElementById("text-color-bar"),
     btnScaleDownAll: document.getElementById("btn-scale-down-all"),
@@ -194,7 +195,12 @@ window.MinimalFlow = window.MinimalFlow || {};
       lastClickNodeId: null,
       hasMovedNode: false,
       isSpacePressed: false,
-      isToolbarPinned: false
+      isToolbarPinned: false,
+      formatPainter: {
+        active: false,
+        mode: "single",
+        style: null
+      }
     }
   };
 
@@ -517,6 +523,11 @@ window.MinimalFlow = window.MinimalFlow || {};
           dom.btnPinToolbar.classList.toggle("active", !!AppState.ui.isToolbarPinned);
         }
 
+        if (dom.btnFormatPainter) {
+          dom.btnFormatPainter.classList.toggle("active", !!AppState.ui.formatPainter?.active);
+          dom.btnFormatPainter.classList.toggle("persistent", AppState.ui.formatPainter?.mode === "persistent");
+        }
+
         if (dom.btnAlignMenu) {
           const isMulti = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size >= 2;
           dom.btnAlignMenu.style.opacity = isMulti ? "1" : "0.75";
@@ -818,6 +829,134 @@ window.MinimalFlow = window.MinimalFlow || {};
     AppState.ui.selectedNodeIds = newSelectedIds;
     renderAll();
     showToast(nodesToPaste.length > 1 ? `${nodesToPaste.length} chart ditempel di tengah kanvas` : "Chart ditempel di tengah kanvas (Ctrl+V)");
+  }
+
+  // ========================================================================
+  // FORMAT PAINTER (SALIN & TEMPEL GAYA ALA CANVA & WORD)
+  // ========================================================================
+  function copyNodeStyle(explicitId = null) {
+    let id = explicitId;
+    if (!id && AppState.ui.selectedType === "node" && AppState.ui.selectedId) {
+      id = AppState.ui.selectedId;
+    } else if (!id && AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0) {
+      id = Array.from(AppState.ui.selectedNodeIds)[0];
+    }
+
+    if (!id) return null;
+    const node = AppState.document.nodes[id];
+    if (!node) return null;
+
+    const styleData = {
+      style: {
+        fill: node.style ? node.style.fill : "#ffffff",
+        stroke: node.style ? node.style.stroke : "#18181b",
+        strokeWidth: node.style ? (node.style.strokeWidth || 1.5) : 1.5,
+        dashed: node.style ? (node.style.dashed || "solid") : "solid"
+      },
+      text: node.text ? {
+        fontFamily: node.text.fontFamily || "Poppins, sans-serif",
+        fontSize: node.text.fontSize || 14,
+        bold: !!node.text.bold,
+        italic: !!node.text.italic,
+        underline: !!node.text.underline,
+        color: node.text.color || (AppState.document.theme === "dark" ? "#f4f4f5" : "#18181b"),
+        align: node.text.align || "center",
+        verticalAlign: node.text.verticalAlign || "middle",
+        paddingX: node.text.paddingX !== undefined ? node.text.paddingX : 14,
+        paddingY: node.text.paddingY !== undefined ? node.text.paddingY : 10
+      } : null
+    };
+
+    AppState.ui.formatPainter.style = styleData;
+    return styleData;
+  }
+
+  function applyNodeStyle(targetNodeId, styleData) {
+    if (!styleData || !targetNodeId) return false;
+    const targetNode = AppState.document.nodes[targetNodeId];
+    if (!targetNode || targetNode.locked) return false;
+
+    // Terapkan gaya visual wadah (fill, stroke, strokeWidth, dashed)
+    if (styleData.style) {
+      targetNode.style = targetNode.style || {};
+      if (styleData.style.fill !== undefined) targetNode.style.fill = styleData.style.fill;
+      if (styleData.style.stroke !== undefined) targetNode.style.stroke = styleData.style.stroke;
+      if (styleData.style.strokeWidth !== undefined) targetNode.style.strokeWidth = styleData.style.strokeWidth;
+      if (styleData.style.dashed !== undefined) targetNode.style.dashed = styleData.style.dashed;
+    }
+
+    // Terapkan tipografi & tata letak teks tanpa merusak teks konten aslinya
+    if (styleData.text && targetNode.text) {
+      targetNode.text.fontFamily = styleData.text.fontFamily;
+      targetNode.text.fontSize = styleData.text.fontSize;
+      targetNode.text.bold = styleData.text.bold;
+      targetNode.text.italic = styleData.text.italic;
+      targetNode.text.underline = styleData.text.underline;
+      targetNode.text.color = styleData.text.color;
+      targetNode.text.align = styleData.text.align;
+      targetNode.text.verticalAlign = styleData.text.verticalAlign;
+      targetNode.text.paddingX = styleData.text.paddingX;
+      targetNode.text.paddingY = styleData.text.paddingY;
+    }
+
+    return true;
+  }
+
+  function activateFormatPainter(mode = "single") {
+    AppState.ui.formatPainter.active = true;
+    AppState.ui.formatPainter.mode = mode;
+
+    if (dom.btnFormatPainter) {
+      dom.btnFormatPainter.classList.add("active");
+      dom.btnFormatPainter.classList.toggle("persistent", mode === "persistent");
+    }
+    if (dom.container) {
+      dom.container.classList.add("format-painter-active");
+    }
+  }
+
+  function deactivateFormatPainter() {
+    AppState.ui.formatPainter.active = false;
+    AppState.ui.formatPainter.mode = "single";
+
+    if (dom.btnFormatPainter) {
+      dom.btnFormatPainter.classList.remove("active", "persistent");
+    }
+    if (dom.container) {
+      dom.container.classList.remove("format-painter-active");
+    }
+  }
+
+  function pasteStyleToSelectedNodes() {
+    if (!AppState.ui.formatPainter.style) {
+      showToast("Salin gaya chart terlebih dahulu (Ctrl+Alt+C atau klik ikon kuas)");
+      return;
+    }
+    let targetIds = [];
+    if (AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0) {
+      targetIds = Array.from(AppState.ui.selectedNodeIds);
+    } else if (AppState.ui.selectedType === "node" && AppState.ui.selectedId) {
+      targetIds = [AppState.ui.selectedId];
+    }
+
+    if (targetIds.length === 0) {
+      showToast("Pilih chart tujuan untuk menerapkan gaya");
+      return;
+    }
+
+    saveSnapshot();
+    let appliedCount = 0;
+    targetIds.forEach(id => {
+      if (applyNodeStyle(id, AppState.ui.formatPainter.style)) {
+        appliedCount++;
+      }
+    });
+
+    if (appliedCount > 0) {
+      renderAll();
+      updatePropertiesBar();
+      showToast(appliedCount > 1 ? `Gaya diterapkan ke ${appliedCount} chart` : "Gaya diterapkan ke chart");
+    }
   }
 
   function toggleNodeLock(nodeId) {
@@ -1471,6 +1610,26 @@ window.MinimalFlow = window.MinimalFlow || {};
     const nodeGroup = e.target.closest(".node-group");
     if (nodeGroup) {
       const nodeId = nodeGroup.dataset.id;
+
+      // Format Painter: Jika kuas cat aktif, terapkan gaya ke node ini
+      if (AppState.ui.formatPainter && AppState.ui.formatPainter.active) {
+        if (nodeId && AppState.ui.formatPainter.style) {
+          saveSnapshot();
+          applyNodeStyle(nodeId, AppState.ui.formatPainter.style);
+          selectSingleNode(nodeId, true);
+          renderAll();
+          updatePropertiesBar();
+
+          if (AppState.ui.formatPainter.mode === "single") {
+            deactivateFormatPainter();
+            showToast("Gaya chart diterapkan");
+          } else {
+            showToast("Gaya chart diterapkan (Kuas Cat aktif, tekan Esc untuk selesai)");
+          }
+        }
+        return;
+      }
+
       const now = Date.now();
 
       // Check double click explicitly
@@ -2005,14 +2164,34 @@ window.MinimalFlow = window.MinimalFlow || {};
   window.addEventListener("keydown", (e) => {
     if (AppState.ui.mode === "EDITING_TEXT") return;
 
+    // Check if user is typing or interacting with an input/textarea/select element
+    const isInputActive = document.activeElement && (
+      document.activeElement.tagName === "INPUT" ||
+      document.activeElement.tagName === "TEXTAREA" ||
+      document.activeElement.tagName === "SELECT" ||
+      document.activeElement.isContentEditable
+    );
+
+    if (isInputActive) {
+      if (e.key === "Escape") {
+        document.activeElement.blur();
+      }
+      return; // Biarkan browser menangani native text copy/paste/cut/selection di dalam input tanpa mencegat!
+    }
+
     // Spacebar Panning Shortcut (Hold Space to Pan Canvas)
-    if (e.code === "Space" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA" && !document.activeElement?.isContentEditable) {
+    if (e.code === "Space") {
       e.preventDefault();
       AppState.ui.isSpacePressed = true;
       dom.container.classList.add("space-pan");
     }
 
     if (e.key === "Escape") {
+      if (AppState.ui.formatPainter && AppState.ui.formatPainter.active) {
+        deactivateFormatPainter();
+        showToast("Kuas Cat dibatalkan");
+        return;
+      }
       if (dom.exportModalBackdrop && dom.exportModalBackdrop.classList.contains("show")) {
         closeExportModal();
         return;
@@ -2038,7 +2217,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     // Ctrl + A: Select All Charts
-    if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")) {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "a" || e.key === "A")) {
       e.preventDefault();
       selectAllNodes();
       return;
@@ -2072,14 +2251,34 @@ window.MinimalFlow = window.MinimalFlow || {};
       return;
     }
 
-    // Copy: Ctrl + C
-    if (e.key === "c" && (e.ctrlKey || e.metaKey)) {
+    // Format Painter: Ctrl + Alt + C (Salin Gaya)
+    if ((e.ctrlKey || e.metaKey) && e.altKey && (e.key === "c" || e.key === "C" || e.code === "KeyC")) {
+      e.preventDefault();
+      const style = copyNodeStyle();
+      if (style) {
+        activateFormatPainter("single");
+        showToast("Gaya disalin (Ctrl+Alt+C). Klik chart lain atau tekan Ctrl+Alt+V.");
+      } else {
+        showToast("Pilih chart terlebih dahulu untuk menyalin gaya");
+      }
+      return;
+    }
+
+    // Format Painter: Ctrl + Alt + V (Tempel Gaya)
+    if ((e.ctrlKey || e.metaKey) && e.altKey && (e.key === "v" || e.key === "V" || e.code === "KeyV")) {
+      e.preventDefault();
+      pasteStyleToSelectedNodes();
+      return;
+    }
+
+    // Copy Chart: Ctrl + C
+    if (e.key === "c" && (e.ctrlKey || e.metaKey) && !e.altKey) {
       copySelectedNodes();
       return;
     }
 
-    // Paste: Ctrl + V
-    if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
+    // Paste Chart: Ctrl + V
+    if (e.key === "v" && (e.ctrlKey || e.metaKey) && !e.altKey) {
       pasteClipboardNode();
       return;
     }
@@ -2732,9 +2931,38 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
   });
 
+  // Format Painter (Salin Gaya ala Canva & Word: 1x Klik = 1x Pakai, Klik Ganda = Berkelanjutan)
+  if (dom.btnFormatPainter) {
+    dom.btnFormatPainter.addEventListener("click", (e) => {
+      // Jika mode berkelanjutan sedang aktif, klik lagi untuk menonaktifkan
+      if (AppState.ui.formatPainter && AppState.ui.formatPainter.active && AppState.ui.formatPainter.mode === "persistent") {
+        deactivateFormatPainter();
+        showToast("Kuas Cat dinonaktifkan");
+        return;
+      }
+      const style = copyNodeStyle();
+      if (!style) {
+        showToast("Pilih chart terlebih dahulu untuk menyalin gaya");
+        return;
+      }
+      activateFormatPainter("single");
+      showToast("Kuas Cat aktif (1x). Klik chart tujuan untuk menerapkan gaya.");
+    });
+
+    dom.btnFormatPainter.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      const style = copyNodeStyle();
+      if (!style) {
+        showToast("Pilih chart terlebih dahulu untuk menyalin gaya");
+        return;
+      }
+      activateFormatPainter("persistent");
+      showToast("Kuas Cat aktif berkelanjutan. Klik chart mana saja (Esc untuk selesai).");
+    });
+  }
+
   // Multi-Node Batch Resize Inputs
-  dom.propNodeW.addEventListener("change", (e) => {
-    const val = Math.max(10, parseInt(e.target.value) || 10);
+  function updateBatchWidth(val) {
     const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
       ? Array.from(AppState.ui.selectedNodeIds)
       : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
@@ -2744,10 +2972,9 @@ window.MinimalFlow = window.MinimalFlow || {};
       nodes.forEach(n => { n.width = val; });
       renderAll();
     }
-  });
+  }
 
-  dom.propNodeH.addEventListener("change", (e) => {
-    const val = Math.max(10, parseInt(e.target.value) || 10);
+  function updateBatchHeight(val) {
     const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
       ? Array.from(AppState.ui.selectedNodeIds)
       : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
@@ -2756,6 +2983,30 @@ window.MinimalFlow = window.MinimalFlow || {};
       saveSnapshot();
       nodes.forEach(n => { n.height = val; });
       renderAll();
+    }
+  }
+
+  dom.propNodeW.addEventListener("change", (e) => {
+    const val = Math.max(10, parseInt(e.target.value) || 10);
+    updateBatchWidth(val);
+  });
+  dom.propNodeW.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const val = Math.max(10, parseInt(e.target.value) || 10);
+      updateBatchWidth(val);
+      dom.propNodeW.blur();
+    }
+  });
+
+  dom.propNodeH.addEventListener("change", (e) => {
+    const val = Math.max(10, parseInt(e.target.value) || 10);
+    updateBatchHeight(val);
+  });
+  dom.propNodeH.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const val = Math.max(10, parseInt(e.target.value) || 10);
+      updateBatchHeight(val);
+      dom.propNodeH.blur();
     }
   });
 

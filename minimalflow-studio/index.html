@@ -309,8 +309,16 @@
             </select>
           </div>
 
-          <!-- Pin / Lock Toolbar Button (Fitur Kunci Toolbar agar Tidak Selalu Hilang) -->
-          <div style="margin-left:auto; display:flex; align-items:center;">
+          <!-- Format Painter (Salin Gaya) & Pin / Lock Toolbar -->
+          <div style="margin-left:auto; display:flex; align-items:center; gap:3px;">
+            <button id="btn-format-painter" class="btn-icon" style="width:26px; height:26px;" title="Salin Gaya / Format Painter (1x Klik: Terapkan 1x, Klik Ganda: Terapkan Berulang, Esc: Batal, Shortcut: Ctrl+Alt+C / Ctrl+Alt+V)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="16" height="6" rx="2"/>
+                <path d="M18 6h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-9"/>
+                <path d="M11 13v3"/>
+                <rect x="9.5" y="16" width="3" height="6" rx="1.5"/>
+              </svg>
+            </button>
             <button id="btn-pin-toolbar" class="btn-icon" style="width:26px; height:26px;" title="Kunci Toolbar (Tetap Terbuka saat Klik Kanvas)">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="17" x2="12" y2="22"/>

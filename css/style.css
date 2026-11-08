@@ -1438,6 +1438,44 @@ body.dark-mode .status-error {
   color: var(--bg-surface) !important;
 }
 
+#btn-format-painter.active {
+  background: var(--accent-black) !important;
+  color: var(--bg-surface) !important;
+  border-color: var(--accent-black) !important;
+}
+
+#btn-format-painter.active.persistent {
+  position: relative;
+  box-shadow: 0 0 0 2px #3b82f6 !important;
+}
+
+#btn-format-painter.active.persistent::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 5px;
+  height: 5px;
+  background: #3b82f6;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #3b82f6;
+}
+
+/* Canvas cursor & interaction when Format Painter is active */
+.format-painter-active,
+.format-painter-active #canvas-svg,
+.format-painter-active .node-group {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2318181b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='3' width='14' height='5' rx='1.5' fill='%233b82f6'/%3E%3Cpath d='M16 5.5h2a2 2 0 0 1 2 2v2.5a2 2 0 0 1-2 2h-7'/%3E%3Cpath d='M11 12v3'/%3E%3Crect x='9.5' y='15' width='3' height='5' rx='1' fill='%2318181b'/%3E%3C/svg%3E") 2 2, crosshair !important;
+}
+
+.format-painter-active .node-group:hover rect,
+.format-painter-active .node-group:hover circle,
+.format-painter-active .node-group:hover polygon,
+.format-painter-active .node-group:hover path {
+  outline: 2px dashed #3b82f6 !important;
+  outline-offset: 2px;
+}
+
 .word-color-btn {
   border: 1px solid var(--border-color);
   background: var(--bg-surface);
