@@ -45,7 +45,11 @@ window.MinimalFlow = window.MinimalFlow || {};
       .replace(/<\/p><p>/gi, "\n")
       .replace(/<p>/gi, "\n")
       .replace(/<\/p>/gi, "")
-      .replace(/&nbsp;/g, " ");
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/g, "'");
 
     res = res.replace(/<strong\b[^>]*>/gi, "<b>").replace(/<\/strong>/gi, "</b>");
     res = res.replace(/<em\b[^>]*>/gi, "<i>").replace(/<\/em>/gi, "</i>");
@@ -58,6 +62,12 @@ window.MinimalFlow = window.MinimalFlow || {};
   // Parse inline Markdown / HTML tags into styled spans (100% clean, ZERO asterisks)
   function parseInlineSpans(str, defaultBold = false, defaultItalic = false) {
     if (!str) return [];
+    // Decode HTML entities yang tersimpan agar teks tampil murni (tanpa &amp;)
+    str = String(str)
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/g, "'");
     // Otomatis bersihkan tanda bintang markdown warisan menjadi tag visual murni
     str = cleanMarkdownToHtml(str);
 
@@ -338,7 +348,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     const isPh = !rawContent || rawContent.toLowerCase() === "insert text" || !!node.text.isPlaceholder;
 
     // Bersihkan sintaks markdown bintang menjadi HTML visual murni
-    const initialHtml = isPh ? "" : cleanMarkdownToHtml(node.text.content || "");
+    const cleanContent = (node.text.content || "").replace(/&amp;/g, "&");
+    const initialHtml = isPh ? "" : cleanMarkdownToHtml(cleanContent).replace(/&(?!(amp|lt|gt|quot|apos|nbsp);)/g, "&amp;");
     editor.innerHTML = initialHtml;
     editor.setAttribute("data-placeholder", "Ketik teks di sini...");
 
