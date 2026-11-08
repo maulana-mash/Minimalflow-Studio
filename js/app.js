@@ -118,10 +118,10 @@ window.MinimalFlow = window.MinimalFlow || {};
     btnResetHandle: document.getElementById("btn-reset-handle"),
     btnEdgeApplyAll: document.getElementById("btn-edge-apply-all"),
     btnEdgeSetDefault: document.getElementById("btn-edge-set-default"),
-    btnLayerTabNodes: document.getElementById("btn-layer-tab-nodes"),
-    btnLayerTabEdges: document.getElementById("btn-layer-tab-edges"),
-    layerCountNodes: document.getElementById("layer-count-nodes"),
-    layerCountEdges: document.getElementById("layer-count-edges"),
+    btnToggleArrowLayer: document.getElementById("btn-toggle-arrow-layer"),
+    labelArrowLayerVisibility: document.getElementById("label-arrow-layer-visibility"),
+    iconEyeArrowContainer: document.getElementById("icon-eye-arrow-container"),
+    layerTotalCount: document.getElementById("layer-total-count"),
     nodeBarTitle: document.getElementById("node-bar-title"),
     btnTextBold: document.getElementById("btn-text-bold"),
     btnTextItalic: document.getElementById("btn-text-italic"),
@@ -234,6 +234,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       hasMovedNode: false,
       isSpacePressed: false,
       isToolbarPinned: false,
+      showArrowsInLayerPanel: true,
       formatPainter: {
         active: false,
         mode: "single",
@@ -1305,12 +1306,126 @@ window.MinimalFlow = window.MinimalFlow || {};
     showToast(labelMap[direction] || "Urutan panah diperbarui");
   }
 
-  function handleLayerReorder(direction) {
-    if (AppState.ui.selectedType === "edge" || (AppState.ui.layerFilterTab === "edges" && AppState.ui.selectedType !== "node")) {
-      reorderSelectedEdges(direction);
-    } else {
-      reorderSelectedNodes(direction);
+  function getAllLayers(includeArrows = true) {
+    const nodes = AppState.document.nodes || {};
+    const edges = AppState.document.edges || {};
+
+    const items = [];
+
+    // Collect all nodes
+    Object.keys(nodes).forEach(id => {
+      const n = nodes[id];
+      items.push({
+        type: "node",
+        id,
+        zIndex: n.zIndex !== undefined ? n.zIndex : 0,
+        isContainer: !!n.isContainer
+      });
+    });
+
+    // Collect all edges if requested
+    if (includeArrows) {
+      Object.keys(edges).forEach(id => {
+        const e = edges[id];
+        let z = e.zIndex;
+        if (z === undefined) {
+          const srcZ = nodes[e.source?.nodeId]?.zIndex ?? 0;
+          const tgtZ = nodes[e.target?.nodeId]?.zIndex ?? 0;
+          z = Math.max(srcZ, tgtZ) + 0.5;
+        }
+        items.push({
+          type: "edge",
+          id,
+          zIndex: z,
+          isContainer: false
+        });
+      });
     }
+
+    // Sort descending: highest zIndex at top of list (index 0 = topmost layer)
+    items.sort((a, b) => {
+      if (a.isContainer !== b.isContainer) return a.isContainer ? 1 : -1;
+      return b.zIndex - a.zIndex;
+    });
+
+    return items;
+  }
+
+  function handleLayerReorder(direction) {
+    const selectedNodeId = AppState.ui.selectedType === "node" 
+      ? (AppState.ui.selectedId || (AppState.ui.selectedNodeIds && Array.from(AppState.ui.selectedNodeIds)[0]))
+      : null;
+    const selectedEdgeId = AppState.ui.selectedType === "edge" ? AppState.ui.selectedId : null;
+    const targetId = selectedNodeId || selectedEdgeId;
+
+    if (!targetId) {
+      showToast("Pilih chart atau panah terlebih dahulu untuk mengubah urutan layer");
+      return;
+    }
+
+    // Selalu gunakan seluruh susunan layer (termasuk panah) agar urutan absolut terjaga
+    const items = getAllLayers(true);
+    const currentIndex = items.findIndex(it => it.id === targetId);
+    if (currentIndex === -1) return;
+
+    let newItems = [...items];
+
+    if (direction === "topmost") {
+      const [moved] = newItems.splice(currentIndex, 1);
+      newItems.unshift(moved);
+    } else if (direction === "backmost") {
+      const [moved] = newItems.splice(currentIndex, 1);
+      newItems.push(moved);
+    } else if (direction === "forward") {
+      if (currentIndex > 0) {
+        const temp = newItems[currentIndex];
+        newItems[currentIndex] = newItems[currentIndex - 1];
+        newItems[currentIndex - 1] = temp;
+      }
+    } else if (direction === "backward") {
+      if (currentIndex < newItems.length - 1) {
+        const temp = newItems[currentIndex];
+        newItems[currentIndex] = newItems[currentIndex + 1];
+        newItems[currentIndex + 1] = temp;
+      }
+    }
+
+    const isSame = items.every((it, idx) => it.id === newItems[idx].id);
+    if (isSame) {
+      if (direction === "forward" || direction === "topmost") {
+        showToast("Objek sudah berada di layer paling atas");
+      } else {
+        showToast("Objek sudah berada di layer paling bawah");
+      }
+      return;
+    }
+
+    saveSnapshot();
+
+    // Reassign zIndex across nodes and edges based on new unified order
+    const total = newItems.length;
+    newItems.forEach((item, idx) => {
+      const newZ = total - idx;
+      if (item.type === "node") {
+        const n = AppState.document.nodes[item.id];
+        if (n) n.zIndex = newZ;
+      } else if (item.type === "edge") {
+        const e = AppState.document.edges[item.id];
+        if (e) e.zIndex = newZ;
+      }
+    });
+
+    renderAll();
+
+    const isEdge = AppState.ui.selectedType === "edge";
+    const prefix = isEdge ? "Panah" : "Layer";
+    const labelMap = {
+      forward: `${prefix} naik 1 tingkat (Ctrl + ])`,
+      backward: `${prefix} turun 1 tingkat (Ctrl + [)`,
+      topmost: `${prefix} dipindah ke paling atas (Ctrl + Shift + ])`,
+      backmost: `${prefix} dipindah ke paling bawah (Ctrl + Shift + [)`
+    };
+    showToast(labelMap[direction] || "Urutan layer diperbarui");
   }
 
   function alignSelectedNodesCenter() {
@@ -1459,32 +1574,94 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     const nodes = AppState.document.nodes || {};
     const edges = AppState.document.edges || {};
-    const nodeIds = Object.keys(nodes);
-    const edgeIds = Object.keys(edges);
+    const nodeCount = Object.keys(nodes).length;
+    const edgeCount = Object.keys(edges).length;
+    const showArrows = AppState.ui.showArrowsInLayerPanel !== false;
 
-    if (dom.layerCountNodes) dom.layerCountNodes.textContent = String(nodeIds.length);
-    if (dom.layerCountEdges) dom.layerCountEdges.textContent = String(edgeIds.length);
-    if (dom.btnLayerTabNodes) dom.btnLayerTabNodes.classList.toggle("active", AppState.ui.layerFilterTab !== "edges");
-    if (dom.btnLayerTabEdges) dom.btnLayerTabEdges.classList.toggle("active", AppState.ui.layerFilterTab === "edges");
-
-    if (AppState.ui.layerFilterTab === "edges") {
-      // TAB ARROW: Tampilkan daftar panah (Urutan: paling atas / render terakhir di paling awal list)
-      if (edgeIds.length === 0) {
-        dom.layersListContainer.innerHTML = '<div style="padding:24px 12px; text-align:center; color:var(--text-muted); font-size:11px;">Belum ada panah di kanvas</div>';
-        return;
+    // Sub-bar Update
+    if (dom.layerTotalCount) {
+      if (showArrows) {
+        dom.layerTotalCount.textContent = `${nodeCount + edgeCount} Layer (${nodeCount} Chart, ${edgeCount} Panah)`;
+      } else {
+        dom.layerTotalCount.textContent = `${nodeCount} Chart (${edgeCount} Panah disembunyikan)`;
       }
+    }
 
-      const sortedEdgeIds = [...edgeIds].reverse();
-      dom.layersListContainer.innerHTML = "";
+    if (dom.btnToggleArrowLayer) {
+      dom.btnToggleArrowLayer.classList.toggle("active", showArrows);
+      if (dom.labelArrowLayerVisibility) {
+        dom.labelArrowLayerVisibility.textContent = showArrows ? "Panah: Terlihat" : "Panah: Sembunyi";
+      }
+      if (dom.iconEyeArrowContainer) {
+        dom.iconEyeArrowContainer.innerHTML = showArrows
+          ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+          : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+      }
+      dom.btnToggleArrowLayer.setAttribute(
+        "title",
+        showArrows ? "Sembunyikan Panah dari daftar susunan layer" : "Tampilkan Panah pada daftar susunan layer"
+      );
+    }
 
-      sortedEdgeIds.forEach(id => {
-        const edge = edges[id];
+    const items = getAllLayers(showArrows);
+
+    if (items.length === 0) {
+      dom.layersListContainer.innerHTML = '<div style="padding:24px 12px; text-align:center; color:var(--text-muted); font-size:11px;">Belum ada objek di kanvas</div>';
+      return;
+    }
+
+    dom.layersListContainer.innerHTML = "";
+
+    items.forEach(item => {
+      if (item.type === "node") {
+        const node = nodes[item.id];
+        if (!node) return;
+
+        const isSelected = AppState.ui.selectedNodeIds.has(item.id) || (AppState.ui.selectedType === "node" && AppState.ui.selectedId === item.id);
+        const el = document.createElement("div");
+        el.className = `layer-item layer-item-node${isSelected ? " selected" : ""}${node.locked ? " locked" : ""}`;
+        el.dataset.id = item.id;
+        el.dataset.type = "node";
+
+        const shapeIconSvg = getShapeIconSvg(node.type);
+        const rawText = (node.text?.content || "").trim();
+        const cleanRaw = rawText ? rawText.replace(/<[^>]*>/g, "").trim() : "";
+        const labelText = cleanRaw ? cleanRaw.split("\n")[0] : getShapeDefaultLabel(node.type);
+
+        el.innerHTML = `
+          <div class="layer-icon" title="${getShapeDefaultLabel(node.type)}">
+            ${shapeIconSvg}
+          </div>
+          <div class="layer-name" title="${escapeHtml(labelText)}">${escapeHtml(labelText)}</div>
+          <button class="layer-lock-btn" title="${node.locked ? 'Buka Kunci (Ctrl + L)' : 'Kunci Posisi (Ctrl + L)'}">
+            ${node.locked ? 
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : 
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'}
+          </button>
+        `;
+
+        el.addEventListener("click", (e) => {
+          if (e.target.closest(".layer-lock-btn")) {
+            toggleNodeLock(item.id);
+            return;
+          }
+          if (e.shiftKey) {
+            toggleNodeSelection(item.id);
+          } else {
+            selectSingleNode(item.id, true);
+          }
+        });
+
+        dom.layersListContainer.appendChild(el);
+      } else if (item.type === "edge") {
+        const edge = edges[item.id];
         if (!edge) return;
 
-        const isSelected = AppState.ui.selectedType === "edge" && AppState.ui.selectedId === id;
-        const item = document.createElement("div");
-        item.className = `layer-item${isSelected ? " selected" : ""}`;
-        item.dataset.id = id;
+        const isSelected = AppState.ui.selectedType === "edge" && AppState.ui.selectedId === item.id;
+        const el = document.createElement("div");
+        el.className = `layer-item layer-item-edge${isSelected ? " selected" : ""}`;
+        el.dataset.id = item.id;
+        el.dataset.type = "edge";
 
         const srcNode = nodes[edge.source?.nodeId];
         const tgtNode = nodes[edge.target?.nodeId];
@@ -1497,7 +1674,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         const tgtLabel = getNodeLabel(tgtNode);
         const edgeLabel = edge.label ? edge.label : `${srcLabel} → ${tgtLabel}`;
 
-        item.innerHTML = `
+        el.innerHTML = `
           <div class="layer-icon" title="Panah Penghubung">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="4" y1="12" x2="20" y2="12"/>
@@ -1507,69 +1684,12 @@ window.MinimalFlow = window.MinimalFlow || {};
           <div class="layer-name" title="${escapeHtml(edgeLabel)}">${escapeHtml(edgeLabel)}</div>
         `;
 
-        item.addEventListener("click", () => {
-          selectItem("edge", id);
+        el.addEventListener("click", () => {
+          selectItem("edge", item.id);
         });
 
-        dom.layersListContainer.appendChild(item);
-      });
-      return;
-    }
-
-    // TAB CHART: Tampilkan daftar chart (Urutan zIndex tertinggi di paling atas list)
-    if (nodeIds.length === 0) {
-      dom.layersListContainer.innerHTML = '<div style="padding:24px 12px; text-align:center; color:var(--text-muted); font-size:11px;">Belum ada chart di kanvas</div>';
-      return;
-    }
-
-    // Urutkan dari layer paling atas (indeks tertinggi) ke layer paling bawah
-    const sortedIds = [...nodeIds].sort((a, b) => {
-      const zA = nodes[a]?.zIndex ?? 0;
-      const zB = nodes[b]?.zIndex ?? 0;
-      if (zA !== zB) return zB - zA;
-      return nodeIds.indexOf(b) - nodeIds.indexOf(a);
-    });
-
-    dom.layersListContainer.innerHTML = "";
-    sortedIds.forEach(id => {
-      const node = nodes[id];
-      if (!node) return;
-
-      const isSelected = AppState.ui.selectedNodeIds.has(id) || (AppState.ui.selectedType === "node" && AppState.ui.selectedId === id);
-      const item = document.createElement("div");
-      item.className = `layer-item${isSelected ? " selected" : ""}${node.locked ? " locked" : ""}`;
-      item.dataset.id = id;
-
-      const shapeIconSvg = getShapeIconSvg(node.type);
-      const rawText = (node.text?.content || "").trim();
-      const cleanRaw = rawText ? rawText.replace(/<[^>]*>/g, "").trim() : "";
-      const labelText = cleanRaw ? cleanRaw.split("\n")[0] : getShapeDefaultLabel(node.type);
-
-      item.innerHTML = `
-        <div class="layer-icon" title="${getShapeDefaultLabel(node.type)}">
-          ${shapeIconSvg}
-        </div>
-        <div class="layer-name" title="${escapeHtml(labelText)}">${escapeHtml(labelText)}</div>
-        <button class="layer-lock-btn" title="${node.locked ? 'Buka Kunci (Ctrl + L)' : 'Kunci Posisi (Ctrl + L)'}">
-          ${node.locked ? 
-            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : 
-            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'}
-        </button>
-      `;
-
-      item.addEventListener("click", (e) => {
-        if (e.target.closest(".layer-lock-btn")) {
-          toggleNodeLock(id);
-          return;
-        }
-        if (e.shiftKey) {
-          toggleNodeSelection(id);
-        } else {
-          selectSingleNode(id, true);
-        }
-      });
-
-      dom.layersListContainer.appendChild(item);
+        dom.layersListContainer.appendChild(el);
+      }
     });
   }
 
@@ -3727,17 +3847,16 @@ window.MinimalFlow = window.MinimalFlow || {};
   if (dom.btnSideLayerBackmost) dom.btnSideLayerBackmost.addEventListener("click", () => handleLayerReorder("backmost"));
   if (dom.btnSideLayerTopmost) dom.btnSideLayerTopmost.addEventListener("click", () => handleLayerReorder("topmost"));
 
-  // Layer Panel Filter Tabs (Chart vs Panah)
-  if (dom.btnLayerTabNodes) {
-    dom.btnLayerTabNodes.addEventListener("click", () => {
-      AppState.ui.layerFilterTab = "nodes";
+  // Layer Panel Toggle Visibilitas Panah di Daftar Layer
+  if (dom.btnToggleArrowLayer) {
+    dom.btnToggleArrowLayer.addEventListener("click", () => {
+      AppState.ui.showArrowsInLayerPanel = !AppState.ui.showArrowsInLayerPanel;
       updateLayerPanel();
-    });
-  }
-  if (dom.btnLayerTabEdges) {
-    dom.btnLayerTabEdges.addEventListener("click", () => {
-      AppState.ui.layerFilterTab = "edges";
-      updateLayerPanel();
+      if (AppState.ui.showArrowsInLayerPanel) {
+        showToast("Panah ditampilkan pada susunan layer");
+      } else {
+        showToast("Panah disembunyikan dari susunan layer");
+      }
     });
   }
 

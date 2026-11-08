@@ -544,7 +544,13 @@ window.MinimalFlow = window.MinimalFlow || {};
     layerEdgesEl.innerHTML = "";
     const isDark = doc.theme === "dark";
 
-    for (const [id, edge] of Object.entries(doc.edges)) {
+    const sortedEdges = Object.entries(doc.edges).sort((a, b) => {
+      const zA = a[1].zIndex ?? 0;
+      const zB = b[1].zIndex ?? 0;
+      return zA - zB;
+    });
+
+    for (const [id, edge] of sortedEdges) {
       const sourceNode = doc.nodes[edge.source?.nodeId];
       const targetNode = doc.nodes[edge.target?.nodeId];
       if (!sourceNode || !targetNode) continue;
