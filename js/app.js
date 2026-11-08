@@ -1245,7 +1245,8 @@ window.MinimalFlow = window.MinimalFlow || {};
 
       const shapeIconSvg = getShapeIconSvg(node.type);
       const rawText = (node.text?.content || "").trim();
-      const labelText = rawText ? rawText.split("\n")[0] : getShapeDefaultLabel(node.type);
+      const cleanRaw = rawText ? rawText.replace(/<[^>]*>/g, "").trim() : "";
+      const labelText = cleanRaw ? cleanRaw.split("\n")[0] : getShapeDefaultLabel(node.type);
 
       item.innerHTML = `
         <div class="layer-icon" title="${getShapeDefaultLabel(node.type)}">

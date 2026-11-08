@@ -20,9 +20,48 @@ window.MinimalFlow = window.MinimalFlow || {};
     return measureCtx;
   }
 
+  function sanitizeHtmlFormatting(html) {
+    if (!html) return "";
+    let s = String(html);
+
+    // 1. Convert spans with explicit bold/italic styles to <b> and <i>
+    s = s.replace(/<span\b[^>]*font-weight:\s*(?:bold|[789]00)[^>]*font-style:\s*italic[^>]*>([\s\S]*?)<\/span>/gi, "<b><i>$1</i></b>");
+    s = s.replace(/<span\b[^>]*font-style:\s*italic[^>]*font-weight:\s*(?:bold|[789]00)[^>]*>([\s\S]*?)<\/span>/gi, "<b><i>$1</i></b>");
+    s = s.replace(/<span\b[^>]*font-weight:\s*(?:bold|[789]00)[^>]*>([\s\S]*?)<\/span>/gi, "<b>$1</b>");
+    s = s.replace(/<span\b[^>]*font-style:\s*italic[^>]*>([\s\S]*?)<\/span>/gi, "<i>$1</i>");
+
+    // 2. Unwrap any remaining spans (loop up to 5 times for nested spans)
+    for (let i = 0; i < 5; i++) {
+      const next = s.replace(/<span\b[^>]*>([\s\S]*?)<\/span>/gi, "$1");
+      if (next === s) break;
+      s = next;
+    }
+
+    // 3. Normalize strong/em to <b>/<i>
+    s = s.replace(/<strong\b[^>]*>/gi, "<b>").replace(/<\/strong>/gi, "</b>");
+    s = s.replace(/<em\b[^>]*>/gi, "<i>").replace(/<\/em>/gi, "</i>");
+
+    // 4. Unwrap other non-essential formatting tags (font, mark, u, small, a)
+    for (let i = 0; i < 3; i++) {
+      const next = s.replace(/<(?:font|mark|small|u|ins|del|s|strike|a)\b[^>]*>([\s\S]*?)<\/(?:font|mark|small|u|ins|del|s|strike|a)>/gi, "$1");
+      if (next === s) break;
+      s = next;
+    }
+
+    // 5. Remove any orphan/stray/unclosed tags (like leftover <span ...>, </span>, etc.)
+    s = s.replace(/<\/?(?:span|font|mark|small|u|ins|del|s|strike|a)\b[^>]*>/gi, "");
+
+    // 6. Clean empty b/i
+    s = s.replace(/<b>\s*<\/b>/gi, "");
+    s = s.replace(/<i>\s*<\/i>/gi, "");
+
+    return s;
+  }
+
   function cleanMarkdownToHtml(str) {
     if (!str) return "";
     let s = String(str);
+    s = sanitizeHtmlFormatting(s);
     // Convert ***text*** -> <b><i>text</i></b>
     s = s.replace(/\*\*\*([^*]+)\*\*\*/g, "<b><i>$1</i></b>");
     // Convert **text** -> <b>text</b>
@@ -35,25 +74,19 @@ window.MinimalFlow = window.MinimalFlow || {};
   function serializeEditorHtml(html) {
     if (!html) return "";
     let res = String(html)
-      .replace(/<(div|p)>\s*<br\s*\/?>\s*<\/\1>/gi, "\n")
+      .replace(/<(div|p)\b[^>]*>\s*<br\s*\/?>\s*<\/\1>/gi, "\n")
       .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/^<div>/i, "")
-      .replace(/<\/div><div>/gi, "\n")
-      .replace(/<div>/gi, "\n")
-      .replace(/<\/div>/gi, "")
-      .replace(/^<p>/i, "")
-      .replace(/<\/p><p>/gi, "\n")
-      .replace(/<p>/gi, "\n")
-      .replace(/<\/p>/gi, "")
+      .replace(/^<(div|p)\b[^>]*>/i, "")
+      .replace(/<\/(div|p)><(div|p)\b[^>]*>/gi, "\n")
+      .replace(/<(div|p)\b[^>]*>/gi, "\n")
+      .replace(/<\/(div|p)>/gi, "")
       .replace(/&nbsp;/g, " ")
       .replace(/&amp;/g, "&")
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .replace(/&apos;/g, "'");
 
-    res = res.replace(/<strong\b[^>]*>/gi, "<b>").replace(/<\/strong>/gi, "</b>");
-    res = res.replace(/<em\b[^>]*>/gi, "<i>").replace(/<\/em>/gi, "</i>");
-    res = res.replace(/<b>\s*<\/b>/gi, "").replace(/<i>\s*<\/i>/gi, "");
+    res = sanitizeHtmlFormatting(res);
 
     if (res.startsWith("\n")) res = res.slice(1);
     return res;
@@ -347,8 +380,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     const rawContent = (node.text.content || "").trim();
     const isPh = !rawContent || rawContent.toLowerCase() === "insert text" || !!node.text.isPlaceholder;
 
-    // Bersihkan sintaks markdown bintang menjadi HTML visual murni
-    const cleanContent = (node.text.content || "").replace(/&amp;/g, "&");
+    // Bersihkan sintaks markdown bintang dan span liar menjadi HTML visual murni
+    const cleanContent = sanitizeHtmlFormatting(String(node.text.content || "").replace(/&amp;/g, "&"));
     const initialHtml = isPh ? "" : cleanMarkdownToHtml(cleanContent).replace(/&(?!(amp|lt|gt|quot|apos|nbsp);)/g, "&amp;");
     editor.innerHTML = initialHtml;
     editor.setAttribute("data-placeholder", "Ketik teks di sini...");
@@ -540,7 +573,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     toggleSelectionFormatting,
     parseInlineSpans,
     cleanMarkdownToHtml,
-    serializeEditorHtml
+    serializeEditorHtml,
+    sanitizeHtmlFormatting
   };
 
 })(window.MinimalFlow);
