@@ -299,6 +299,8 @@ aside.shapes-sidebar {
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .shape-card {
@@ -381,6 +383,118 @@ aside.shapes-sidebar {
 }
 
 /* Guide Modal Styles */
+.guide-modal-tabs {
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: 8px;
+  background: var(--bg-surface);
+}
+
+.guide-tab-btn {
+  padding: 10px 14px;
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.guide-tab-btn:hover {
+  color: var(--text-main);
+}
+
+.guide-tab-btn.active {
+  color: var(--text-main);
+  font-weight: 600;
+  border-bottom-color: var(--text-main);
+}
+
+.symbol-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 12px;
+}
+
+.symbol-guide-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.symbol-guide-card:hover {
+  border-color: var(--text-main);
+  background: var(--bg-subtle);
+}
+
+.symbol-guide-icon-box {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+}
+
+.symbol-guide-icon-box svg {
+  width: 32px;
+  height: 32px;
+}
+
+.symbol-guide-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.symbol-guide-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.symbol-guide-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.symbol-guide-badge {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.symbol-guide-desc {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
 .guide-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);

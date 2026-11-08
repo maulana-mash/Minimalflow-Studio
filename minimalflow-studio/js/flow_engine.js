@@ -46,6 +46,47 @@ window.MinimalFlow = window.MinimalFlow || {};
         const rx = w / 2;
         return `M 0 ${ry} A ${rx} ${ry} 0 0 1 ${w} ${ry} V ${h - ry} A ${rx} ${ry} 0 0 1 0 ${h - ry} Z M 0 ${ry} A ${rx} ${ry} 0 0 0 ${w} ${ry}`;
       }
+      case "offpage":
+        return `M 0 0 H ${w} V ${h * 0.7} L ${w / 2} ${h} L 0 ${h * 0.7} Z`;
+      case "manual_operation": {
+        const inset = Math.min(w * 0.18, 26);
+        return `M 0 0 H ${w} L ${w - inset} ${h} H ${inset} Z`;
+      }
+      case "manual_input": {
+        const slope = Math.min(h * 0.28, 22);
+        return `M 0 ${slope} L ${w} 0 V ${h} H 0 Z`;
+      }
+      case "preparation": {
+        const hexW = Math.min(w * 0.18, 26);
+        return `M ${hexW} 0 H ${w - hexW} L ${w} ${h / 2} L ${w - hexW} ${h} H ${hexW} L 0 ${h / 2} Z`;
+      }
+      case "predefined_process": {
+        const inset = Math.min(w * 0.12, 18);
+        return `M 0 0 H ${w} V ${h} H 0 Z M ${inset} 0 V ${h} M ${w - inset} 0 V ${h}`;
+      }
+      case "display": {
+        const r = h / 2;
+        const rightCurve = Math.min(w * 0.14, 18);
+        return `M ${r} 0 H ${w - rightCurve} Q ${w} ${h / 2} ${w - rightCurve} ${h} H ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`;
+      }
+      case "disk_storage": {
+        const arcX = Math.min(w * 0.16, 22);
+        return `M ${arcX} 0 H ${w} Q ${w - arcX * 1.2} ${h / 2} ${w} ${h} H ${arcX} Q 0 ${h / 2} ${arcX} 0 Z`;
+      }
+      case "magnetic_tape": {
+        const r = Math.min(w * 0.42, h * 0.45);
+        const cx = w * 0.45, cy = r + 2;
+        return `M ${cx} ${cy - r} A ${r} ${r} 0 1 0 ${cx} ${cy + r} A ${r} ${r} 0 1 0 ${cx} ${cy - r} M ${cx} ${cy + r} H ${w}`;
+      }
+      case "punch_card": {
+        const cut = Math.min(w * 0.18, h * 0.28, 24);
+        return `M ${cut} 0 H ${w} V ${h} H 0 V ${cut} Z`;
+      }
+      case "document": {
+        const wave = Math.min(h * 0.16, 14);
+        const b = h - wave;
+        return `M 0 0 H ${w} V ${b} Q ${w * 0.75} ${b - wave} ${w * 0.5} ${b} Q ${w * 0.25} ${b + wave} 0 ${b} Z`;
+      }
       default:
         return `M 0 0 H ${w} V ${h} H 0 Z`;
     }
@@ -54,16 +95,70 @@ window.MinimalFlow = window.MinimalFlow || {};
   function getNodePinLocal(node, pin) {
     const { width: w, height: h, type } = node;
     switch (pin) {
-      case "N": return { x: w / 2, y: 0 };
-      case "S": return { x: w / 2, y: h };
+      case "N": {
+        if (type === "manual_input") {
+          const slope = Math.min(h * 0.28, 22);
+          return { x: w / 2, y: slope / 2 };
+        }
+        if (type === "magnetic_tape") {
+          const r = Math.min(w * 0.42, h * 0.45);
+          const cx = w * 0.45, cy = r + 2;
+          return { x: cx, y: cy - r };
+        }
+        return { x: w / 2, y: 0 };
+      }
+      case "S": {
+        if (type === "document") {
+          const wave = Math.min(h * 0.16, 14);
+          return { x: w / 2, y: h - wave };
+        }
+        if (type === "magnetic_tape") {
+          const r = Math.min(w * 0.42, h * 0.45);
+          const cx = w * 0.45, cy = r + 2;
+          return { x: cx, y: cy + r };
+        }
+        return { x: w / 2, y: h };
+      }
       case "E": {
         if (type === "triangle") return { x: w * 0.75, y: h / 2 };
         if (type === "parallelogram") return { x: w - Math.min(w * 0.2, 28) / 2, y: h / 2 };
+        if (type === "manual_operation") {
+          const inset = Math.min(w * 0.18, 26);
+          return { x: w - inset / 2, y: h / 2 };
+        }
+        if (type === "offpage") return { x: w, y: h * 0.35 };
+        if (type === "magnetic_tape") {
+          const r = Math.min(w * 0.42, h * 0.45);
+          const cx = w * 0.45, cy = r + 2;
+          return { x: cx + r, y: cy };
+        }
+        if (type === "document") {
+          const wave = Math.min(h * 0.16, 14);
+          return { x: w, y: (h - wave) / 2 };
+        }
         return { x: w, y: h / 2 };
       }
       case "W": {
         if (type === "triangle") return { x: w * 0.25, y: h / 2 };
         if (type === "parallelogram") return { x: Math.min(w * 0.2, 28) / 2, y: h / 2 };
+        if (type === "manual_operation") {
+          const inset = Math.min(w * 0.18, 26);
+          return { x: inset / 2, y: h / 2 };
+        }
+        if (type === "manual_input") {
+          const slope = Math.min(h * 0.28, 22);
+          return { x: 0, y: (slope + h) / 2 };
+        }
+        if (type === "offpage") return { x: 0, y: h * 0.35 };
+        if (type === "magnetic_tape") {
+          const r = Math.min(w * 0.42, h * 0.45);
+          const cx = w * 0.45, cy = r + 2;
+          return { x: cx - r, y: cy };
+        }
+        if (type === "document") {
+          const wave = Math.min(h * 0.16, 14);
+          return { x: 0, y: (h - wave) / 2 };
+        }
         return { x: 0, y: h / 2 };
       }
       default: return { x: w / 2, y: h / 2 };
@@ -302,6 +397,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     else if (type === "diamond") { width = 140; height = 110; }
     else if (type === "triangle") { width = 140; height = 96; }
     else if (type === "image") { width = 180; height = 130; }
+    else if (type === "offpage") { width = 110; height = 110; }
+    else if (type === "magnetic_tape") { width = 120; height = 100; }
+    else if (type === "document") { width = 160; height = 85; }
 
     return {
       id,

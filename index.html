@@ -155,31 +155,71 @@
     <aside class="shapes-sidebar">
       <div class="sidebar-header">BENTUK BAGAN</div>
       <div class="shapes-grid">
-        <div class="shape-card" draggable="true" data-shape="rectangle" title="Tarik atau Klik untuk menambah">
+        <div class="shape-card" draggable="true" data-shape="rectangle" title="Tarik atau Klik untuk menambah: Proses / Pengolahan Komputer">
           <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 4 8 H 28 V 24 H 4 Z"/></svg>
           <span>Proses</span>
         </div>
-        <div class="shape-card" draggable="true" data-shape="rounded" title="Tarik atau Klik untuk menambah">
+        <div class="shape-card" draggable="true" data-shape="rounded" title="Tarik atau Klik untuk menambah: Terminator (Mulai / Selesai)">
           <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 10 8 H 22 A 8 8 0 0 1 30 16 A 8 8 0 0 1 22 24 H 10 A 8 8 0 0 1 2 16 A 8 8 0 0 1 10 8 Z"/></svg>
           <span>Terminator</span>
         </div>
-        <div class="shape-card" draggable="true" data-shape="diamond" title="Tarik atau Klik untuk menambah">
+        <div class="shape-card" draggable="true" data-shape="diamond" title="Tarik atau Klik untuk menambah: Keputusan / Percabangan Kondisi">
           <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 16 6 L 28 16 L 16 26 L 4 16 Z"/></svg>
           <span>Keputusan</span>
         </div>
-        <div class="shape-card" draggable="true" data-shape="circle" title="Tarik atau Klik untuk menambah">
+        <div class="shape-card" draggable="true" data-shape="circle" title="Tarik atau Klik untuk menambah: Konektor Halaman Sama">
           <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="16" cy="16" r="10"/></svg>
-          <span>Lingkaran</span>
+          <span>Konektor</span>
         </div>
-        <div class="shape-card" draggable="true" data-shape="parallelogram" title="Tarik atau Klik untuk menambah">
+        <div class="shape-card" draggable="true" data-shape="parallelogram" title="Tarik atau Klik untuk menambah: Data Input / Output">
           <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 8 8 L 28 8 L 24 24 L 4 24 Z"/></svg>
           <span>Data I/O</span>
         </div>
-        <div class="shape-card" draggable="true" data-shape="cylinder" title="Tarik atau Klik untuk menambah">
+        <div class="shape-card" draggable="true" data-shape="document" title="Tarik atau Klik untuk menambah: Dokumen Kertas / Laporan Cetak">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 5 7 H 27 V 21 Q 21.5 18 16 21 Q 10.5 24 5 21 Z"/></svg>
+          <span>Dokumen</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="predefined_process" title="Tarik atau Klik untuk menambah: Sub-program / Prosedur Terdefinisi">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 4 8 H 28 V 24 H 4 Z M 9 8 V 24 M 23 8 V 24"/></svg>
+          <span>Sub-Proses</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="preparation" title="Tarik atau Klik untuk menambah: Persiapan / Inisialisasi Storage">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 9 7 H 23 L 28 16 L 23 25 H 9 L 4 16 Z"/></svg>
+          <span>Persiapan</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="manual_input" title="Tarik atau Klik untuk menambah: Masukan Data Manual Keyboard">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 4 13 L 28 8 V 25 H 4 Z"/></svg>
+          <span>Input Manual</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="manual_operation" title="Tarik atau Klik untuk menambah: Operasi Pengolahan Manual">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 4 8 H 28 L 23 24 H 9 Z"/></svg>
+          <span>Opr. Manual</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="display" title="Tarik atau Klik untuk menambah: Tampilan Layar Output / Monitor">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 12 7 H 23 Q 28 16 23 25 H 12 A 9 9 0 0 1 12 7 Z"/></svg>
+          <span>Display</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="offpage" title="Tarik atau Klik untuk menambah: Konektor Lembar / Halaman Berbeda">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 6 6 H 26 V 19 L 16 27 L 6 19 Z"/></svg>
+          <span>Konektor Hal.</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="cylinder" title="Tarik atau Klik untuk menambah: Basis Data / Database">
           <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 6 10 A 10 4 0 0 1 26 10 V 22 A 10 4 0 0 1 6 22 Z M 6 10 A 10 4 0 0 0 26 10"/></svg>
           <span>Database</span>
         </div>
-        <div class="shape-card" draggable="true" data-shape="triangle" title="Tarik atau Klik untuk menambah">
+        <div class="shape-card" draggable="true" data-shape="disk_storage" title="Tarik atau Klik untuk menambah: Penyimpanan Disk Online">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 8 7 H 27 Q 22 16 27 25 H 8 Q 3 16 8 7 Z"/></svg>
+          <span>Simpan Disk</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="magnetic_tape" title="Tarik atau Klik untuk menambah: Pita Magnetik (Magnetic Tape)">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="14" cy="14" r="9"/><line x1="14" y1="23" x2="28" y2="23"/></svg>
+          <span>Pita Magnetik</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="punch_card" title="Tarik atau Klik untuk menambah: Kartu Berlubang (Punch Card)">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 9 7 H 28 V 25 H 4 V 12 Z"/></svg>
+          <span>Punch Card</span>
+        </div>
+        <div class="shape-card" draggable="true" data-shape="triangle" title="Tarik atau Klik untuk menambah: Segitiga">
           <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M 16 6 L 28 26 L 4 26 Z"/></svg>
           <span>Segitiga</span>
         </div>
@@ -1085,8 +1125,8 @@
             </svg>
           </div>
           <div>
-            <h2 class="modal-title" style="font-family:var(--font-heading); font-size:16px; font-weight:700; color:var(--text-main);">Panduan Lengkap & Pintasan Keyboard</h2>
-            <div style="font-size:11.5px; color:var(--text-muted); margin-top:1px;">Dokumentasi pengoperasian studio, gestur kanvas, dan shortcut MinimalFlow</div>
+            <h2 class="modal-title" style="font-family:var(--font-heading); font-size:16px; font-weight:700; color:var(--text-main);">Panduan Lengkap & Kamus Simbol Flowchart</h2>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:1px;">Dokumentasi standar ANSI/ISO 5807, fungsi simbol bagan alur, dan shortcut studio</div>
           </div>
         </div>
         <button id="btn-close-guide-modal" class="btn-icon" style="width:32px; height:32px; border-radius:8px;" title="Tutup Panduan (Esc)">
@@ -1094,65 +1134,352 @@
         </button>
       </div>
 
+      <!-- Navigation Tabs -->
+      <div class="guide-modal-tabs">
+        <button class="guide-tab-btn active" data-tab="symbols">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          <span>Kamus Simbol Flowchart</span>
+        </button>
+        <button class="guide-tab-btn" data-tab="workflow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <span>Alur Kerja & Kanvas</span>
+        </button>
+        <button class="guide-tab-btn" data-tab="shortcuts">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/></svg>
+          <span>Pintasan Keyboard</span>
+        </button>
+      </div>
+
       <!-- Scrollable Content Body -->
-      <div style="padding:20px; overflow-y:auto; max-height:calc(88vh - 125px); display:flex; flex-direction:column; gap:20px;">
+      <div style="padding:20px; overflow-y:auto; max-height:calc(88vh - 165px);">
         
-        <!-- Section 1: Alur Kerja & Kanvas -->
-        <div>
-          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-            <span>Alur Kerja & Pengoperasian Kanvas</span>
+        <!-- Tab 1: Kamus Simbol Standar Bagan Alur (ANSI/ISO 5807) -->
+        <div id="guide-tab-content-symbols" class="guide-tab-content" style="display:flex; flex-direction:column; gap:16px;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>Kamus Standar Simbol Bagan Alur (ANSI / ISO 5807)</span>
           </div>
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
-            <div class="guide-card">
-              <div class="guide-card-title">Tambah & Hubungkan Chart</div>
-              <div class="guide-card-desc">Tarik bentuk dari panel kiri ke kanvas. Klik <strong>titik pin bulat</strong> pada chart sumber, lalu klik pin chart tujuan untuk menyambungkan garis panah (<em>Tap-to-Connect</em>).</div>
+
+          <div class="symbol-guide-grid">
+            <!-- 1. Flow Direction Symbol -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Flow Direction Symbol">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="6" y1="8" x2="6" y2="24"/><polyline points="3 20 6 24 9 20"/>
+                  <line x1="14" y1="24" x2="14" y2="8"/><polyline points="11 12 14 8 17 12"/>
+                  <line x1="26" y1="11" x2="18" y2="11"/><polyline points="21 8 18 11 21 14"/>
+                  <line x1="18" y1="21" x2="26" y2="21"/><polyline points="23 18 26 21 23 24"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Flow Direction symbol</span>
+                  <span class="symbol-guide-badge">Konektor Panah</span>
+                </div>
+                <div class="symbol-guide-desc">Yaitu simbol yang digunakan untuk menghubungkan antara simbol yang satu dengan simbol yang lain. Simbol ini disebut juga connecting line.</div>
+              </div>
             </div>
-            <div class="guide-card">
-              <div class="guide-card-title">Edit Teks Langsung</div>
-              <div class="guide-card-desc"><strong>Double-click</strong> pada teks chart untuk mengetik langsung seperti di Word. Atur ukuran font, ketebalan, dan perataan teks melalui floating bar di atas kanvas.</div>
+
+            <!-- 2. Terminator Symbol -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Terminator Symbol">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="4" y="9" width="24" height="14" rx="7"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Terminator Symbol</span>
+                  <span class="symbol-guide-badge">Mulai / Selesai</span>
+                </div>
+                <div class="symbol-guide-desc">Yaitu simbol untuk permulaan (start) atau akhir (stop) dari suatu kegiatan.</div>
+              </div>
             </div>
-            <div class="guide-card">
-              <div class="guide-card-title">Unggah Gambar & Logo</div>
-              <div class="guide-card-desc">Drag & drop file PNG, JPG, atau SVG langsung dari komputer ke atas kanvas, atau klik kartu <strong>Unggah Gambar</strong> pada panel kiri.</div>
+
+            <!-- 3. Connector Symbol (On-Page) -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Connector Symbol (On-Page)">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="16" cy="16" r="10"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Connector Symbol</span>
+                  <span class="symbol-guide-badge">Halaman Sama</span>
+                </div>
+                <div class="symbol-guide-desc">Yaitu simbol untuk keluar - masuk atau penyambungan proses dalam lembar / halaman yang sama.</div>
+              </div>
             </div>
-            <div class="guide-card">
-              <div class="guide-card-title">Navigasi Kamera (Pan & Zoom)</div>
-              <div class="guide-card-desc">Scroll roda mouse untuk <strong>Zoom In/Out</strong>. Tahan <strong>Spacebar + Drag</strong> (atau klik roda tengah mouse) untuk menggeser pandangan kanvas tanpa memindahkan chart.</div>
+
+            <!-- 4. Connector Symbol (Off-Page) -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Connector Symbol (Off-Page)">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 6 6 H 26 V 18 L 16 26 L 6 18 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Connector Symbol (Off-Page)</span>
+                  <span class="symbol-guide-badge">Lembar Berbeda</span>
+                </div>
+                <div class="symbol-guide-desc">Yaitu simbol untuk keluar - masuk atau penyambungan proses pada lembar / halaman yang berbeda.</div>
+              </div>
+            </div>
+
+            <!-- 5. Processing Symbol -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Processing Symbol">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="4" y="8" width="24" height="16" rx="1"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Processing Symbol</span>
+                  <span class="symbol-guide-badge">Pengolahan</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol yang menunjukkan pengolahan yang dilakukan oleh komputer.</div>
+              </div>
+            </div>
+
+            <!-- 6. Simbol Manual Operation -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol Manual Operation">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 4 8 H 28 L 23 24 H 9 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol Manual Operation</span>
+                  <span class="symbol-guide-badge">Non-Komputer</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol yang menunjukkan pengolahan yang tidak dilakukan oleh computer.</div>
+              </div>
+            </div>
+
+            <!-- 7. Simbol Decision -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol Decision">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 16 5 L 27 16 L 16 27 L 5 16 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol Decision</span>
+                  <span class="symbol-guide-badge">Kondisi / Logika</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol pemilihan proses berdasarkan kondisi yang ada.</div>
+              </div>
+            </div>
+
+            <!-- 8. Simbol Input-Output -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol Input-Output">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 8 8 L 28 8 L 24 24 L 4 24 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol Input-Output</span>
+                  <span class="symbol-guide-badge">Data I/O</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol yang menyatakan proses input dan output tanpa tergantung dengan jenis peralatannya.</div>
+              </div>
+            </div>
+
+            <!-- 9. Simbol Manual Input -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol Manual Input">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 4 13 L 28 8 V 24 H 4 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol Manual Input</span>
+                  <span class="symbol-guide-badge">Keyboard</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol untuk pemasukan data secara manual on-line keyboard.</div>
+              </div>
+            </div>
+
+            <!-- 10. Simbol Preparation -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol Preparation">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 9 7 H 23 L 28 16 L 23 25 H 9 L 4 16 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol Preparation</span>
+                  <span class="symbol-guide-badge">Inisialisasi</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol untuk mempersiapkan penyimpanan yang akan digunakan sebagai tempat pengolahan di dalam storage.</div>
+              </div>
+            </div>
+
+            <!-- 11. Simbol Predefine Proses -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol Predefine Proses">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 4 8 H 28 V 24 H 4 Z M 9 8 V 24 M 23 8 V 24"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol Predefine Proses</span>
+                  <span class="symbol-guide-badge">Sub-Program</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol untuk pelaksanaan suatu bagian (sub-program)/prosedure.</div>
+              </div>
+            </div>
+
+            <!-- 12. Simbol Display -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol Display">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 12 7 H 23 Q 28 16 23 25 H 12 A 9 9 0 0 1 12 7 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol Display</span>
+                  <span class="symbol-guide-badge">Output Layar</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol yang menyatakan peralatan output yang digunakan yaitu layar, plotter, printer dan sebagainya.</div>
+              </div>
+            </div>
+
+            <!-- 13. Simbol disk and On-line Storage -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol disk and On-line Storage">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 8 7 H 27 Q 22 16 27 25 H 8 Q 3 16 8 7 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol disk and On-line Storage</span>
+                  <span class="symbol-guide-badge">Penyimpanan Disk</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol yang menyatakan input yang berasal dari disk atau disimpan ke disk.</div>
+              </div>
+            </div>
+
+            <!-- 14. Simbol magnetik tape Unit -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol magnetik tape Unit">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="14" cy="14" r="8"/>
+                  <line x1="14" y1="22" x2="28" y2="22"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol magnetik tape Unit</span>
+                  <span class="symbol-guide-badge">Pita Magnetik</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol yang menyatakan input berasal dari pita magnetik atau output disimpan ke pita magnetik.</div>
+              </div>
+            </div>
+
+            <!-- 15. Simbol Punch Card -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol Punch Card">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 9 7 H 28 V 25 H 4 V 12 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol Punch Card</span>
+                  <span class="symbol-guide-badge">Kartu Berlubang</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol yang menyatakan bahwa input berasal dari kartu atau output ditulis ke kartu.</div>
+              </div>
+            </div>
+
+            <!-- 16. Simbol Dokumen -->
+            <div class="symbol-guide-card">
+              <div class="symbol-guide-icon-box" title="Simbol Dokumen">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M 5 7 H 27 V 21 Q 21.5 18 16 21 Q 10.5 24 5 21 Z"/>
+                </svg>
+              </div>
+              <div class="symbol-guide-content">
+                <div class="symbol-guide-title-row">
+                  <span class="symbol-guide-name">Simbol Dokumen</span>
+                  <span class="symbol-guide-badge">Kertas / Laporan</span>
+                </div>
+                <div class="symbol-guide-desc">Simbol yang menyatakan input berasal dari dokumen dalam bentuk kertas atau output dicetak ke kertas.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Section 2: Manipulasi Ukuran & Posisi -->
-        <div>
-          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-            <span>Manipulasi Ukuran, Transformasi, & Tata Letak</span>
+        <!-- Tab 2: Alur Kerja & Kanvas -->
+        <div id="guide-tab-content-workflow" class="guide-tab-content" style="display:none; flex-direction:column; gap:20px;">
+          <div>
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              <span>Alur Kerja & Pengoperasian Kanvas</span>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
+              <div class="guide-card">
+                <div class="guide-card-title">Tambah & Hubungkan Chart</div>
+                <div class="guide-card-desc">Tarik bentuk dari panel kiri ke kanvas. Klik <strong>titik pin bulat</strong> pada chart sumber, lalu klik pin chart tujuan untuk menyambungkan garis panah (<em>Tap-to-Connect</em>).</div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-card-title">Edit Teks Langsung</div>
+                <div class="guide-card-desc"><strong>Double-click</strong> pada teks chart untuk mengetik langsung seperti di Word. Atur ukuran font, ketebalan, dan perataan teks melalui floating bar di atas kanvas.</div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-card-title">Unggah Gambar & Logo</div>
+                <div class="guide-card-desc">Drag & drop file PNG, JPG, atau SVG langsung dari komputer ke atas kanvas, atau klik kartu <strong>Unggah Gambar</strong> pada panel kiri.</div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-card-title">Navigasi Kamera (Pan & Zoom)</div>
+                <div class="guide-card-desc">Scroll roda mouse untuk <strong>Zoom In/Out</strong>. Tahan <strong>Spacebar + Drag</strong> (atau klik roda tengah mouse) untuk menggeser pandangan kanvas tanpa memindahkan chart.</div>
+              </div>
+            </div>
           </div>
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
-            <div class="guide-card">
-              <div class="guide-card-title">Handle 8 Arah (Sudut & Sisi)</div>
-              <div class="guide-card-desc">Tarik salah satu dari 4 handle tepi (atas, bawah, kiri, kanan) untuk memanjangkan chart ke satu arah saja tanpa mengubah dimensi lainnya.</div>
+
+          <div>
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              <span>Manipulasi Ukuran, Transformasi, & Tata Letak</span>
             </div>
-            <div class="guide-card">
-              <div class="guide-card-title">Perbesar Simetris (Tahan Alt)</div>
-              <div class="guide-card-desc">Tahan tombol <span class="kbd-badge">Alt</span> saat menarik handle untuk memperbesar/memanjangkan chart secara simetris dari titik tengah tanpa menggeser posisi pusatnya.</div>
-            </div>
-            <div class="guide-card">
-              <div class="guide-card-title">Geser Presisi (Tombol Panah)</div>
-              <div class="guide-card-desc">Gunakan tombol panah keyboard (<span class="kbd-badge">↑</span> <span class="kbd-badge">↓</span> <span class="kbd-badge">←</span> <span class="kbd-badge">→</span>) untuk menggeser chart sejauh 5px, atau tahan <span class="kbd-badge">Shift</span> untuk geser cepat 20px.</div>
-            </div>
-            <div class="guide-card">
-              <div class="guide-card-title">Ratakan Tengah Vertikal</div>
-              <div class="guide-card-desc">Pilih minimal 2 chart (tahan Shift saat klik / drag seleksi), lalu tekan <span class="kbd-badge">Alt + C</span> untuk menyelaraskan seluruh chart ke sumbu tengah alur.</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
+              <div class="guide-card">
+                <div class="guide-card-title">Handle 8 Arah (Sudut & Sisi)</div>
+                <div class="guide-card-desc">Tarik salah satu dari 4 handle tepi (atas, bawah, kiri, kanan) untuk memanjangkan chart ke satu arah saja tanpa mengubah dimensi lainnya.</div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-card-title">Perbesar Simetris (Tahan Alt)</div>
+                <div class="guide-card-desc">Tahan tombol <span class="kbd-badge">Alt</span> saat menarik handle untuk memperbesar/memanjangkan chart secara simetris dari titik tengah tanpa menggeser posisi pusatnya.</div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-card-title">Geser Presisi (Tombol Panah)</div>
+                <div class="guide-card-desc">Gunakan tombol panah keyboard (<span class="kbd-badge">↑</span> <span class="kbd-badge">↓</span> <span class="kbd-badge">←</span> <span class="kbd-badge">→</span>) untuk menggeser chart sejauh 5px, atau tahan <span class="kbd-badge">Shift</span> untuk geser cepat 20px.</div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-card-title">Ratakan Tengah Vertikal</div>
+                <div class="guide-card-desc">Pilih minimal 2 chart (tahan Shift saat klik / drag seleksi), lalu tekan <span class="kbd-badge">Alt + C</span> untuk menyelaraskan seluruh chart ke sumbu tengah alur.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Section 3: Daftar Lengkap Pintasan Keyboard -->
-        <div>
-          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+        <!-- Tab 3: Pintasan Keyboard -->
+        <div id="guide-tab-content-shortcuts" class="guide-tab-content" style="display:none; flex-direction:column; gap:16px;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/></svg>
             <span>Daftar Pintasan Keyboard (Shortcuts Cheat Sheet)</span>
           </div>
           <div class="shortcuts-grid">

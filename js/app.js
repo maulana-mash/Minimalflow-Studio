@@ -1475,6 +1475,16 @@ window.MinimalFlow = window.MinimalFlow || {};
       parallelogram: "Data I/O",
       cylinder: "Database",
       triangle: "Segitiga",
+      document: "Dokumen",
+      predefined_process: "Sub-Proses",
+      preparation: "Persiapan",
+      manual_input: "Masukan Manual",
+      manual_operation: "Operasi Manual",
+      display: "Tampilan Layar",
+      offpage: "Konektor Lembar",
+      disk_storage: "Penyimpanan Disk",
+      magnetic_tape: "Pita Magnetik",
+      punch_card: "Kartu Berlubang",
       image: "Gambar"
     };
     return map[type] || "Chart";
@@ -1494,6 +1504,26 @@ window.MinimalFlow = window.MinimalFlow || {};
         return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6 A8 3 0 0 1 20 6 V18 A8 3 0 0 1 4 18 Z M4 6 A8 3 0 0 0 20 6"/></svg>';
       case "triangle":
         return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 L22 20 L2 20 Z"/></svg>';
+      case "document":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4 H20 V17 Q16 15 12 17 Q8 19 4 17 Z"/></svg>';
+      case "predefined_process":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/></svg>';
+      case "preparation":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4 H18 L22 12 L18 20 H6 L2 12 Z"/></svg>';
+      case "manual_input":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9 L21 5 V19 H3 Z"/></svg>';
+      case "manual_operation":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5 H21 L17 19 H7 Z"/></svg>';
+      case "display":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 5 H18 Q21 12 18 19 H8 A7 7 0 0 1 8 5 Z"/></svg>';
+      case "offpage":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3 H20 V14 L12 21 L4 14 Z"/></svg>';
+      case "disk_storage":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 5 H20 Q16 12 20 19 H6 Q2 12 6 5 Z"/></svg>';
+      case "magnetic_tape":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="7"/><line x1="10" y1="17" x2="21" y2="17"/></svg>';
+      case "punch_card":
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 5 H20 V19 H4 V8 Z"/></svg>';
       case "image":
         return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
       default:
@@ -5338,6 +5368,18 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (e.target === dom.guideModalBackdrop) closeGuideModal();
     });
   }
+
+  // Guide Modal Tab Switcher
+  document.querySelectorAll(".guide-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".guide-tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".guide-tab-content").forEach(c => c.style.display = "none");
+      btn.classList.add("active");
+      const tabTarget = btn.dataset.tab;
+      const contentEl = document.getElementById(`guide-tab-content-${tabTarget}`);
+      if (contentEl) contentEl.style.display = "flex";
+    });
+  });
 
   // Initialization & Bootstrap
   const savedTheme = localStorage.getItem("minimalflow_theme") || AppState.document.theme || "light";

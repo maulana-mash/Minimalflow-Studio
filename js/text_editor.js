@@ -272,6 +272,16 @@ window.MinimalFlow = window.MinimalFlow || {};
       shapeSafeReduction = Math.min(width * 0.25, 30);
     } else if (node.type === "circle") {
       shapeSafeReduction = Math.min(width * 0.16, 20);
+    } else if (node.type === "preparation") {
+      shapeSafeReduction = Math.min(width * 0.18, 26) * 1.5;
+    } else if (node.type === "predefined_process") {
+      shapeSafeReduction = Math.min(width * 0.12, 18) * 2;
+    } else if (node.type === "manual_operation") {
+      shapeSafeReduction = Math.min(width * 0.18, 26);
+    } else if (node.type === "display") {
+      shapeSafeReduction = Math.min(width * 0.14, 18);
+    } else if (node.type === "magnetic_tape") {
+      shapeSafeReduction = Math.min(width * 0.2, 24);
     }
 
     const maxWidth = Math.max(8, width - (paddingX * 2) - shapeSafeReduction);
@@ -419,11 +429,12 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   function getDefaultShapeHeight(type) {
-    if (type === "circle" || type === "diamond") return 110;
+    if (type === "circle" || type === "diamond" || type === "offpage") return 110;
     if (type === "triangle") return 96;
-    if (type === "cylinder") return 80;
+    if (type === "cylinder" || type === "magnetic_tape") return 100;
+    if (type === "document") return 85;
     if (type === "image") return 130;
-    return 60; // rectangle, rounded, parallelogram
+    return 60; // rectangle, rounded, parallelogram, manual_operation, preparation, predefined_process, display, disk_storage, punch_card
   }
 
   function openInlineEditor(nodeId, doc, uiState, dom, onSave, onLiveRender) {
@@ -525,6 +536,14 @@ window.MinimalFlow = window.MinimalFlow || {};
         safePadX += Math.min(node.width * 0.22, 28);
       } else if (node.type === "triangle") {
         safePadX += Math.min(node.width * 0.25, 30);
+      } else if (node.type === "preparation") {
+        safePadX += Math.min(node.width * 0.18, 26);
+      } else if (node.type === "predefined_process") {
+        safePadX += Math.min(node.width * 0.12, 18);
+      } else if (node.type === "manual_operation") {
+        safePadX += Math.min(node.width * 0.18, 26);
+      } else if (node.type === "display") {
+        safePadX += Math.min(node.width * 0.14, 18);
       }
       editor.style.paddingTop = `${Math.round(padTop)}px`;
       editor.style.paddingLeft = `${Math.round(safePadX)}px`;
