@@ -455,13 +455,20 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   function updatePropertiesBar() {
-    if (AppState.ui.selectedType === "node" && AppState.ui.selectedId) {
-      const node = AppState.document.nodes[AppState.ui.selectedId];
+    if (AppState.ui.selectedType === "node" && (AppState.ui.selectedId || (AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0))) {
+      const primaryId = AppState.ui.selectedId || Array.from(AppState.ui.selectedNodeIds)[0];
+      const node = AppState.document.nodes[primaryId];
       if (node) {
         dom.nodeBar.classList.add("show");
         dom.edgeBar.classList.remove("show");
 
-        dom.nodeBarTitle.textContent = node.locked ? "Node (Terkunci)" : "Node";
+        const selectedCount = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 1 ? AppState.ui.selectedNodeIds.size : 1;
+        const allLocked = selectedCount > 1
+          ? Array.from(AppState.ui.selectedNodeIds).every(id => AppState.document.nodes[id]?.locked)
+          : !!node.locked;
+        dom.nodeBarTitle.textContent = selectedCount > 1 
+          ? (allLocked ? `${selectedCount} Chart (Terkunci)` : `${selectedCount} Chart`)
+          : (node.locked ? "Node (Terkunci)" : "Node");
 
         if (node.text) {
           document.getElementById("prop-font-family").value = node.text.fontFamily;
@@ -534,14 +541,14 @@ window.MinimalFlow = window.MinimalFlow || {};
           dom.btnAlignMenu.style.opacity = isMulti ? "1" : "0.75";
         }
 
-        if (node.locked) {
+        if (allLocked) {
           dom.iconLock.style.display = "block";
           dom.iconUnlock.style.display = "none";
-          dom.btnNodeLock.setAttribute("title", "Buka Kunci Posisi (Ctrl + L)");
+          dom.btnNodeLock.setAttribute("title", selectedCount > 1 ? "Buka Kunci Seluruh Chart (Ctrl + L)" : "Buka Kunci Posisi (Ctrl + L)");
         } else {
           dom.iconLock.style.display = "none";
           dom.iconUnlock.style.display = "block";
-          dom.btnNodeLock.setAttribute("title", "Kunci Posisi Chart (Ctrl + L)");
+          dom.btnNodeLock.setAttribute("title", selectedCount > 1 ? "Kunci Seluruh Chart (Ctrl + L)" : "Kunci Posisi Chart (Ctrl + L)");
         }
 
         let matched = false;
@@ -1283,12 +1290,22 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   function rotateNode(nodeId) {
+    const nodes = getSelectedNodesList();
+    if (nodes.length > 1) {
+      saveSnapshot();
+      nodes.forEach(n => {
+        n.rotation = ((n.rotation || 0) + 90) % 360;
+      });
+      renderAll();
+      showToast(`${nodes.length} chart diputar 90°`);
+      return;
+    }
     const node = AppState.document.nodes[nodeId];
     if (node) {
       saveSnapshot();
       node.rotation = ((node.rotation || 0) + 90) % 360;
       renderAll();
-      showToast(`Diputar: ${node.rotation}`);
+      showToast(`Diputar: ${node.rotation}°`);
     }
   }
 
@@ -1320,16 +1337,34 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   function applyNodeFill(node, color) {
-    saveSnapshot();
-    node.style.fill = color;
-    if (node.text) {
-      if (FlowEngine.isDarkColor(color)) {
-        node.text.color = "#ffffff";
-      } else {
-        node.text.color = AppState.document.theme === "dark" && color === "transparent" ? "#f4f4f5" : "#18181b";
-      }
+    const nodes = getSelectedNodesList();
+    if (nodes.length > 0) {
+      saveSnapshot();
+      nodes.forEach(n => {
+        n.style.fill = color;
+        if (n.text) {
+          if (FlowEngine.isDarkColor(color)) {
+            n.text.color = "#ffffff";
+          } else {
+            n.text.color = AppState.document.theme === "dark" && color === "transparent" ? "#f4f4f5" : "#18181b";
+          }
+        }
+      });
+      renderAll();
+      return;
     }
-    renderAll();
+    if (node) {
+      saveSnapshot();
+      node.style.fill = color;
+      if (node.text) {
+        if (FlowEngine.isDarkColor(color)) {
+          node.text.color = "#ffffff";
+        } else {
+          node.text.color = AppState.document.theme === "dark" && color === "transparent" ? "#f4f4f5" : "#18181b";
+        }
+      }
+      renderAll();
+    }
   }
 
   // Context Menu
@@ -2568,41 +2603,56 @@ window.MinimalFlow = window.MinimalFlow || {};
     showToast(`Beralih ke Mode ${nextTheme === 'dark' ? 'Gelap' : 'Terang'}`);
   });
 
-  // Node Property Bar Controls
-  document.getElementById("prop-font-family").addEventListener("change", (e) => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node && node.text) { saveSnapshot(); node.text.fontFamily = e.target.value; renderAll(); }
-  });
+  // Helper: Dapatkan seluruh node yang sedang dipilih (mendukung single & multiple selection)
+  function getSelectedNodesList() {
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    return nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+  }
 
-  dom.propFontSize.addEventListener("change", (e) => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node && node.text) {
+  // Node Property Bar Controls (Tersinkronisasi ke seluruh chart yang dipilih)
+  document.getElementById("prop-font-family").addEventListener("change", (e) => {
+    const nodes = getSelectedNodesList().filter(n => n.text);
+    if (nodes.length > 0) {
       saveSnapshot();
-      const val = parseInt(e.target.value) || 14;
-      node.text.fontSize = val;
-      if (dom.propFontSizeNum) dom.propFontSizeNum.value = val;
+      nodes.forEach(n => { n.text.fontFamily = e.target.value; });
       renderAll();
     }
   });
 
+  function updateBatchFontSize(val) {
+    const nodes = getSelectedNodesList().filter(n => n.text);
+    if (nodes.length > 0) {
+      saveSnapshot();
+      nodes.forEach(n => { n.text.fontSize = val; });
+      if (dom.propFontSizeNum) dom.propFontSizeNum.value = val;
+      if (dom.propFontSize) dom.propFontSize.value = String(val);
+      renderAll();
+    }
+  }
+
+  dom.propFontSize.addEventListener("change", (e) => {
+    const val = parseInt(e.target.value) || 14;
+    updateBatchFontSize(val);
+  });
+
   if (dom.propFontSizeNum) {
-    dom.propFontSizeNum.addEventListener("input", (e) => {
-      const node = AppState.document.nodes[AppState.ui.selectedId];
-      if (node && node.text) {
+    dom.propFontSizeNum.addEventListener("change", (e) => {
+      const val = Math.max(8, Math.min(96, parseInt(e.target.value) || 14));
+      updateBatchFontSize(val);
+    });
+    dom.propFontSizeNum.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
         const val = Math.max(8, Math.min(96, parseInt(e.target.value) || 14));
-        node.text.fontSize = val;
-        if (dom.propFontSize) dom.propFontSize.value = String(val);
-        renderAll();
+        updateBatchFontSize(val);
+        dom.propFontSizeNum.blur();
       }
     });
-    dom.propFontSizeNum.addEventListener("change", () => saveSnapshot());
   }
 
   function setTextAlign(align) {
-    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
-      ? Array.from(AppState.ui.selectedNodeIds)
-      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
-    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && n.text);
+    const nodes = getSelectedNodesList().filter(n => n.text);
     if (nodes.length > 0) {
       saveSnapshot();
       nodes.forEach(n => { n.text.align = align; });
@@ -2633,10 +2683,12 @@ window.MinimalFlow = window.MinimalFlow || {};
         }
         return;
       }
-      const node = AppState.document.nodes[AppState.ui.selectedId];
-      if (node && node.text) {
+      const nodes = getSelectedNodesList().filter(n => n.text);
+      if (nodes.length > 0) {
         saveSnapshot();
-        node.text.bold = !node.text.bold;
+        const nextBold = !nodes[0].text.bold;
+        nodes.forEach(n => { n.text.bold = nextBold; });
+        dom.btnTextBold.classList.toggle("active", nextBold);
         renderAll();
       }
     });
@@ -2658,56 +2710,79 @@ window.MinimalFlow = window.MinimalFlow || {};
         }
         return;
       }
-      const node = AppState.document.nodes[AppState.ui.selectedId];
-      if (node && node.text) {
+      const nodes = getSelectedNodesList().filter(n => n.text);
+      if (nodes.length > 0) {
         saveSnapshot();
-        node.text.italic = !node.text.italic;
+        const nextItalic = !nodes[0].text.italic;
+        nodes.forEach(n => { n.text.italic = nextItalic; });
+        dom.btnTextItalic.classList.toggle("active", nextItalic);
         renderAll();
       }
     });
   }
 
-  dom.btnTextUnderline.addEventListener("click", () => {
-    const node = AppState.document.nodes[AppState.ui.selectedId];
-    if (node && node.text) {
+  if (dom.btnTextUnderline) {
+    dom.btnTextUnderline.addEventListener("mousedown", (e) => {
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) e.preventDefault();
+    });
+    dom.btnTextUnderline.addEventListener("click", () => {
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) {
+        if (window.MinimalFlow && window.MinimalFlow.TextEditor && window.MinimalFlow.TextEditor.toggleSelectionFormatting) {
+          window.MinimalFlow.TextEditor.toggleSelectionFormatting(activeEditor, "underline");
+        } else {
+          document.execCommand("underline", false, null);
+          activeEditor.dispatchEvent(new Event("input"));
+        }
+        return;
+      }
+      const nodes = getSelectedNodesList().filter(n => n.text);
+      if (nodes.length > 0) {
+        saveSnapshot();
+        const nextUnderline = !nodes[0].text.underline;
+        nodes.forEach(n => { n.text.underline = nextUnderline; });
+        dom.btnTextUnderline.classList.toggle("active", nextUnderline);
+        renderAll();
+      }
+    });
+  }
+
+  function updateBatchPaddingX(val) {
+    const nodes = getSelectedNodesList().filter(n => n.text);
+    if (nodes.length > 0) {
       saveSnapshot();
-      node.text.underline = !node.text.underline;
+      nodes.forEach(n => { n.text.paddingX = val; });
+      if (dom.propPaddingXNum) dom.propPaddingXNum.value = val;
+      if (dom.propPaddingX) dom.propPaddingX.value = String(val);
       renderAll();
     }
-  });
+  }
 
   if (dom.propPaddingX) {
     dom.propPaddingX.addEventListener("change", (e) => {
-      const node = AppState.document.nodes[AppState.ui.selectedId];
-      if (node && node.text) {
-        saveSnapshot();
-        const val = parseInt(e.target.value) || 0;
-        node.text.paddingX = val;
-        if (dom.propPaddingXNum) dom.propPaddingXNum.value = val;
-        renderAll();
-      }
+      const val = parseInt(e.target.value) || 0;
+      updateBatchPaddingX(val);
     });
   }
 
   if (dom.propPaddingXNum) {
-    dom.propPaddingXNum.addEventListener("input", (e) => {
-      const node = AppState.document.nodes[AppState.ui.selectedId];
-      if (node && node.text) {
+    dom.propPaddingXNum.addEventListener("change", (e) => {
+      const val = Math.max(0, Math.min(120, parseInt(e.target.value) || 0));
+      updateBatchPaddingX(val);
+    });
+    dom.propPaddingXNum.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
         const val = Math.max(0, Math.min(120, parseInt(e.target.value) || 0));
-        node.text.paddingX = val;
-        if (dom.propPaddingX) dom.propPaddingX.value = String(val);
-        renderAll();
+        updateBatchPaddingX(val);
+        dom.propPaddingXNum.blur();
       }
     });
-    dom.propPaddingXNum.addEventListener("change", () => saveSnapshot());
   }
 
   // Batch Scaling Helpers
   function scaleSelectedNodes(factor) {
-    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
-      ? Array.from(AppState.ui.selectedNodeIds)
-      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
-    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    const nodes = getSelectedNodesList();
     if (nodes.length === 0) return;
     saveSnapshot();
 
@@ -2731,10 +2806,7 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   function equalizeSelectedNodesSize() {
-    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
-      ? Array.from(AppState.ui.selectedNodeIds)
-      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
-    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    const nodes = getSelectedNodesList();
     if (nodes.length < 2) {
       showToast("Pilih minimal 2 chart untuk menyamakan ukuran");
       return;
@@ -2752,10 +2824,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   // Word-Style Object Alignment (Gambar 1)
   function alignSelectedNodes(type) {
-    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
-      ? Array.from(AppState.ui.selectedNodeIds)
-      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
-    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    const nodes = getSelectedNodesList();
     if (nodes.length < 2) {
       showToast("Pilih minimal 2 chart untuk perataan");
       return;
@@ -3117,10 +3186,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   // Multi-Node Batch Resize Inputs
   function updateBatchWidth(val) {
-    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
-      ? Array.from(AppState.ui.selectedNodeIds)
-      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
-    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    const nodes = getSelectedNodesList();
     if (nodes.length > 0) {
       saveSnapshot();
       nodes.forEach(n => { n.width = val; });
@@ -3129,10 +3195,7 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   function updateBatchHeight(val) {
-    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
-      ? Array.from(AppState.ui.selectedNodeIds)
-      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
-    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
+    const nodes = getSelectedNodesList();
     if (nodes.length > 0) {
       saveSnapshot();
       nodes.forEach(n => { n.height = val; });
@@ -3171,10 +3234,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   // Text Vertical Alignment Buttons (Top, Middle, Bottom)
   function setTextValign(valign) {
-    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
-      ? Array.from(AppState.ui.selectedNodeIds)
-      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
-    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && n.text);
+    const nodes = getSelectedNodesList().filter(n => n.text);
     if (nodes.length > 0) {
       saveSnapshot();
       nodes.forEach(n => { n.text.verticalAlign = valign; });
@@ -3228,7 +3288,15 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (AppState.ui.selectedId) openInlineEditor(AppState.ui.selectedId);
   });
   dom.btnNodeRotate.addEventListener("click", () => {
-    if (AppState.ui.selectedId) rotateNode(AppState.ui.selectedId);
+    const nodes = getSelectedNodesList();
+    if (nodes.length > 0) {
+      saveSnapshot();
+      nodes.forEach(n => { n.rotation = ((n.rotation || 0) + 90) % 360; });
+      renderAll();
+      showToast(nodes.length > 1 ? `${nodes.length} chart diputar 90°` : "Chart diputar 90°");
+    } else if (AppState.ui.selectedId) {
+      rotateNode(AppState.ui.selectedId);
+    }
   });
   dom.btnNodeLock.addEventListener("click", () => {
     lockSelectedNodes(null);
