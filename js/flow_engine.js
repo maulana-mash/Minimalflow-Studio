@@ -545,6 +545,10 @@ window.MinimalFlow = window.MinimalFlow || {};
     const isDark = doc.theme === "dark";
 
     for (const [id, edge] of Object.entries(doc.edges)) {
+      const sourceNode = doc.nodes[edge.source?.nodeId];
+      const targetNode = doc.nodes[edge.target?.nodeId];
+      if (!sourceNode || !targetNode) continue;
+
       const { pathD, handlePos } = calculateEdgePath(edge, doc.nodes);
       if (!pathD) continue;
 
