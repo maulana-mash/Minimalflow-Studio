@@ -28,6 +28,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     inlineEditor: document.getElementById("inline-text-editor"),
     contextMenu: document.getElementById("app-context-menu"),
     zoomText: document.getElementById("zoom-text"),
+    btnZoomFit: document.getElementById("btn-zoom-fit"),
     toast: document.getElementById("toast"),
     btnUndo: document.getElementById("btn-undo"),
     btnRedo: document.getElementById("btn-redo"),
@@ -2474,6 +2475,77 @@ window.MinimalFlow = window.MinimalFlow || {};
     });
   });
 
+  // Pusatkan Tampilan Kanvas ke Diagram atau Batas Area Print (Fit to Screen)
+  function fitToContentOrBoundary() {
+    const containerRect = dom.container.getBoundingClientRect();
+    const viewW = containerRect.width;
+    const viewH = containerRect.height;
+    if (viewW <= 0 || viewH <= 0) return;
+
+    const nodes = Object.values(AppState.document.nodes);
+    const ws = AppState.document.canvas.workspace;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    if (nodes.length > 0) {
+      nodes.forEach(n => {
+        minX = Math.min(minX, n.x);
+        minY = Math.min(minY, n.y);
+        maxX = Math.max(maxX, n.x + n.width);
+        maxY = Math.max(maxY, n.y + n.height);
+      });
+    }
+
+    // Sertakan batas workspace/area print jika ada
+    if (ws) {
+      if (minX === Infinity) {
+        minX = ws.x;
+        minY = ws.y;
+        maxX = ws.x + ws.width;
+        maxY = ws.y + ws.height;
+      } else {
+        minX = Math.min(minX, ws.x);
+        minY = Math.min(minY, ws.y);
+        maxX = Math.max(maxX, ws.x + ws.width);
+        maxY = Math.max(maxY, ws.y + ws.height);
+      }
+    }
+
+    if (minX === Infinity || maxX === -Infinity) {
+      minX = 0;
+      minY = 0;
+      maxX = 1600;
+      maxY = 900;
+    }
+
+    const padding = 60;
+    const boxW = Math.max(100, maxX - minX);
+    const boxH = Math.max(100, maxY - minY);
+
+    const scaleX = (viewW - padding * 2) / boxW;
+    const scaleY = (viewH - padding * 2) / boxH;
+    let fitZoom = Math.min(scaleX, scaleY);
+    fitZoom = Math.min(Math.max(fitZoom, 0.2), 2.5);
+
+    const boxCenterX = minX + boxW / 2;
+    const boxCenterY = minY + boxH / 2;
+
+    const screenCenterX = viewW / 2;
+    const screenCenterY = viewH / 2;
+
+    AppState.document.canvas.zoom = fitZoom;
+    AppState.document.canvas.pan.x = Math.round(screenCenterX - boxCenterX * fitZoom);
+    AppState.document.canvas.pan.y = Math.round(screenCenterY - boxCenterY * fitZoom);
+
+    updateViewportUI();
+    renderAll();
+    showToast(`Tampilan dipusatkan (${Math.round(fitZoom * 100)}%)`);
+  }
+
+  if (dom.btnZoomFit) {
+    dom.btnZoomFit.addEventListener("click", fitToContentOrBoundary);
+  }
+
   dom.selectWorkspace.addEventListener("change", (e) => {
     saveSnapshot();
     Canvas.setWorkspacePreset(e.target.value, AppState.document, (ws, name) => {
@@ -2773,6 +2845,50 @@ window.MinimalFlow = window.MinimalFlow || {};
   ];
 
   let activeWordColorTarget = null; // "fill" | "stroke" | "textColor"
+  let previewOriginalColors = {}; // { [nodeId]: { fill, stroke, textColor } }
+
+  function previewWordColor(color) {
+    if (!activeWordColorTarget) return;
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    const nodes = nodeIds.map(id => AppState.document.nodes[id]).filter(n => n);
+    if (nodes.length === 0) return;
+
+    if (activeWordColorTarget === "fill") {
+      nodes.forEach(n => { n.style.fill = color; });
+      if (dom.fillColorBar) dom.fillColorBar.style.background = color === "transparent" ? "none" : color;
+    } else if (activeWordColorTarget === "stroke") {
+      nodes.forEach(n => { n.style.stroke = color; });
+      if (dom.strokeColorBar) dom.strokeColorBar.style.background = color === "transparent" ? "none" : color;
+    } else if (activeWordColorTarget === "textColor") {
+      nodes.forEach(n => { if (n.text) n.text.color = color; });
+      if (dom.textColorBar) dom.textColorBar.style.background = color === "transparent" ? "#000000" : color;
+    }
+    renderAll();
+  }
+
+  function revertWordColorPreview() {
+    if (!activeWordColorTarget || Object.keys(previewOriginalColors).length === 0) return;
+    Object.entries(previewOriginalColors).forEach(([id, orig]) => {
+      const n = AppState.document.nodes[id];
+      if (n) {
+        if (orig.fill !== undefined && n.style) n.style.fill = orig.fill;
+        if (orig.stroke !== undefined && n.style) n.style.stroke = orig.stroke;
+        if (orig.textColor !== undefined && n.text) n.text.color = orig.textColor;
+      }
+    });
+
+    if (AppState.ui.selectedId) {
+      const n = AppState.document.nodes[AppState.ui.selectedId];
+      if (n) {
+        if (dom.fillColorBar && n.style) dom.fillColorBar.style.background = n.style.fill || "#ffffff";
+        if (dom.strokeColorBar && n.style) dom.strokeColorBar.style.background = n.style.stroke || "#18181b";
+        if (dom.textColorBar && n.text) dom.textColorBar.style.background = n.text.color || "#000000";
+      }
+    }
+    renderAll();
+  }
 
   function initWordColorPalette() {
     if (!dom.wordThemeColorsGrid || !dom.wordStandardColorsRow) return;
@@ -2786,6 +2902,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         cell.style.background = color;
         cell.title = color;
         cell.addEventListener("click", () => applyWordChosenColor(color));
+        cell.addEventListener("mouseenter", () => previewWordColor(color));
         dom.wordThemeColorsGrid.appendChild(cell);
       });
     });
@@ -2798,6 +2915,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       cell.style.background = color;
       cell.title = color;
       cell.addEventListener("click", () => applyWordChosenColor(color));
+      cell.addEventListener("mouseenter", () => previewWordColor(color));
       dom.wordStandardColorsRow.appendChild(cell);
     });
 
@@ -2807,11 +2925,28 @@ window.MinimalFlow = window.MinimalFlow || {};
     transCell.dataset.color = "transparent";
     transCell.title = "Transparan (Tanpa Warna)";
     transCell.addEventListener("click", () => applyWordChosenColor("transparent"));
+    transCell.addEventListener("mouseenter", () => previewWordColor("transparent"));
     dom.wordStandardColorsRow.appendChild(transCell);
   }
 
   function openWordColorPicker(target, triggerEl) {
     activeWordColorTarget = target;
+    previewOriginalColors = {};
+
+    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+      ? Array.from(AppState.ui.selectedNodeIds)
+      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+    nodeIds.forEach(id => {
+      const n = AppState.document.nodes[id];
+      if (n) {
+        previewOriginalColors[id] = {
+          fill: n.style ? n.style.fill : null,
+          stroke: n.style ? n.style.stroke : null,
+          textColor: n.text ? n.text.color : null
+        };
+      }
+    });
+
     const isDark = AppState.document.theme === "dark";
 
     if (target === "textColor") {
@@ -2833,6 +2968,8 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   function closeWordColorPicker() {
+    revertWordColorPreview();
+    previewOriginalColors = {};
     if (dom.wordColorPickerPopover) {
       dom.wordColorPickerPopover.classList.remove("show");
     }
@@ -2841,6 +2978,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   function applyWordChosenColor(color) {
     if (!activeWordColorTarget) return;
+    previewOriginalColors = {}; // Kosongkan agar tidak di-revert saat popover ditutup
     const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
       ? Array.from(AppState.ui.selectedNodeIds)
       : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
@@ -2872,6 +3010,12 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   initWordColorPalette();
 
+  if (dom.wordColorPickerPopover) {
+    dom.wordColorPickerPopover.addEventListener("mouseleave", () => {
+      revertWordColorPreview();
+    });
+  }
+
   if (dom.btnFillColorPicker) {
     dom.btnFillColorPicker.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -2894,6 +3038,13 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   if (dom.btnWordColorAuto) {
+    dom.btnWordColorAuto.addEventListener("mouseenter", () => {
+      const isDark = AppState.document.theme === "dark";
+      const autoCol = activeWordColorTarget === "fill"
+        ? (isDark ? "#18181b" : "#ffffff")
+        : (activeWordColorTarget === "textColor" ? (isDark ? "#fafafa" : "#18181b") : (isDark ? "#f4f4f5" : "#18181b"));
+      previewWordColor(autoCol);
+    });
     dom.btnWordColorAuto.addEventListener("click", () => {
       const isDark = AppState.document.theme === "dark";
       if (activeWordColorTarget === "fill") {
@@ -2907,6 +3058,9 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   if (dom.btnWordColorNone) {
+    dom.btnWordColorNone.addEventListener("mouseenter", () => {
+      previewWordColor("transparent");
+    });
     dom.btnWordColorNone.addEventListener("click", () => {
       applyWordChosenColor("transparent");
     });

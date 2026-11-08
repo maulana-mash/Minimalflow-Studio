@@ -604,36 +604,47 @@ window.MinimalFlow = window.MinimalFlow || {};
         { id: "nw", x: 0, y: 0 },
         { id: "ne", x: node.width, y: 0 },
         { id: "sw", x: 0, y: node.height },
-        { id: "se", x: node.width, y: node.height },
-        { id: "n",  x: node.width / 2, y: 0 },
-        { id: "s",  x: node.width / 2, y: node.height },
-        { id: "w",  x: 0, y: node.height / 2 },
-        { id: "e",  x: node.width, y: node.height / 2 }
+        { id: "se", x: node.width, y: node.height }
       ];
 
       const titleMap = {
-        nw: "Tarik untuk mengubah ukuran (Tahan Alt untuk simetris dari tengah)",
-        ne: "Tarik untuk mengubah ukuran (Tahan Alt untuk simetris dari tengah)",
-        se: "Tarik untuk mengubah ukuran (Tahan Alt untuk simetris dari tengah)",
-        sw: "Tarik untuk mengubah ukuran (Tahan Alt untuk simetris dari tengah)",
-        n:  "Tarik untuk memanjangkan ke atas (Tahan Alt untuk atas & bawah simetris)",
-        s:  "Tarik untuk memanjangkan ke bawah (Tahan Alt untuk bawah & atas simetris)",
-        w:  "Tarik untuk melebarkan ke kiri (Tahan Alt untuk kiri & kanan simetris)",
-        e:  "Tarik untuk melebarkan ke kanan (Tahan Alt untuk kanan & kiri simetris)"
+        nw: "Tarik pin pojok untuk mengubah panjang & lebar (Tahan Alt untuk simetris dari tengah)",
+        ne: "Tarik pin pojok untuk mengubah panjang & lebar (Tahan Alt untuk simetris dari tengah)",
+        se: "Tarik pin pojok untuk mengubah panjang & lebar (Tahan Alt untuk simetris dari tengah)",
+        sw: "Tarik pin pojok untuk mengubah panjang & lebar (Tahan Alt untuk simetris dari tengah)"
       };
+
+      // Garis bounding box seleksi tipis 1px putus-putus mengelilingi chart tanpa menutupi outline asli
+      const selBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      selBox.setAttribute("class", "selection-bounding-box");
+      selBox.setAttribute("x", node.x - 2);
+      selBox.setAttribute("y", node.y - 2);
+      selBox.setAttribute("width", node.width + 4);
+      selBox.setAttribute("height", node.height + 4);
+      selBox.setAttribute("rx", (node.type === "circle" ? (node.width + 4) / 2 : 4));
+      selBox.setAttribute("fill", "none");
+      selBox.setAttribute("stroke", "#3b82f6");
+      selBox.setAttribute("stroke-width", "1");
+      selBox.setAttribute("stroke-dasharray", "3,3");
+      selBox.setAttribute("opacity", "0.85");
+      selBox.setAttribute("pointer-events", "none");
+      if (rot) {
+        selBox.setAttribute("transform", `rotate(${rot} ${node.x + node.width / 2} ${node.y + node.height / 2})`);
+      }
+      overlaySelectionEl.appendChild(selBox);
 
       handles.forEach(h => {
         const rotP = rotatePoint(h.x, h.y, node.width / 2, node.height / 2, rot);
         const handle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         handle.setAttribute("class", `resize-handle ${h.id}`);
-        handle.setAttribute("x", node.x + rotP.x - 4);
-        handle.setAttribute("y", node.y + rotP.y - 4);
-        handle.setAttribute("width", 8);
-        handle.setAttribute("height", 8);
+        handle.setAttribute("x", node.x + rotP.x - 3.5);
+        handle.setAttribute("y", node.y + rotP.y - 3.5);
+        handle.setAttribute("width", 7);
+        handle.setAttribute("height", 7);
         handle.setAttribute("rx", 1.5);
         handle.setAttribute("data-node-id", node.id);
         handle.setAttribute("data-corner", h.id);
-        handle.setAttribute("title", titleMap[h.id] || "Tarik untuk mengubah ukuran chart");
+        handle.setAttribute("title", titleMap[h.id] || "Tarik pin pojok untuk mengubah ukuran chart");
         overlaySelectionEl.appendChild(handle);
       });
     });
