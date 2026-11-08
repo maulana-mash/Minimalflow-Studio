@@ -528,6 +528,35 @@ window.MinimalFlow = window.MinimalFlow || {};
     return g;
   }
 
+  function getOrCreateArrowMarker(svgDefs, type, color) {
+    if (!svgDefs || !color) return type === "start" ? "url(#arrow-start)" : "url(#arrow-end)";
+    const safeColor = String(color).toLowerCase().replace(/[^a-z0-9]/g, "_");
+    const markerId = `arrow-${type}-${safeColor}`;
+    let marker = svgDefs.querySelector(`#${markerId}`);
+    if (!marker) {
+      marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+      marker.setAttribute("id", markerId);
+      marker.setAttribute("viewBox", "0 0 10 10");
+      marker.setAttribute("markerWidth", "6");
+      marker.setAttribute("markerHeight", "6");
+      marker.setAttribute("orient", "auto");
+      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      if (type === "start") {
+        marker.setAttribute("refX", "1");
+        marker.setAttribute("refY", "5");
+        p.setAttribute("d", "M 10 1.5 L 0 5 L 10 8.5 z");
+      } else {
+        marker.setAttribute("refX", "9");
+        marker.setAttribute("refY", "5");
+        p.setAttribute("d", "M 0 1.5 L 10 5 L 0 8.5 z");
+      }
+      p.setAttribute("fill", color);
+      marker.appendChild(p);
+      svgDefs.appendChild(marker);
+    }
+    return `url(#${markerId})`;
+  }
+
   function createEdgeElement(id, edge, doc, uiState, svgDefs) {
     const isDark = doc.theme === "dark";
     const sourceNode = doc.nodes[edge.source?.nodeId];
