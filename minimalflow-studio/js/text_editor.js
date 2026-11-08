@@ -71,25 +71,123 @@ window.MinimalFlow = window.MinimalFlow || {};
     return s;
   }
 
-  function serializeEditorHtml(html) {
-    if (!html) return "";
-    let res = String(html)
-      .replace(/<(div|p)\b[^>]*>\s*<br\s*\/?>\s*<\/\1>/gi, "\n")
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/^<(div|p)\b[^>]*>/i, "")
-      .replace(/<\/(div|p)><(div|p)\b[^>]*>/gi, "\n")
-      .replace(/<(div|p)\b[^>]*>/gi, "\n")
-      .replace(/<\/(div|p)>/gi, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&apos;/g, "'");
+  function serializeEditorDOM(rootEl) {
+    if (!rootEl) return "";
+    let el = rootEl;
+    if (typeof rootEl === "string") {
+      el = document.createElement("div");
+      el.innerHTML = rootEl;
+    }
 
-    res = sanitizeHtmlFormatting(res);
+    const BLOCK_TAGS = new Set(["DIV", "P", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"]);
 
-    if (res.startsWith("\n")) res = res.slice(1);
+    function isBlockElement(node) {
+      return node && node.nodeType === 1 && BLOCK_TAGS.has(node.tagName);
+    }
+
+    // Membedakan Enter disengaja vs bogus placeholder <br> bawaan browser
+    function isTrailingBogusBr(brNode) {
+      let next = brNode.nextSibling;
+      while (next) {
+        if (isBlockElement(next)) {
+          return true; // Berada tepat sebelum block berikutnya
+        }
+        if (next.nodeType === 3 && next.nodeValue.length > 0) {
+          return false; // Masih ada teks setelahnya
+        }
+        if (next.nodeType === 1) {
+          if (next.tagName === "BR") return false; // Ada <br> lagi setelahnya (misal <br><br>)
+          if ((next.textContent && next.textContent.length > 0) || (next.querySelector && next.querySelector("br"))) {
+            return false;
+          }
+        }
+        next = next.nextSibling;
+      }
+      return true; // Mencapai akhir container tanpa konten lanjutan -> bogus!
+    }
+
+    const lines = [];
+    let currentLine = "";
+    let hasOpenBlock = false;
+
+    function flushLine() {
+      lines.push(currentLine);
+      currentLine = "";
+      hasOpenBlock = false;
+    }
+
+    function walk(node) {
+      for (let child = node.firstChild; child; child = child.nextSibling) {
+        if (isBlockElement(child)) {
+          if (hasOpenBlock || currentLine.length > 0) {
+            flushLine();
+          }
+          hasOpenBlock = true;
+          walk(child);
+          flushLine();
+        } else if (child.nodeType === 3) {
+          hasOpenBlock = true;
+          const val = child.nodeValue.replace(/\u00A0/g, " ");
+          if (val.includes("\n")) {
+            const parts = val.split("\n");
+            for (let p = 0; p < parts.length; p++) {
+              if (p > 0) flushLine();
+              currentLine += parts[p];
+            }
+            hasOpenBlock = true;
+          } else {
+            currentLine += val;
+          }
+        } else if (child.nodeType === 1) {
+          const tag = child.tagName;
+          if (tag === "BR") {
+            hasOpenBlock = true;
+            if (!isTrailingBogusBr(child)) {
+              flushLine();
+            }
+          } else if (tag === "B" || tag === "STRONG") {
+            hasOpenBlock = true;
+            currentLine += "<b>";
+            walk(child);
+            currentLine += "</b>";
+          } else if (tag === "I" || tag === "EM") {
+            hasOpenBlock = true;
+            currentLine += "<i>";
+            walk(child);
+            currentLine += "</i>";
+          } else {
+            hasOpenBlock = true;
+            walk(child);
+          }
+        }
+      }
+    }
+
+    walk(el);
+    if (hasOpenBlock || currentLine.length > 0) {
+      flushLine();
+    }
+
+    let res = lines.join("\n")
+      .replace(/<b>\s*<\/b>/gi, "")
+      .replace(/<i>\s*<\/i>/gi, "");
+
     return res;
+  }
+
+  const serializeEditorHtml = serializeEditorDOM;
+
+  function computeRequiredNodeHeight(node, totalTextHeight) {
+    const padY = (node.text && node.text.paddingY !== undefined) ? node.text.paddingY : 10;
+    const baseContentH = totalTextHeight + (padY * 2);
+
+    if (node.type === "cylinder") {
+      const uncappedH = baseContentH / (1 - 0.22 * 1.5);
+      const cappedH = baseContentH + (18 * 1.5);
+      return Math.round(Math.min(uncappedH, cappedH));
+    }
+
+    return Math.round(baseContentH);
   }
 
   // Parse inline Markdown / HTML tags into styled spans (100% clean, ZERO asterisks)
@@ -452,23 +550,17 @@ window.MinimalFlow = window.MinimalFlow || {};
     editor.addEventListener("dblclick", stopPropagation);
     editor.addEventListener("wheel", stopPropagation);
 
+    const initialTextSnapshot = node.text?.content ?? "";
+
     function onLiveInput() {
-      const val = serializeEditorHtml(editor.innerHTML);
+      const val = serializeEditorDOM(editor);
       node.text.content = val;
       node.text.isPlaceholder = !editor.textContent.trim();
       adjustPadding();
 
       const layout = layoutNodeText(node);
-      const padY = (node.text && node.text.paddingY !== undefined) ? node.text.paddingY : 10;
-      let extraSafeY = 0;
-      if (node.type === "cylinder") {
-        const ry = Math.min(node.height * 0.22, 18);
-        extraSafeY = ry * 1.5;
-      }
-      const minRequiredH = layout.totalTextHeight + (padY * 2) + extraSafeY;
       const baseH = node.baseHeight || getDefaultShapeHeight(node.type);
-      // Tinggi target bertambah dinamis saat Enter, dan MENYUSUT KEMBALI saat Enter dihapus
-      const targetHeight = Math.max(baseH, Math.round(minRequiredH + 8));
+      const targetHeight = Math.max(baseH, computeRequiredNodeHeight(node, layout.totalTextHeight));
 
       if (targetHeight !== node.height) {
         node.height = targetHeight;
@@ -503,34 +595,28 @@ window.MinimalFlow = window.MinimalFlow || {};
       activeEditingNodeId = null;
       activeEditingFinishFn = null;
 
-      const rawText = editor.textContent.trim();
-      const hasOnlyNewlines = !rawText && /<br\b|<div|<p/i.test(editor.innerHTML);
+      const previousContent = node.text?.content ?? "";
+      const serialized = serializeEditorDOM(editor);
+
+      const rawText = serialized.trim();
       const isPlaceholder = rawText.toLowerCase() === "insert text";
 
-      if (isPlaceholder || (!rawText && !hasOnlyNewlines)) {
+      if (isPlaceholder || !rawText) {
         node.text.content = "";
         node.text.isPlaceholder = false;
       } else {
-        let serialized = serializeEditorHtml(editor.innerHTML);
-        // Hapus newline di awal teks jika ada, tapi pertahankan newline di akhir yang dibuat user via Enter
-        if (serialized.startsWith("\n")) {
-          serialized = serialized.replace(/^\n+/, "");
-        }
         node.text.content = serialized;
         node.text.isPlaceholder = false;
       }
 
-      // Pastikan tinggi node sinkron kembali dengan baseHeight jika teks dihapus
-      const layout = layoutNodeText(node);
-      const padY = (node.text && node.text.paddingY !== undefined) ? node.text.paddingY : 10;
-      let extraSafeY = 0;
-      if (node.type === "cylinder") {
-        const ry = Math.min(node.height * 0.22, 18);
-        extraSafeY = ry * 1.5;
+      // DIRTY-CHECK GUARD:
+      // Hanya sesuaikan tinggi jika teks memang berubah dari kondisi awal sebelum diedit.
+      // Jika teks sama sekali tidak berubah (atau hanya klik lalu keluar), tinggi node 100% dipertahankan.
+      if (node.text.content !== previousContent && node.text.content !== initialTextSnapshot) {
+        const layout = layoutNodeText(node);
+        const baseH = node.baseHeight || getDefaultShapeHeight(node.type);
+        node.height = Math.max(baseH, computeRequiredNodeHeight(node, layout.totalTextHeight));
       }
-      const minRequiredH = layout.totalTextHeight + (padY * 2) + extraSafeY;
-      const baseH = node.baseHeight || getDefaultShapeHeight(node.type);
-      node.height = Math.max(baseH, Math.round(minRequiredH + 8));
 
       fo.remove();
       if (curSvgText) {
@@ -617,6 +703,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     parseInlineSpans,
     cleanMarkdownToHtml,
     serializeEditorHtml,
+    serializeEditorDOM,
+    computeRequiredNodeHeight,
     sanitizeHtmlFormatting
   };
 
