@@ -320,9 +320,22 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
   }
 
+  function getDefaultShapeHeight(type) {
+    if (type === "circle" || type === "diamond") return 110;
+    if (type === "triangle") return 96;
+    if (type === "cylinder") return 80;
+    if (type === "image") return 130;
+    return 60; // rectangle, rounded, parallelogram
+  }
+
   function openInlineEditor(nodeId, doc, uiState, dom, onSave, onLiveRender) {
     const node = doc.nodes[nodeId];
     if (!node || node.type === "image") return;
+
+    // Jika baseHeight belum tercatat atau node belum pernah di-resize manual, catat tinggi acuan dasar
+    if (node.baseHeight === undefined) {
+      node.baseHeight = Math.max(getDefaultShapeHeight(node.type), Math.min(node.height, 80));
+    }
 
     // Jika ada node lain yang sedang diedit, selesaikan dulu
     if (activeEditingNodeId && activeEditingFinishFn) {
@@ -446,9 +459,19 @@ window.MinimalFlow = window.MinimalFlow || {};
       adjustPadding();
 
       const layout = layoutNodeText(node);
-      const minRequiredH = layout.totalTextHeight + (node.text.paddingY || 10) * 2;
-      if (minRequiredH > node.height) {
-        node.height = Math.round(minRequiredH + 8);
+      const padY = (node.text && node.text.paddingY !== undefined) ? node.text.paddingY : 10;
+      let extraSafeY = 0;
+      if (node.type === "cylinder") {
+        const ry = Math.min(node.height * 0.22, 18);
+        extraSafeY = ry * 1.5;
+      }
+      const minRequiredH = layout.totalTextHeight + (padY * 2) + extraSafeY;
+      const baseH = node.baseHeight || getDefaultShapeHeight(node.type);
+      // Tinggi target bertambah dinamis saat Enter, dan MENYUSUT KEMBALI saat Enter dihapus
+      const targetHeight = Math.max(baseH, Math.round(minRequiredH + 8));
+
+      if (targetHeight !== node.height) {
+        node.height = targetHeight;
         fo.setAttribute("height", String(node.height));
         const shapePath = nodeGroupEl.querySelector(".node-shape");
         if (shapePath && FlowEngine) {
@@ -488,6 +511,18 @@ window.MinimalFlow = window.MinimalFlow || {};
         node.text.content = serializeEditorHtml(editor.innerHTML).trim();
         node.text.isPlaceholder = false;
       }
+
+      // Pastikan tinggi node sinkron kembali dengan baseHeight jika teks dihapus
+      const layout = layoutNodeText(node);
+      const padY = (node.text && node.text.paddingY !== undefined) ? node.text.paddingY : 10;
+      let extraSafeY = 0;
+      if (node.type === "cylinder") {
+        const ry = Math.min(node.height * 0.22, 18);
+        extraSafeY = ry * 1.5;
+      }
+      const minRequiredH = layout.totalTextHeight + (padY * 2) + extraSafeY;
+      const baseH = node.baseHeight || getDefaultShapeHeight(node.type);
+      node.height = Math.max(baseH, Math.round(minRequiredH + 8));
 
       fo.remove();
       if (curSvgText) {

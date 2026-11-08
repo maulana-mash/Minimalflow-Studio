@@ -286,6 +286,8 @@ window.MinimalFlow = window.MinimalFlow || {};
       y: Math.round(worldY - height / 2),
       width,
       height,
+      baseWidth: width,
+      baseHeight: height,
       rotation: 0,
       locked: false,
       groupId: null,
@@ -293,7 +295,8 @@ window.MinimalFlow = window.MinimalFlow || {};
       style: {
         fill: isDark ? "#27272a" : "#ffffff",
         stroke: isDark ? "#f4f4f5" : "#18181b",
-        strokeWidth: 1.5
+        strokeWidth: 1.5,
+        dashed: "solid"
       },
       text: type === "image" ? null : {
         content: "",
@@ -394,9 +397,15 @@ window.MinimalFlow = window.MinimalFlow || {};
         path.setAttribute("d", getShapePath(node.type, node.width, node.height));
         path.setAttribute("fill", node.style.fill);
         path.setAttribute("stroke", node.style.stroke || (isDark ? "#f4f4f5" : "#18181b"));
-        path.setAttribute("stroke-width", node.style.strokeWidth || 1.5);
-        if (node.style.dashed === "dashed") {
+        const strokeW = (node.style && node.style.strokeWidth !== undefined) ? node.style.strokeWidth : 1.5;
+        path.setAttribute("stroke-width", strokeW);
+        const dashStyle = (node.style && node.style.dashed) || "solid";
+        if (dashStyle === "dashed") {
           path.setAttribute("stroke-dasharray", "6, 4");
+        } else if (dashStyle === "dotted") {
+          path.setAttribute("stroke-dasharray", "2, 3");
+        } else {
+          path.removeAttribute("stroke-dasharray");
         }
         g.appendChild(path);
 

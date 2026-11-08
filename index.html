@@ -393,6 +393,25 @@
             </button>
           </div>
 
+          <!-- Outline Style & Thickness (Fitur Edit Outline & Dash) -->
+          <div style="display:flex; align-items:center; gap:3px;" title="Ketebalan & Gaya Garis Outline Chart">
+            <select id="prop-node-stroke-width" class="prop-select" style="min-width:54px; height:26px;" title="Ketebalan Garis Tepi Chart (Outline Thickness)">
+              <option value="1">1.0 px</option>
+              <option value="1.5" selected>1.5 px</option>
+              <option value="2">2.0 px</option>
+              <option value="2.5">2.5 px</option>
+              <option value="3">3.0 px</option>
+              <option value="4">4.0 px</option>
+              <option value="5">5.0 px</option>
+              <option value="6">6.0 px</option>
+            </select>
+            <select id="prop-node-stroke-dash" class="prop-select" style="min-width:70px; height:26px;" title="Gaya Garis Outline Chart (Solid, Putus-putus, Titik-titik)">
+              <option value="solid" selected>Solid ──</option>
+              <option value="dashed">Dash - -</option>
+              <option value="dotted">Dot · · ·</option>
+            </select>
+          </div>
+
           <!-- Layer Z-Order Quick Actions (Ikon Saja: Ke Bawah, Ke Atas, Paling Bawah, Paling Atas) -->
           <div class="layer-order-group" style="display:flex; align-items:center; gap:2px; margin-left:6px;" title="Urutan Layer / Z-Order">
             <button id="btn-layer-down" class="btn-icon" style="width:28px; height:28px;" title="Ke Bawah (Ctrl + [)">

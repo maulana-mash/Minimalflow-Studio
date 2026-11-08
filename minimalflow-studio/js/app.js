@@ -66,6 +66,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     fillColorBar: document.getElementById("fill-color-bar"),
     btnStrokeColorPicker: document.getElementById("btn-stroke-color-picker"),
     strokeColorBar: document.getElementById("stroke-color-bar"),
+    propNodeStrokeWidth: document.getElementById("prop-node-stroke-width"),
+    propNodeStrokeDash: document.getElementById("prop-node-stroke-dash"),
     btnAlignMenu: document.getElementById("btn-align-menu"),
     menuAlignDropdown: document.getElementById("menu-align-dropdown"),
     wordColorPickerPopover: document.getElementById("word-color-picker-popover"),
@@ -305,6 +307,16 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   function renderAll() {
+    if (AppState.document && AppState.document.nodes) {
+      const TextEditor = window.MinimalFlow && window.MinimalFlow.TextEditor;
+      if (TextEditor && typeof TextEditor.sanitizeHtmlFormatting === "function") {
+        Object.values(AppState.document.nodes).forEach(n => {
+          if (n && n.text && n.text.content && (n.text.content.includes("<span") || n.text.content.includes("&amp;"))) {
+            n.text.content = TextEditor.sanitizeHtmlFormatting(n.text.content.replace(/&amp;/g, "&"));
+          }
+        });
+      }
+    }
     FlowEngine.renderNodes(dom.layerNodes, AppState.document, AppState.ui, (nodeId) => {
       selectSingleNode(nodeId, false);
       openInlineEditor(nodeId);
@@ -524,6 +536,22 @@ window.MinimalFlow = window.MinimalFlow || {};
         }
         if (dom.strokeColorBar) {
           dom.strokeColorBar.style.background = node.style.stroke || (AppState.document.theme === "dark" ? "#f4f4f5" : "#18181b");
+        }
+
+        if (dom.propNodeStrokeWidth) {
+          const sw = (node.style && node.style.strokeWidth !== undefined) ? String(node.style.strokeWidth) : "1.5";
+          dom.propNodeStrokeWidth.value = sw;
+          if (!dom.propNodeStrokeWidth.value) {
+            const opt = document.createElement("option");
+            opt.value = sw;
+            opt.textContent = `${sw} px`;
+            dom.propNodeStrokeWidth.appendChild(opt);
+            dom.propNodeStrokeWidth.value = sw;
+          }
+        }
+
+        if (dom.propNodeStrokeDash) {
+          dom.propNodeStrokeDash.value = (node.style && node.style.dashed) || "solid";
         }
 
         if (dom.btnPinToolbar) {
@@ -2143,6 +2171,22 @@ window.MinimalFlow = window.MinimalFlow || {};
       return;
     }
 
+    if (AppState.ui.mode === "RESIZING_NODE") {
+      const rs = AppState.ui.resizeStart;
+      if (rs && rs.nodeId && AppState.document.nodes[rs.nodeId]) {
+        AppState.document.nodes[rs.nodeId].baseWidth = AppState.document.nodes[rs.nodeId].width;
+        AppState.document.nodes[rs.nodeId].baseHeight = AppState.document.nodes[rs.nodeId].height;
+      }
+      if (rs && rs.multiNodes) {
+        Object.keys(rs.multiNodes).forEach(mId => {
+          if (AppState.document.nodes[mId]) {
+            AppState.document.nodes[mId].baseWidth = AppState.document.nodes[mId].width;
+            AppState.document.nodes[mId].baseHeight = AppState.document.nodes[mId].height;
+          }
+        });
+      }
+    }
+
     if (AppState.ui.mode !== "EDITING_TEXT") {
       AppState.ui.mode = "IDLE";
     }
@@ -2796,6 +2840,8 @@ window.MinimalFlow = window.MinimalFlow || {};
       n.y = Math.round(n.y - dh / 2);
       n.width = newW;
       n.height = newH;
+      n.baseWidth = newW;
+      n.baseHeight = newH;
     });
 
     if (nodes.length === 1 && dom.propNodeW && dom.propNodeH) {
@@ -2818,6 +2864,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     nodes.slice(1).forEach(n => {
       n.width = targetW;
       n.height = targetH;
+      n.baseWidth = targetW;
+      n.baseHeight = targetH;
     });
     renderAll();
     showToast(`Ukuran seluruh chart disamakan (${targetW} x ${targetH} px)`);
@@ -3190,7 +3238,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     const nodes = getSelectedNodesList();
     if (nodes.length > 0) {
       saveSnapshot();
-      nodes.forEach(n => { n.width = val; });
+      nodes.forEach(n => { n.width = val; n.baseWidth = val; });
       renderAll();
     }
   }
@@ -3199,9 +3247,51 @@ window.MinimalFlow = window.MinimalFlow || {};
     const nodes = getSelectedNodesList();
     if (nodes.length > 0) {
       saveSnapshot();
-      nodes.forEach(n => { n.height = val; });
+      nodes.forEach(n => { n.height = val; n.baseHeight = val; });
       renderAll();
     }
+  }
+
+  function updateBatchStrokeWidth(val) {
+    const nodes = getSelectedNodesList();
+    if (nodes.length > 0) {
+      saveSnapshot();
+      nodes.forEach(n => {
+        if (!n.locked) {
+          n.style = n.style || {};
+          n.style.strokeWidth = val;
+        }
+      });
+      renderAll();
+    }
+  }
+
+  function updateBatchStrokeDash(val) {
+    const nodes = getSelectedNodesList();
+    if (nodes.length > 0) {
+      saveSnapshot();
+      nodes.forEach(n => {
+        if (!n.locked) {
+          n.style = n.style || {};
+          n.style.dashed = val;
+        }
+      });
+      renderAll();
+    }
+  }
+
+  if (dom.propNodeStrokeWidth) {
+    dom.propNodeStrokeWidth.addEventListener("change", (e) => {
+      const val = parseFloat(e.target.value) || 1.5;
+      updateBatchStrokeWidth(val);
+    });
+  }
+
+  if (dom.propNodeStrokeDash) {
+    dom.propNodeStrokeDash.addEventListener("change", (e) => {
+      const val = e.target.value;
+      updateBatchStrokeDash(val);
+    });
   }
 
   dom.propNodeW.addEventListener("change", (e) => {
@@ -3219,6 +3309,13 @@ window.MinimalFlow = window.MinimalFlow || {};
   dom.propNodeH.addEventListener("change", (e) => {
     const val = Math.max(10, parseInt(e.target.value) || 10);
     updateBatchHeight(val);
+  });
+  dom.propNodeH.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const val = Math.max(10, parseInt(e.target.value) || 10);
+      updateBatchHeight(val);
+      dom.propNodeH.blur();
+    }
   });
   dom.propNodeH.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
