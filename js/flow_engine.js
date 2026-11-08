@@ -540,9 +540,39 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
   }
 
+  function getOrCreateArrowMarker(svgDefs, type, color) {
+    if (!svgDefs || !color) return type === "start" ? "url(#arrow-start)" : "url(#arrow-end)";
+    const safeColor = String(color).toLowerCase().replace(/[^a-z0-9]/g, "_");
+    const markerId = `arrow-${type}-${safeColor}`;
+    let marker = svgDefs.querySelector(`#${markerId}`);
+    if (!marker) {
+      marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+      marker.setAttribute("id", markerId);
+      marker.setAttribute("viewBox", "0 0 10 10");
+      marker.setAttribute("markerWidth", "6");
+      marker.setAttribute("markerHeight", "6");
+      marker.setAttribute("orient", "auto");
+      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      if (type === "start") {
+        marker.setAttribute("refX", "1");
+        marker.setAttribute("refY", "5");
+        p.setAttribute("d", "M 10 1.5 L 0 5 L 10 8.5 z");
+      } else {
+        marker.setAttribute("refX", "9");
+        marker.setAttribute("refY", "5");
+        p.setAttribute("d", "M 0 1.5 L 10 5 L 0 8.5 z");
+      }
+      p.setAttribute("fill", color);
+      marker.appendChild(p);
+      svgDefs.appendChild(marker);
+    }
+    return `url(#${markerId})`;
+  }
+
   function renderEdges(layerEdgesEl, doc, uiState) {
     layerEdgesEl.innerHTML = "";
     const isDark = doc.theme === "dark";
+    const svgDefs = layerEdgesEl.ownerSVGElement ? layerEdgesEl.ownerSVGElement.querySelector("defs") : null;
 
     const sortedEdges = Object.entries(doc.edges).sort((a, b) => {
       const zA = a[1].zIndex ?? 0;
@@ -572,13 +602,19 @@ window.MinimalFlow = window.MinimalFlow || {};
       path.setAttribute("d", pathD);
       path.setAttribute("fill", "none");
       path.setAttribute("stroke", strokeColor);
+      path.style.stroke = strokeColor;
       path.setAttribute("stroke-width", strokeW);
+      path.style.strokeWidth = `${strokeW}px`;
 
       if (edge.style.dashed === "dashed") path.setAttribute("stroke-dasharray", "6, 4");
       if (edge.style.dashed === "dotted") path.setAttribute("stroke-dasharray", "2, 3");
 
-      if (edge.style.markerEnd === "arrow") path.setAttribute("marker-end", "url(#arrow-end)");
-      if (edge.style.markerStart === "arrow") path.setAttribute("marker-start", "url(#arrow-start)");
+      if (edge.style.markerEnd === "arrow") {
+        path.setAttribute("marker-end", getOrCreateArrowMarker(svgDefs, "end", strokeColor));
+      }
+      if (edge.style.markerStart === "arrow") {
+        path.setAttribute("marker-start", getOrCreateArrowMarker(svgDefs, "start", strokeColor));
+      }
 
       g.appendChild(path);
 

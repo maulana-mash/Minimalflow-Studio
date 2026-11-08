@@ -4331,26 +4331,32 @@ window.MinimalFlow = window.MinimalFlow || {};
     const raw = dom.inputJsonRaw.value.trim();
     if (!raw) {
       dom.jsonImportStatus.className = "status-badge status-idle";
-      dom.jsonImportStatus.textContent = "Menunggu kode JSON / MMD atau lepaskan berkas...";
+      dom.jsonImportStatus.textContent = "Menunggu kode JSON / MMD atau teks prompt alur...";
       return null;
     }
 
     const adapter = window.MinimalFlow && window.MinimalFlow.Adapter;
     const isDark = AppState.document.theme === "dark";
 
+    // 1. Coba parse lewat Universal Adapter (MinimalFlow Native JSON, Modul Trainer Mashimurelay, Mermaid Script)
     if (adapter && typeof adapter.parseUniversal === "function") {
       const res = adapter.parseUniversal(raw, isDark);
-      if (res.success) {
+      if (res.success && res.document) {
         dom.jsonImportStatus.className = "status-badge status-success";
-        dom.jsonImportStatus.textContent = `${res.formatTitle}: ${res.nodeCount} node, ${res.edgeCount} kabel`;
+        dom.jsonImportStatus.textContent = `${res.formatTitle}: ${res.nodeCount} node, ${res.edgeCount} kabel (Siap Diterapkan)`;
         return res.document;
-      } else {
-        dom.jsonImportStatus.className = "status-badge status-error";
-        dom.jsonImportStatus.textContent = res.error || "Format tidak valid atau tidak dikenali";
-        return null;
       }
     }
 
+    // 2. Periksa apakah berupa Prompt Alur Teks Bebas atau Alur Langkah (1. Mulai -> 2. Input ... dsb)
+    const steps = extractStepsFromAnyInput(raw);
+    if (steps && steps.length >= 2) {
+      dom.jsonImportStatus.className = "status-badge status-info";
+      dom.jsonImportStatus.textContent = `Teks Prompt Alur Terdeteksi (${steps.length} Langkah) — Klik "Rapikan Format" atau langsung "Kompilasi & Terapkan"`;
+      return buildFlowchartFromStepList(steps, isDark);
+    }
+
+    // 3. Coba parsing JSON langsung untuk format generik
     try {
       const parsed = JSON.parse(raw);
       if (typeof parsed !== "object" || parsed === null) {
@@ -4362,8 +4368,13 @@ window.MinimalFlow = window.MinimalFlow || {};
       dom.jsonImportStatus.textContent = `Format JSON Valid (${nodeCount} node, ${edgeCount} kabel)`;
       return parsed;
     } catch (e) {
+      if (steps && steps.length === 1) {
+        dom.jsonImportStatus.className = "status-badge status-info";
+        dom.jsonImportStatus.textContent = `Teks Alur Terdeteksi (1 Langkah) — Tambahkan langkah berikutnya atau klik "Rapikan Format"`;
+        return buildFlowchartFromStepList(steps, isDark);
+      }
       dom.jsonImportStatus.className = "status-badge status-error";
-      dom.jsonImportStatus.textContent = `Sintaks Error: ${e.message}`;
+      dom.jsonImportStatus.textContent = "Format Belum Dikenali: Masukkan JSON, Mermaid, atau teks alur langkah bertingkat";
       return null;
     }
   }
@@ -4480,7 +4491,15 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   // Kompilasi dan ganti seluruh alur kanvas aktif
   function compileAndApplyJsonReplace() {
-    const parsed = updateJsonImportStatus();
+    let parsed = updateJsonImportStatus();
+    if (!parsed && dom.inputJsonRaw && dom.inputJsonRaw.value.trim()) {
+      const isDark = AppState.document.theme === "dark";
+      const normalized = normalizeOrGenerateFlowchart(dom.inputJsonRaw.value.trim(), isDark);
+      if (normalized && normalized.formatted) {
+        dom.inputJsonRaw.value = normalized.formatted;
+        parsed = updateJsonImportStatus();
+      }
+    }
     if (!parsed) {
       showToast("Gagal: Format diagram tidak valid atau belum dikenali!");
       return;
@@ -4532,7 +4551,15 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   // Gabungkan (Merge) alur baru ke alur yang sudah ada
   function compileAndApplyJsonMerge() {
-    const parsed = updateJsonImportStatus();
+    let parsed = updateJsonImportStatus();
+    if (!parsed && dom.inputJsonRaw && dom.inputJsonRaw.value.trim()) {
+      const isDark = AppState.document.theme === "dark";
+      const normalized = normalizeOrGenerateFlowchart(dom.inputJsonRaw.value.trim(), isDark);
+      if (normalized && normalized.formatted) {
+        dom.inputJsonRaw.value = normalized.formatted;
+        parsed = updateJsonImportStatus();
+      }
+    }
     if (!parsed || !parsed.nodes) {
       showToast("Gagal: Format JSON tidak valid!");
       return;

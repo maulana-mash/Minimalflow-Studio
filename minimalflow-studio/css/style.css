@@ -1389,8 +1389,7 @@ body.is-tap-connecting .pin-circle {
 
 .edge-path {
   cursor: pointer;
-  stroke: var(--text-main);
-  transition: stroke-width 0.15s ease;
+  transition: stroke-width 0.15s ease, filter 0.15s ease;
 }
 
 .edge-path:hover {
@@ -1398,12 +1397,11 @@ body.is-tap-connecting .pin-circle {
 }
 
 .edge-group.selected .edge-path {
-  stroke: var(--accent-black) !important;
+  filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.75));
 }
 
 #arrow-end-path,
 #arrow-start-path {
-  fill: var(--text-main);
   transition: fill 0.15s ease;
 }
 
@@ -1412,6 +1410,13 @@ body.is-tap-connecting .pin-circle {
   fill: var(--bg-surface);
   stroke: var(--text-main);
   stroke-width: 1.8;
+  transition: all 0.15s ease;
+}
+
+.edge-group.selected .edge-handle {
+  fill: #3b82f6 !important;
+  stroke: #ffffff !important;
+  stroke-width: 2.2px !important;
 }
 
 .edge-handle:hover {
@@ -1567,6 +1572,17 @@ body.dark-mode .group-bounding-rect {
 body.dark-mode .status-success {
   color: #4ade80;
   background: rgba(74, 222, 128, 0.15);
+}
+
+.status-info {
+  color: #1d4ed8;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+body.dark-mode .status-info {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.15);
 }
 
 .status-error {
