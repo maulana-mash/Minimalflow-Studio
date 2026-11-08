@@ -29,9 +29,10 @@ window.MinimalFlow = window.MinimalFlow || {};
     clone.querySelector("#layer-draft")?.remove();
     clone.querySelectorAll(".pin-circle")?.forEach(el => el.remove());
     clone.querySelectorAll(".edge-handle")?.forEach(el => el.remove());
+    clone.querySelectorAll(".edge-hit-area")?.forEach(el => el.remove());
 
     // Hapus seluruh teks placeholder "Insert text" agar hasil ekspor gambar murni bersih
-    clone.querySelectorAll("#layer-nodes text").forEach(textEl => {
+    clone.querySelectorAll("#layer-elements text, #layer-nodes text, .node-group text").forEach(textEl => {
       const txt = (textEl.textContent || "").trim().toLowerCase();
       if (!txt || txt === "insert text") {
         textEl.remove();

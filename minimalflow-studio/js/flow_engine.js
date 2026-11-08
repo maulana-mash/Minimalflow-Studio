@@ -356,13 +356,363 @@ window.MinimalFlow = window.MinimalFlow || {};
     };
   }
 
-  function renderNodes(layerNodesEl, doc, uiState, onDblClick) {
-    layerNodesEl.innerHTML = "";
+  function createNodeElement(id, node, doc, uiState, onDblClick) {
     const isDark = doc.theme === "dark";
     const textEditorModule = exports.TextEditor;
+    const isSelected = (uiState.selectedNodeIds && uiState.selectedNodeIds.has(id)) || uiState.selectedId === id;
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "node-group" + (isSelected ? " selected" : "") + (node.locked ? " locked" : "") + (node.isContainer ? " is-container" : ""));
+    g.setAttribute("data-id", id);
+    if (node.groupId) {
+      g.setAttribute("data-group-id", node.groupId);
+    }
 
-    // Render container/subgraph boundaries first so children sit on top, then sort by zIndex
-    const sortedEntries = Object.entries(doc.nodes).sort((a, b) => {
+    // Explicit dblclick event listener on each node element
+    if (typeof onDblClick === "function" && !node.isContainer) {
+      g.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onDblClick(id);
+      });
+    }
+
+    const rot = node.rotation || 0;
+    g.setAttribute("transform", `translate(${node.x}, ${node.y}) rotate(${rot}, ${node.width / 2}, ${node.height / 2})`);
+
+    if (node.type === "image" && node.src) {
+      const img = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      img.setAttribute("href", node.src);
+      img.setAttribute("x", 0);
+      img.setAttribute("y", 0);
+      img.setAttribute("width", node.width);
+      img.setAttribute("height", node.height);
+      img.setAttribute("preserveAspectRatio", "contain");
+      img.style.pointerEvents = "none";
+      g.appendChild(img);
+
+      const borderRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      borderRect.setAttribute("class", "node-shape");
+      borderRect.setAttribute("x", 0);
+      borderRect.setAttribute("y", 0);
+      borderRect.setAttribute("width", node.width);
+      borderRect.setAttribute("height", node.height);
+      borderRect.setAttribute("rx", 4);
+      borderRect.setAttribute("fill", "transparent");
+      borderRect.setAttribute("stroke", isDark ? "#3f3f46" : "#e4e4e7");
+      borderRect.setAttribute("stroke-width", 1);
+      g.appendChild(borderRect);
+    } else {
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("class", "node-shape");
+      path.setAttribute("d", getShapePath(node.type, node.width, node.height));
+      path.setAttribute("fill", node.style.fill);
+      path.setAttribute("stroke", node.style.stroke || (isDark ? "#f4f4f5" : "#18181b"));
+      const strokeW = (node.style && node.style.strokeWidth !== undefined) ? node.style.strokeWidth : 1.5;
+      path.setAttribute("stroke-width", strokeW);
+      const dashStyle = (node.style && node.style.dashed) || "solid";
+      if (dashStyle === "dashed") {
+        path.setAttribute("stroke-dasharray", "6, 4");
+      } else if (dashStyle === "dotted") {
+        path.setAttribute("stroke-dasharray", "2, 3");
+      } else {
+        path.removeAttribute("stroke-dasharray");
+      }
+      g.appendChild(path);
+
+      if (node.text && textEditorModule) {
+        const rawContent = (node.text.content || "").trim();
+        const isPh = !rawContent || rawContent.toLowerCase() === "insert text" || !!node.text.isPlaceholder;
+
+        // Hanya render teks jika ada isi nyata, hindari mencetak watermark/placeholder "Insert text"
+        if (!isPh && rawContent.length > 0) {
+          // Clip-Path agar teks tidak menembus kotak pembatas atas dan bawah chart
+          const clipId = `clip-node-text-${id}`;
+          const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+          const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+          clipPath.setAttribute("id", clipId);
+          const clipShape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          clipShape.setAttribute("d", getShapePath(node.type, node.width, node.height));
+          clipPath.appendChild(clipShape);
+          defs.appendChild(clipPath);
+          g.appendChild(defs);
+
+          const layout = textEditorModule.layoutNodeText(node);
+          const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          textEl.setAttribute("id", `node-text-${id}`);
+          textEl.setAttribute("clip-path", `url(#${clipId})`);
+          textEl.setAttribute("x", layout.xPos);
+          textEl.setAttribute("y", layout.startY);
+          textEl.setAttribute("text-anchor", layout.anchor);
+          textEl.setAttribute("font-family", node.text.fontFamily);
+          textEl.setAttribute("font-size", node.text.fontSize);
+          textEl.setAttribute("font-weight", node.text.bold ? "700" : "500");
+          textEl.setAttribute("font-style", node.text.italic ? "italic" : "normal");
+          textEl.setAttribute("text-decoration", node.text.underline ? "underline" : "none");
+          const activeTextColor = node.text.color || (isDarkColor(node.style.fill) ? "#ffffff" : (isDark ? "#fafafa" : "#18181b"));
+          textEl.setAttribute("fill", activeTextColor);
+          textEl.style.pointerEvents = "none";
+          textEl.style.userSelect = "none";
+          textEl.style.webkitUserSelect = "none";
+
+          layout.lines.forEach((lineSpans, index) => {
+            const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+            tspan.setAttribute("x", layout.xPos);
+            if (index > 0) tspan.setAttribute("dy", layout.lineHeight);
+
+            if (Array.isArray(lineSpans)) {
+              if (lineSpans.length === 0 || (lineSpans.length === 1 && !lineSpans[0].text)) {
+                tspan.textContent = " ";
+              } else {
+                lineSpans.forEach(span => {
+                  const subSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                  if (span.bold) {
+                    subSpan.setAttribute("font-weight", "700");
+                  } else {
+                    subSpan.setAttribute("font-weight", node.text.bold ? "700" : "500");
+                  }
+
+                  if (span.italic) {
+                    subSpan.setAttribute("font-style", "italic");
+                  } else {
+                    subSpan.setAttribute("font-style", node.text.italic ? "italic" : "normal");
+                  }
+
+                  subSpan.textContent = span.text;
+                  tspan.appendChild(subSpan);
+                });
+              }
+            } else {
+              tspan.textContent = lineSpans || " ";
+            }
+
+            textEl.appendChild(tspan);
+          });
+          g.appendChild(textEl);
+        }
+      }
+    }
+
+    if (node.locked && !node.isContainer) {
+      const lockG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      lockG.setAttribute("transform", `translate(${node.width - 20}, 6) scale(0.65)`);
+      lockG.innerHTML = `
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="none" stroke="${isDark ? '#f4f4f5' : '#18181b'}" stroke-width="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" fill="none" stroke="${isDark ? '#f4f4f5' : '#18181b'}" stroke-width="2"/>
+      `;
+      g.appendChild(lockG);
+    }
+
+    if (!node.isContainer) {
+      ["N", "E", "S", "W"].forEach(pin => {
+        const localP = getNodePinLocal(node, pin);
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("class", "pin-circle");
+        circle.setAttribute("cx", localP.x);
+        circle.setAttribute("cy", localP.y);
+        circle.setAttribute("r", 5);
+        circle.setAttribute("data-node-id", id);
+        circle.setAttribute("data-pin", pin);
+
+        if (uiState.pendingPinSource && 
+            uiState.pendingPinSource.nodeId === id && 
+            uiState.pendingPinSource.pin === pin) {
+          circle.classList.add("active-source");
+        }
+        g.appendChild(circle);
+      });
+    }
+
+    return g;
+  }
+
+  function createEdgeElement(id, edge, doc, uiState, svgDefs) {
+    const isDark = doc.theme === "dark";
+    const sourceNode = doc.nodes[edge.source?.nodeId];
+    const targetNode = doc.nodes[edge.target?.nodeId];
+    if (!sourceNode || !targetNode) return null;
+
+    const { pathD, handlePos } = calculateEdgePath(edge, doc.nodes);
+    if (!pathD) return null;
+
+    const isSelected = uiState.selectedId === id;
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "edge-group" + (isSelected ? " selected" : ""));
+    g.setAttribute("data-id", id);
+
+    const strokeW = edge.style && edge.style.strokeWidth !== undefined ? edge.style.strokeWidth : 1.5;
+    const strokeColor = getEdgeStrokeColor(edge, isDark);
+    g.style.color = strokeColor;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("class", "edge-path");
+    path.setAttribute("d", pathD);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", strokeColor);
+    path.style.stroke = strokeColor;
+    path.setAttribute("stroke-width", strokeW);
+    path.style.strokeWidth = `${strokeW}px`;
+
+    if (edge.style && edge.style.dashed === "dashed") path.setAttribute("stroke-dasharray", "6, 4");
+    if (edge.style && edge.style.dashed === "dotted") path.setAttribute("stroke-dasharray", "2, 3");
+
+    if (edge.style && edge.style.markerEnd === "arrow") {
+      path.setAttribute("marker-end", getOrCreateArrowMarker(svgDefs, "end", strokeColor));
+    }
+    if (edge.style && edge.style.markerStart === "arrow") {
+      path.setAttribute("marker-start", getOrCreateArrowMarker(svgDefs, "start", strokeColor));
+    }
+
+    g.appendChild(path);
+
+    // Invisible wide hit-area stroke (exactly 8px) for effortless arrow selection
+    const hitPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    hitPath.setAttribute("class", "edge-hit-area");
+    hitPath.setAttribute("d", pathD);
+    hitPath.setAttribute("fill", "none");
+    hitPath.setAttribute("stroke", "transparent");
+    hitPath.setAttribute("stroke-width", "8");
+    hitPath.setAttribute("stroke-linecap", "round");
+    hitPath.setAttribute("stroke-linejoin", "round");
+    hitPath.style.cursor = "pointer";
+    hitPath.style.pointerEvents = "stroke";
+    g.appendChild(hitPath);
+
+    // Render edge label badge if label is provided
+    if (edge.label && String(edge.label).trim()) {
+      const textG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      textG.setAttribute("class", "edge-label-group");
+      textG.style.pointerEvents = "none";
+
+      const textStr = String(edge.label).trim();
+      const badgeW = Math.max(26, textStr.length * 7.2 + 14);
+      const badgeH = 20;
+
+      const badgeRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      badgeRect.setAttribute("class", "edge-label-bg");
+      badgeRect.setAttribute("x", handlePos.x - badgeW / 2);
+      badgeRect.setAttribute("y", handlePos.y - badgeH / 2);
+      badgeRect.setAttribute("width", badgeW);
+      badgeRect.setAttribute("height", badgeH);
+      badgeRect.setAttribute("rx", "4");
+      badgeRect.setAttribute("fill", isDark ? "#18181b" : "#ffffff");
+      badgeRect.setAttribute("stroke", isDark ? "#3f3f46" : "#d4d4d8");
+      badgeRect.setAttribute("stroke-width", "1");
+
+      const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      textEl.setAttribute("class", "edge-label-text");
+      textEl.setAttribute("x", handlePos.x);
+      textEl.setAttribute("y", handlePos.y);
+      textEl.setAttribute("text-anchor", "middle");
+      textEl.setAttribute("dominant-baseline", "central");
+      textEl.setAttribute("fill", isDark ? "#d4d4d8" : "#27272a");
+      textEl.setAttribute("font-family", "Inter, -apple-system, BlinkMacSystemFont, sans-serif");
+      textEl.setAttribute("font-size", "11px");
+      textEl.setAttribute("font-weight", "500");
+      textEl.textContent = textStr;
+
+      textG.appendChild(badgeRect);
+      textG.appendChild(textEl);
+      g.appendChild(textG);
+    }
+
+    const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    handle.setAttribute("class", "edge-handle");
+    handle.setAttribute("cx", handlePos.x);
+    handle.setAttribute("cy", handlePos.y);
+    handle.setAttribute("r", 4.5);
+    handle.setAttribute("data-edge-id", id);
+    handle.setAttribute("title", "Tarik untuk membelokkan jalur garis / Double-click untuk reset");
+    if (edge.type === "step") {
+      const n1 = getNodePinNormal(edge.source.pin, sourceNode.rotation || 0);
+      const n2 = getNodePinNormal(edge.target.pin, targetNode.rotation || 0);
+      const isSourceH = Math.abs(n1.x) > Math.abs(n1.y);
+      const isTargetH = Math.abs(n2.x) > Math.abs(n2.y);
+      if (isSourceH && isTargetH) handle.style.cursor = "ew-resize";
+      else if (!isSourceH && !isTargetH) handle.style.cursor = "ns-resize";
+      else handle.style.cursor = "move";
+    } else {
+      handle.style.cursor = "move";
+    }
+    g.appendChild(handle);
+
+    return g;
+  }
+
+  /**
+   * Unified diagram renderer: interleave nodes and edges strictly by ascending zIndex
+   * so DOM order directly reflects the visual layer hierarchy.
+   */
+  function renderDiagram(containerEl, doc, uiState, onDblClick) {
+    if (!containerEl) return;
+    containerEl.innerHTML = "";
+    const svgDefs = containerEl.ownerSVGElement ? containerEl.ownerSVGElement.querySelector("defs") : null;
+    const nodes = doc.nodes || {};
+    const edges = doc.edges || {};
+
+    const containers = [];
+    const regularItems = [];
+
+    // Separate container nodes (swimlanes/kelompok) — always render at the very bottom
+    Object.entries(nodes).forEach(([id, node]) => {
+      if (node.isContainer) {
+        containers.push({ type: "node", id, node, zIndex: node.zIndex ?? 0 });
+      } else {
+        regularItems.push({ type: "node", id, node, zIndex: node.zIndex ?? 0 });
+      }
+    });
+
+    Object.entries(edges).forEach(([id, edge]) => {
+      let z = edge.zIndex;
+      if (z === undefined) {
+        const srcZ = nodes[edge.source?.nodeId]?.zIndex ?? 0;
+        const tgtZ = nodes[edge.target?.nodeId]?.zIndex ?? 0;
+        z = Math.min(srcZ, tgtZ) - 0.1;
+      }
+      regularItems.push({ type: "edge", id, edge, zIndex: z });
+    });
+
+    // Containers sorted ascending (lowest first)
+    containers.sort((a, b) => a.zIndex - b.zIndex);
+
+    // Regular items sorted ascending (lowest first, highest topmost)
+    regularItems.sort((a, b) => {
+      if (a.zIndex !== b.zIndex) {
+        return a.zIndex - b.zIndex;
+      }
+      // If tied: edges render below nodes by default
+      if (a.type !== b.type) {
+        return a.type === "edge" ? -1 : 1;
+      }
+      return 0;
+    });
+
+    // Render containers first (bottom-most)
+    containers.forEach(item => {
+      const el = createNodeElement(item.id, item.node, doc, uiState, onDblClick);
+      if (el) containerEl.appendChild(el);
+    });
+
+    // Render interleaved regular items
+    regularItems.forEach(item => {
+      if (item.type === "node") {
+        const el = createNodeElement(item.id, item.node, doc, uiState, onDblClick);
+        if (el) containerEl.appendChild(el);
+      } else if (item.type === "edge") {
+        const el = createEdgeElement(item.id, item.edge, doc, uiState, svgDefs);
+        if (el) containerEl.appendChild(el);
+      }
+    });
+  }
+
+  function renderNodes(layerNodesEl, doc, uiState, onDblClick) {
+    if (!layerNodesEl) return;
+    const hasEdges = !!layerNodesEl.querySelector(".edge-group");
+    if (hasEdges) {
+      renderDiagram(layerNodesEl, doc, uiState, onDblClick);
+      return;
+    }
+    layerNodesEl.innerHTML = "";
+    const sortedEntries = Object.entries(doc.nodes || {}).sort((a, b) => {
       const aCont = a[1].isContainer ? 1 : 0;
       const bCont = b[1].isContainer ? 1 : 0;
       if (aCont !== bCont) return bCont - aCont;
@@ -373,321 +723,106 @@ window.MinimalFlow = window.MinimalFlow || {};
     });
 
     for (const [id, node] of sortedEntries) {
-      const isSelected = (uiState.selectedNodeIds && uiState.selectedNodeIds.has(id)) || uiState.selectedId === id;
-      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      g.setAttribute("class", "node-group" + (isSelected ? " selected" : "") + (node.locked ? " locked" : "") + (node.isContainer ? " is-container" : ""));
-      g.setAttribute("data-id", id);
-      if (node.groupId) {
-        g.setAttribute("data-group-id", node.groupId);
-      }
-
-      // Explicit dblclick event listener on each node element
-      if (typeof onDblClick === "function" && !node.isContainer) {
-        g.addEventListener("dblclick", (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onDblClick(id);
-        });
-      }
-
-      const rot = node.rotation || 0;
-      g.setAttribute("transform", `translate(${node.x}, ${node.y}) rotate(${rot}, ${node.width / 2}, ${node.height / 2})`);
-
-      if (node.type === "image" && node.src) {
-        const img = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        img.setAttribute("href", node.src);
-        img.setAttribute("x", 0);
-        img.setAttribute("y", 0);
-        img.setAttribute("width", node.width);
-        img.setAttribute("height", node.height);
-        img.setAttribute("preserveAspectRatio", "contain");
-        img.style.pointerEvents = "none";
-        g.appendChild(img);
-
-        const borderRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        borderRect.setAttribute("class", "node-shape");
-        borderRect.setAttribute("x", 0);
-        borderRect.setAttribute("y", 0);
-        borderRect.setAttribute("width", node.width);
-        borderRect.setAttribute("height", node.height);
-        borderRect.setAttribute("rx", 4);
-        borderRect.setAttribute("fill", "transparent");
-        borderRect.setAttribute("stroke", isDark ? "#3f3f46" : "#e4e4e7");
-        borderRect.setAttribute("stroke-width", 1);
-        g.appendChild(borderRect);
-      } else {
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("class", "node-shape");
-        path.setAttribute("d", getShapePath(node.type, node.width, node.height));
-        path.setAttribute("fill", node.style.fill);
-        path.setAttribute("stroke", node.style.stroke || (isDark ? "#f4f4f5" : "#18181b"));
-        const strokeW = (node.style && node.style.strokeWidth !== undefined) ? node.style.strokeWidth : 1.5;
-        path.setAttribute("stroke-width", strokeW);
-        const dashStyle = (node.style && node.style.dashed) || "solid";
-        if (dashStyle === "dashed") {
-          path.setAttribute("stroke-dasharray", "6, 4");
-        } else if (dashStyle === "dotted") {
-          path.setAttribute("stroke-dasharray", "2, 3");
-        } else {
-          path.removeAttribute("stroke-dasharray");
-        }
-        g.appendChild(path);
-
-        if (node.text && textEditorModule) {
-          const rawContent = (node.text.content || "").trim();
-          const isPh = !rawContent || rawContent.toLowerCase() === "insert text" || !!node.text.isPlaceholder;
-
-          // Hanya render teks jika ada isi nyata, hindari mencetak watermark/placeholder "Insert text"
-          if (!isPh && rawContent.length > 0) {
-            // Clip-Path agar teks tidak menembus kotak pembatas atas dan bawah chart
-            const clipId = `clip-node-text-${id}`;
-            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-            const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
-            clipPath.setAttribute("id", clipId);
-            const clipShape = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            clipShape.setAttribute("d", getShapePath(node.type, node.width, node.height));
-            clipPath.appendChild(clipShape);
-            defs.appendChild(clipPath);
-            g.appendChild(defs);
-
-            const layout = textEditorModule.layoutNodeText(node);
-            const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            textEl.setAttribute("id", `node-text-${id}`);
-            textEl.setAttribute("clip-path", `url(#${clipId})`);
-            textEl.setAttribute("x", layout.xPos);
-            textEl.setAttribute("y", layout.startY);
-            textEl.setAttribute("text-anchor", layout.anchor);
-            textEl.setAttribute("font-family", node.text.fontFamily);
-            textEl.setAttribute("font-size", node.text.fontSize);
-            textEl.setAttribute("font-weight", node.text.bold ? "700" : "500");
-            textEl.setAttribute("font-style", node.text.italic ? "italic" : "normal");
-            textEl.setAttribute("text-decoration", node.text.underline ? "underline" : "none");
-            const activeTextColor = node.text.color || (this.isDarkColor(node.style.fill) ? "#ffffff" : (isDark ? "#fafafa" : "#18181b"));
-            textEl.setAttribute("fill", activeTextColor);
-            textEl.style.pointerEvents = "none";
-            textEl.style.userSelect = "none";
-            textEl.style.webkitUserSelect = "none";
-
-            layout.lines.forEach((lineSpans, index) => {
-              const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-              tspan.setAttribute("x", layout.xPos);
-              if (index > 0) tspan.setAttribute("dy", layout.lineHeight);
-
-              if (Array.isArray(lineSpans)) {
-                if (lineSpans.length === 0 || (lineSpans.length === 1 && !lineSpans[0].text)) {
-                  tspan.textContent = " ";
-                } else {
-                  lineSpans.forEach(span => {
-                    const subSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                    if (span.bold) {
-                      subSpan.setAttribute("font-weight", "700");
-                    } else {
-                      subSpan.setAttribute("font-weight", node.text.bold ? "700" : "500");
-                    }
-
-                    if (span.italic) {
-                      subSpan.setAttribute("font-style", "italic");
-                    } else {
-                      subSpan.setAttribute("font-style", node.text.italic ? "italic" : "normal");
-                    }
-
-                    subSpan.textContent = span.text;
-                    tspan.appendChild(subSpan);
-                  });
-                }
-              } else {
-                tspan.textContent = lineSpans || " ";
-              }
-
-              textEl.appendChild(tspan);
-            });
-            g.appendChild(textEl);
-          }
-        }
-      }
-
-      if (node.locked && !node.isContainer) {
-        const lockG = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        lockG.setAttribute("transform", `translate(${node.width - 20}, 6) scale(0.65)`);
-        lockG.innerHTML = `
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="none" stroke="${isDark ? '#f4f4f5' : '#18181b'}" stroke-width="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" fill="none" stroke="${isDark ? '#f4f4f5' : '#18181b'}" stroke-width="2"/>
-        `;
-        g.appendChild(lockG);
-      }
-
-      if (!node.isContainer) {
-        ["N", "E", "S", "W"].forEach(pin => {
-          const localP = getNodePinLocal(node, pin);
-          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          circle.setAttribute("class", "pin-circle");
-          circle.setAttribute("cx", localP.x);
-          circle.setAttribute("cy", localP.y);
-          circle.setAttribute("r", 5);
-          circle.setAttribute("data-node-id", id);
-          circle.setAttribute("data-pin", pin);
-
-          if (uiState.pendingPinSource && 
-              uiState.pendingPinSource.nodeId === id && 
-              uiState.pendingPinSource.pin === pin) {
-            circle.classList.add("active-source");
-          }
-          g.appendChild(circle);
-        });
-      }
-
-      layerNodesEl.appendChild(g);
+      const g = createNodeElement(id, node, doc, uiState, onDblClick);
+      if (g) layerNodesEl.appendChild(g);
     }
-  }
-
-  function getOrCreateArrowMarker(svgDefs, type, color) {
-    if (!svgDefs || !color) return type === "start" ? "url(#arrow-start)" : "url(#arrow-end)";
-    const safeColor = String(color).toLowerCase().replace(/[^a-z0-9]/g, "_");
-    const markerId = `arrow-${type}-${safeColor}`;
-    let marker = svgDefs.querySelector(`#${markerId}`);
-    if (!marker) {
-      marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-      marker.setAttribute("id", markerId);
-      marker.setAttribute("viewBox", "0 0 10 10");
-      marker.setAttribute("markerWidth", "6");
-      marker.setAttribute("markerHeight", "6");
-      marker.setAttribute("orient", "auto");
-      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      if (type === "start") {
-        marker.setAttribute("refX", "1");
-        marker.setAttribute("refY", "5");
-        p.setAttribute("d", "M 10 1.5 L 0 5 L 10 8.5 z");
-      } else {
-        marker.setAttribute("refX", "9");
-        marker.setAttribute("refY", "5");
-        p.setAttribute("d", "M 0 1.5 L 10 5 L 0 8.5 z");
-      }
-      p.setAttribute("fill", color);
-      marker.appendChild(p);
-      svgDefs.appendChild(marker);
-    }
-    return `url(#${markerId})`;
   }
 
   function renderEdges(layerEdgesEl, doc, uiState) {
-    layerEdgesEl.innerHTML = "";
-    const isDark = doc.theme === "dark";
+    if (!layerEdgesEl) return;
     const svgDefs = layerEdgesEl.ownerSVGElement ? layerEdgesEl.ownerSVGElement.querySelector("defs") : null;
+    const isDark = doc.theme === "dark";
 
-    const sortedEdges = Object.entries(doc.edges).sort((a, b) => {
+    // If layerEdgesEl is the unified element container containing .node-group,
+    // update edge geometry in-place so we DO NOT unmount or recreate active text editor nodes!
+    const hasNodes = !!layerEdgesEl.querySelector(".node-group");
+    if (hasNodes) {
+      const edges = doc.edges || {};
+      const edgeIds = new Set(Object.keys(edges));
+
+      // Remove deleted edges
+      layerEdgesEl.querySelectorAll(".edge-group").forEach(el => {
+        const id = el.dataset.id;
+        if (!edgeIds.has(id)) {
+          el.remove();
+        }
+      });
+
+      // Update or create each edge
+      Object.entries(edges).forEach(([id, edge]) => {
+        const sourceNode = doc.nodes[edge.source?.nodeId];
+        const targetNode = doc.nodes[edge.target?.nodeId];
+        if (!sourceNode || !targetNode) return;
+
+        const { pathD, handlePos } = calculateEdgePath(edge, doc.nodes);
+        if (!pathD) return;
+
+        const existingG = layerEdgesEl.querySelector(`.edge-group[data-id="${id}"]`);
+        if (existingG) {
+          const path = existingG.querySelector(".edge-path");
+          if (path) {
+            path.setAttribute("d", pathD);
+            const strokeColor = getEdgeStrokeColor(edge, isDark);
+            path.setAttribute("stroke", strokeColor);
+            path.style.stroke = strokeColor;
+            const strokeW = edge.style && edge.style.strokeWidth !== undefined ? edge.style.strokeWidth : 1.5;
+            path.setAttribute("stroke-width", strokeW);
+            path.style.strokeWidth = `${strokeW}px`;
+
+            if (edge.style && edge.style.dashed === "dashed") path.setAttribute("stroke-dasharray", "6, 4");
+            else if (edge.style && edge.style.dashed === "dotted") path.setAttribute("stroke-dasharray", "2, 3");
+            else path.removeAttribute("stroke-dasharray");
+
+            if (edge.style && edge.style.markerEnd === "arrow") {
+              path.setAttribute("marker-end", getOrCreateArrowMarker(svgDefs, "end", strokeColor));
+            } else {
+              path.removeAttribute("marker-end");
+            }
+            if (edge.style && edge.style.markerStart === "arrow") {
+              path.setAttribute("marker-start", getOrCreateArrowMarker(svgDefs, "start", strokeColor));
+            } else {
+              path.removeAttribute("marker-start");
+            }
+          }
+
+          const hitPath = existingG.querySelector(".edge-hit-area");
+          if (hitPath) hitPath.setAttribute("d", pathD);
+
+          const handle = existingG.querySelector(".edge-handle");
+          if (handle) {
+            handle.setAttribute("cx", handlePos.x);
+            handle.setAttribute("cy", handlePos.y);
+          }
+
+          const labelBg = existingG.querySelector(".edge-label-bg");
+          const labelText = existingG.querySelector(".edge-label-text");
+          if (labelBg && labelText) {
+            const badgeW = parseFloat(labelBg.getAttribute("width")) || 26;
+            const badgeH = parseFloat(labelBg.getAttribute("height")) || 20;
+            labelBg.setAttribute("x", handlePos.x - badgeW / 2);
+            labelBg.setAttribute("y", handlePos.y - badgeH / 2);
+            labelText.setAttribute("x", handlePos.x);
+            labelText.setAttribute("y", handlePos.y);
+          }
+        } else {
+          const g = createEdgeElement(id, edge, doc, uiState, svgDefs);
+          if (g) layerEdgesEl.appendChild(g);
+        }
+      });
+      return;
+    }
+
+    // Standalone container
+    layerEdgesEl.innerHTML = "";
+    const sortedEdges = Object.entries(doc.edges || {}).sort((a, b) => {
       const zA = a[1].zIndex ?? 0;
       const zB = b[1].zIndex ?? 0;
       return zA - zB;
     });
 
     for (const [id, edge] of sortedEdges) {
-      const sourceNode = doc.nodes[edge.source?.nodeId];
-      const targetNode = doc.nodes[edge.target?.nodeId];
-      if (!sourceNode || !targetNode) continue;
-
-      const { pathD, handlePos } = calculateEdgePath(edge, doc.nodes);
-      if (!pathD) continue;
-
-      const isSelected = uiState.selectedId === id;
-      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      g.setAttribute("class", "edge-group" + (isSelected ? " selected" : ""));
-      g.setAttribute("data-id", id);
-
-      const strokeW = edge.style.strokeWidth !== undefined ? edge.style.strokeWidth : 1.5;
-      const strokeColor = getEdgeStrokeColor(edge, isDark);
-      g.style.color = strokeColor;
-
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("class", "edge-path");
-      path.setAttribute("d", pathD);
-      path.setAttribute("fill", "none");
-      path.setAttribute("stroke", strokeColor);
-      path.style.stroke = strokeColor;
-      path.setAttribute("stroke-width", strokeW);
-      path.style.strokeWidth = `${strokeW}px`;
-
-      if (edge.style.dashed === "dashed") path.setAttribute("stroke-dasharray", "6, 4");
-      if (edge.style.dashed === "dotted") path.setAttribute("stroke-dasharray", "2, 3");
-
-      if (edge.style.markerEnd === "arrow") {
-        path.setAttribute("marker-end", getOrCreateArrowMarker(svgDefs, "end", strokeColor));
-      }
-      if (edge.style.markerStart === "arrow") {
-        path.setAttribute("marker-start", getOrCreateArrowMarker(svgDefs, "start", strokeColor));
-      }
-
-      g.appendChild(path);
-
-      // Invisible wide hit-area stroke (exactly 8px per user specification) for effortless arrow selection
-      const hitPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      hitPath.setAttribute("class", "edge-hit-area");
-      hitPath.setAttribute("d", pathD);
-      hitPath.setAttribute("fill", "none");
-      hitPath.setAttribute("stroke", "transparent");
-      hitPath.setAttribute("stroke-width", "8");
-      hitPath.setAttribute("stroke-linecap", "round");
-      hitPath.setAttribute("stroke-linejoin", "round");
-      hitPath.style.cursor = "pointer";
-      hitPath.style.pointerEvents = "stroke";
-      g.appendChild(hitPath);
-
-      // Render edge label badge if label is provided
-      if (edge.label && String(edge.label).trim()) {
-        const textG = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        textG.setAttribute("class", "edge-label-group");
-        textG.style.pointerEvents = "none";
-
-        const textStr = String(edge.label).trim();
-        const badgeW = Math.max(26, textStr.length * 7.2 + 14);
-        const badgeH = 20;
-
-        const badgeRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        badgeRect.setAttribute("x", handlePos.x - badgeW / 2);
-        badgeRect.setAttribute("y", handlePos.y - badgeH / 2);
-        badgeRect.setAttribute("width", badgeW);
-        badgeRect.setAttribute("height", badgeH);
-        badgeRect.setAttribute("rx", "4");
-        badgeRect.setAttribute("fill", isDark ? "#18181b" : "#ffffff");
-        badgeRect.setAttribute("stroke", isDark ? "#3f3f46" : "#d4d4d8");
-        badgeRect.setAttribute("stroke-width", "1");
-
-        const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        textEl.setAttribute("x", handlePos.x);
-        textEl.setAttribute("y", handlePos.y);
-        textEl.setAttribute("text-anchor", "middle");
-        textEl.setAttribute("dominant-baseline", "central");
-        textEl.setAttribute("fill", isDark ? "#d4d4d8" : "#27272a");
-        textEl.setAttribute("font-family", "Inter, -apple-system, BlinkMacSystemFont, sans-serif");
-        textEl.setAttribute("font-size", "11px");
-        textEl.setAttribute("font-weight", "500");
-        textEl.textContent = textStr;
-
-        textG.appendChild(badgeRect);
-        textG.appendChild(textEl);
-        g.appendChild(textG);
-      }
-
-      const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      handle.setAttribute("class", "edge-handle");
-      handle.setAttribute("cx", handlePos.x);
-      handle.setAttribute("cy", handlePos.y);
-      handle.setAttribute("r", 4.5);
-      handle.setAttribute("data-edge-id", id);
-      handle.setAttribute("title", "Tarik untuk membelokkan jalur garis / Double-click untuk reset");
-      if (edge.type === "step") {
-        const n1 = getNodePinNormal(edge.source.pin, sourceNode.rotation || 0);
-        const n2 = getNodePinNormal(edge.target.pin, targetNode.rotation || 0);
-        const isSourceH = Math.abs(n1.x) > Math.abs(n1.y);
-        const isTargetH = Math.abs(n2.x) > Math.abs(n2.y);
-        if (isSourceH && isTargetH) handle.style.cursor = "ew-resize";
-        else if (!isSourceH && !isTargetH) handle.style.cursor = "ns-resize";
-        else handle.style.cursor = "move";
-      } else {
-        handle.style.cursor = "move";
-      }
-      g.appendChild(handle);
-
-      layerEdgesEl.appendChild(g);
+      const g = createEdgeElement(id, edge, doc, uiState, svgDefs);
+      if (g) layerEdgesEl.appendChild(g);
     }
   }
 
@@ -810,6 +945,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     getEdgeStrokeColor,
     createNodeData,
     createEdgeData,
+    renderDiagram,
     renderNodes,
     renderEdges,
     renderOverlays

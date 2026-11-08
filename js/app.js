@@ -17,8 +17,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     svg: document.getElementById("canvas-svg"),
     viewport: document.getElementById("viewport"),
     gridPattern: document.getElementById("dot-grid"),
-    layerEdges: document.getElementById("layer-edges"),
-    layerNodes: document.getElementById("layer-nodes"),
+    layerElements: document.getElementById("layer-elements") || document.getElementById("layer-nodes"),
+    layerEdges: document.getElementById("layer-elements") || document.getElementById("layer-edges"),
+    layerNodes: document.getElementById("layer-elements") || document.getElementById("layer-nodes"),
     layerDraft: document.getElementById("layer-draft"),
     overlayPins: document.getElementById("overlay-pins"),
     overlayHandles: document.getElementById("overlay-handles"),
@@ -359,11 +360,10 @@ window.MinimalFlow = window.MinimalFlow || {};
         });
       }
     }
-    FlowEngine.renderNodes(dom.layerNodes, AppState.document, AppState.ui, (nodeId) => {
+    FlowEngine.renderDiagram(dom.layerElements, AppState.document, AppState.ui, (nodeId) => {
       selectSingleNode(nodeId, false);
       openInlineEditor(nodeId);
     });
-    FlowEngine.renderEdges(dom.layerEdges, AppState.document, AppState.ui);
     FlowEngine.renderOverlays(dom.overlaySelection, AppState.document, AppState.ui);
     updatePropertiesBar();
     updateLayerPanel();
@@ -374,16 +374,16 @@ window.MinimalFlow = window.MinimalFlow || {};
     const isNodeSelected = AppState.ui.selectedType === "node";
     
     // Update .selected class on nodes without recreating SVG DOM elements
-    if (dom.layerNodes) {
-      dom.layerNodes.querySelectorAll(".node-group").forEach(el => {
+    if (dom.layerElements) {
+      dom.layerElements.querySelectorAll(".node-group").forEach(el => {
         const id = el.dataset.id;
         el.classList.toggle("selected", isNodeSelected && selectedIds.has(id));
       });
     }
 
     // Update .selected class on edges
-    if (dom.layerEdges) {
-      dom.layerEdges.querySelectorAll(".edge-group").forEach(el => {
+    if (dom.layerElements) {
+      dom.layerElements.querySelectorAll(".edge-group").forEach(el => {
         const id = el.dataset.id;
         el.classList.toggle("selected", AppState.ui.selectedType === "edge" && AppState.ui.selectedId === id);
       });
@@ -1267,7 +1267,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         if (z === undefined) {
           const srcZ = nodes[e.source?.nodeId]?.zIndex ?? 0;
           const tgtZ = nodes[e.target?.nodeId]?.zIndex ?? 0;
-          z = Math.max(srcZ, tgtZ) + 0.5;
+          z = Math.min(srcZ, tgtZ) - 0.1;
         }
         items.push({
           type: "edge",
@@ -1787,13 +1787,13 @@ window.MinimalFlow = window.MinimalFlow || {};
     } else if (action === "align-middle") {
       alignSelectedNodesMiddle();
     } else if (action === "layer-topmost") {
-      reorderSelectedNodes("topmost");
+      handleLayerReorder("topmost");
     } else if (action === "layer-up") {
-      reorderSelectedNodes("forward");
+      handleLayerReorder("forward");
     } else if (action === "layer-down") {
-      reorderSelectedNodes("backward");
+      handleLayerReorder("backward");
     } else if (action === "layer-backmost") {
-      reorderSelectedNodes("backmost");
+      handleLayerReorder("backmost");
     } else if (action === "delete") {
       deleteSelected();
     }
