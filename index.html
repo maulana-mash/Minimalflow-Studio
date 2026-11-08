@@ -60,6 +60,7 @@
           <option value="a4_landscape">A4 Landscape</option>
           <option value="a4_portrait">A4 Portrait</option>
           <option value="square">Persegi (Square)</option>
+          <option value="custom">Kustom (Atur Ukuran Sendiri...)</option>
         </select>
 
         <button id="btn-toggle-orientation" class="btn-labeled" title="Putar Orientasi Kanvas (Landscape / Portrait)">
@@ -505,136 +506,82 @@
           </div>
         </div>
 
-        <!-- POD KANAN: Arrow / Line Properties (2-Tier Compact Stacked Pod matching Chart Pod) -->
+        <!-- Arrow / Line Properties (Contextual Bar with Clear Labels, Arrow Color Picker, and Twin-Arrows Icon) -->
         <div id="edge-context-bar" class="context-bar context-bar-pod">
-          <!-- Row 1: Arrow Routing, Marker & Reset Belokan -->
-          <div class="context-bar-row" style="align-items:center; gap:3px;">
-            <span class="context-label" style="font-size:11px; font-weight:700; color:var(--text-muted); padding-right:3px;">PANAH</span>
-            <div style="width:1px; height:16px; background:var(--border-color); margin:0 1px;"></div>
+          <div class="context-bar-row" style="align-items:center; gap:6px;">
+            <span class="context-label" style="font-size:11px; font-weight:700; color:var(--text-muted); padding-right:4px;">PANAH</span>
 
-            <!-- 1. Ikon Sudut / Routing Dropdown -->
-            <div class="dropdown-wrapper">
-              <button id="btn-edge-type-dropdown" class="btn-icon dropdown-trigger" style="width:26px; height:26px;" title="Jenis Sudut / Belokan Jalur (Siku, Kurva, Lurus)">
-                <span id="icon-edge-type-container" style="display:flex; align-items:center; justify-content:center;">
-                  <svg id="icon-edge-type-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 5v14h14"/>
-                    <polyline points="15 15 19 19 15 23"/>
-                  </svg>
-                </span>
-              </button>
-              <div id="menu-edge-type-dropdown" class="context-dropdown-menu">
-                <button class="dropdown-item active" data-value="step">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v14h14"/></svg>
-                  <span>Siku-siku (Orthogonal)</span>
-                </button>
-                <button class="dropdown-item" data-value="bezier">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19C10 19 10 5 20 5"/></svg>
-                  <span>Kurva Luwes (Bezier)</span>
-                </button>
-                <button class="dropdown-item" data-value="straight">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="4"/></svg>
-                  <span>Garis Lurus (Straight)</span>
-                </button>
+            <!-- 1. Jenis Sudut / Routing -->
+            <select id="prop-edge-type" class="prop-select" title="Jenis Sudut / Belokan Jalur">
+              <option value="step" selected>Siku-siku (Orthogonal)</option>
+              <option value="bezier">Kurva Luwes (Bezier)</option>
+              <option value="straight">Garis Lurus (Straight)</option>
+            </select>
+
+            <!-- 2. Ujung Panah / Marker -->
+            <select id="prop-edge-marker" class="prop-select" title="Arah & Ujung Panah">
+              <option value="end" selected>Panah Akhir</option>
+              <option value="both">Panah Dua Arah</option>
+              <option value="none">Tanpa Panah</option>
+            </select>
+
+            <!-- 3. Ketebalan Garis -->
+            <select id="prop-edge-width" class="prop-select" title="Ketebalan Garis">
+              <option value="1">1.0 px</option>
+              <option value="1.5" selected>1.5 px (Standar)</option>
+              <option value="2">2.0 px</option>
+              <option value="2.5">2.5 px</option>
+              <option value="3">3.0 px</option>
+              <option value="4">4.0 px</option>
+              <option value="5">5.0 px</option>
+            </select>
+
+            <!-- 4. Gaya Garis -->
+            <select id="prop-edge-dash" class="prop-select" title="Gaya Garis">
+              <option value="solid" selected>Solid ──</option>
+              <option value="dashed">Dashed - -</option>
+              <option value="dotted">Dotted · · ·</option>
+            </select>
+
+            <!-- 5. Warna Garis Panah ala Word (Arrow Color Picker) -->
+            <button id="btn-edge-color-picker" class="btn-icon word-color-btn" style="height:28px; padding:2px 6px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;" title="Warna Garis Panah (Arrow Color)">
+              <div style="display:flex; align-items:center; gap:2px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                  <path d="M2 2l7.586 7.586"/>
+                  <circle cx="11" cy="11" r="2"/>
+                </svg>
+                <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
-            </div>
+              <span id="edge-color-bar" class="color-indicator-bar" style="width:18px; height:3px; background:#18181b; border-radius:1px;"></span>
+            </button>
 
-            <!-- 2. Ikon Ujung Panah / Marker Dropdown (Dynamic SVG Icon) -->
-            <div class="dropdown-wrapper">
-              <button id="btn-edge-marker-dropdown" class="btn-icon dropdown-trigger" style="width:26px; height:26px;" title="Ujung Panah (Panah Akhir, Dua Arah, Tanpa Panah)">
-                <span id="icon-edge-marker-container" style="display:flex; align-items:center; justify-content:center;">
-                  <svg id="icon-edge-marker-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="4" y1="12" x2="20" y2="12"/>
-                    <polyline points="14 6 20 12 14 18"/>
-                  </svg>
-                </span>
-              </button>
-              <div id="menu-edge-marker-dropdown" class="context-dropdown-menu">
-                <button class="dropdown-item active" data-value="end">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>
-                  <span>Panah Akhir</span>
-                </button>
-                <button class="dropdown-item" data-value="both">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 3 12 9 18"/><line x1="3" y1="12" x2="21" y2="12"/><polyline points="15 6 21 12 15 18"/></svg>
-                  <span>Panah Dua Arah</span>
-                </button>
-                <button class="dropdown-item" data-value="none">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/></svg>
-                  <span>Tanpa Panah</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- 3. Ikon Reset Belokan -->
-            <button id="btn-reset-handle" class="btn-icon" style="width:26px; height:26px;" title="Reset Belokan Jalur Garis ke Posisi Semula">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- 6. Reset Belokan Jalur Garis -->
+            <button id="btn-reset-handle" class="btn-labeled" style="height:28px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; gap:4px;" title="Reset Belokan Jalur Garis ke Posisi Semula">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                 <path d="M3 3v5h5"/>
               </svg>
+              <span>Reset Belokan</span>
             </button>
-          </div>
 
-          <!-- Row 2: Stroke Width, Line Style & Bulk Actions -->
-          <div class="context-bar-row" style="align-items:center; gap:3px;">
-            <!-- 4. Ikon Ukuran / Ketebalan Garis Dropdown -->
-            <div class="dropdown-wrapper">
-              <button id="btn-edge-width-dropdown" class="btn-icon dropdown-trigger" style="width:26px; height:26px;" title="Ketebalan Garis (1.0 - 5.0 px)">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
-                  <line x1="3" y1="6" x2="21" y2="6" stroke-width="1.2"/>
-                  <line x1="3" y1="12" x2="21" y2="12" stroke-width="2.2"/>
-                  <line x1="3" y1="18" x2="21" y2="18" stroke-width="3.5"/>
-                </svg>
-              </button>
-              <div id="menu-edge-width-dropdown" class="context-dropdown-menu align-right">
-                <button class="dropdown-item" data-value="1"><span>1.0 px (Sangat Halus)</span></button>
-                <button class="dropdown-item active" data-value="1.5"><span>1.5 px (Standar)</span></button>
-                <button class="dropdown-item" data-value="2"><span>2.0 px (Medium)</span></button>
-                <button class="dropdown-item" data-value="2.5"><span>2.5 px (Tegas)</span></button>
-                <button class="dropdown-item" data-value="3"><span>3.0 px (Tebal)</span></button>
-                <button class="dropdown-item" data-value="4"><span>4.0 px (Ekstra Tebal)</span></button>
-                <button class="dropdown-item" data-value="5"><span>5.0 px (Maksimal)</span></button>
-              </div>
-            </div>
+            <div style="width:1px; height:18px; background:var(--border-color); margin:0 2px;"></div>
 
-            <!-- 5. Ikon Gaya Garis Dropdown (Solid, Putus-putus, Titik-titik) -->
-            <div class="dropdown-wrapper">
-              <button id="btn-edge-dash-dropdown" class="btn-icon dropdown-trigger" style="width:26px; height:26px;" title="Gaya Garis (Solid, Putus-putus, Titik-titik)">
-                <span id="icon-edge-dash-container" style="display:flex; align-items:center; justify-content:center;">
-                  <svg id="icon-edge-dash-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
-                    <line x1="3" y1="12" x2="21" y2="12" stroke-width="2"/>
-                  </svg>
-                </span>
-              </button>
-              <div id="menu-edge-dash-dropdown" class="context-dropdown-menu align-right">
-                <button class="dropdown-item active" data-value="solid">
-                  <svg width="24" height="10" viewBox="0 0 24 10" fill="none" stroke="currentColor"><line x1="0" y1="5" x2="24" y2="5" stroke-width="2"/></svg>
-                  <span>Solid (Garis Utuh)</span>
-                </button>
-                <button class="dropdown-item" data-value="dashed">
-                  <svg width="24" height="10" viewBox="0 0 24 10" fill="none" stroke="currentColor"><line x1="0" y1="5" x2="24" y2="5" stroke-width="2" stroke-dasharray="5 3"/></svg>
-                  <span>Dashed (Putus-putus)</span>
-                </button>
-                <button class="dropdown-item" data-value="dotted">
-                  <svg width="24" height="10" viewBox="0 0 24 10" fill="none" stroke="currentColor"><line x1="0" y1="5" x2="24" y2="5" stroke-width="2.5" stroke-dasharray="2 3" stroke-linecap="round"/></svg>
-                  <span>Dotted (Titik-titik)</span>
-                </button>
-              </div>
-            </div>
-
-            <div style="width:1px; height:16px; background:var(--border-color); margin:0 2px;"></div>
-
-            <!-- 6. Bulk: Terapkan ke Semua Panah -->
-            <button id="btn-edge-apply-all" class="btn-icon" style="width:26px; height:26px;" title="Terapkan Format Ini ke Semua Panah di Kanvas">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 12h16"/>
-                <polyline points="14 6 20 12 14 18"/>
-                <path d="M4 18h10"/>
-                <polyline points="10 15 14 18 10 21"/>
+            <!-- 7. Terapkan ke Semua Panah (Ikon Panah Ganda ke Dokumen / Kanvas) -->
+            <button id="btn-edge-apply-all" class="btn-icon" style="width:28px; height:28px;" title="Terapkan Format Ini ke Semua Panah di Kanvas">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="13" y="3" width="9" height="18" rx="2"/>
+                <path d="M2 8h7"/>
+                <polyline points="6 5 9 8 6 11"/>
+                <path d="M2 16h7"/>
+                <polyline points="6 13 9 16 6 19"/>
               </svg>
             </button>
 
-            <!-- 7. Bulk: Jadikan Default untuk Panah Baru -->
-            <button id="btn-edge-set-default" class="btn-icon" style="width:26px; height:26px;" title="Jadikan Gaya Ini Sebagai Default Panah Baru">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- 8. Jadikan Default untuk Panah Baru -->
+            <button id="btn-edge-set-default" class="btn-icon" style="width:28px; height:28px;" title="Jadikan Gaya Ini Sebagai Default Panah Baru">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
               </svg>
             </button>
@@ -1253,6 +1200,80 @@
       <span>More Colors...</span>
     </button>
     <input type="color" id="word-hidden-native-color" style="display:none;">
+  </div>
+
+  <!-- Modal Kustom Batas Ukuran Workspace (px, mm, cm) -->
+  <div id="modal-custom-ws-backdrop" class="modal-backdrop">
+    <div id="modal-custom-ws" class="modal-dialog" style="width:440px; max-width:92vw; border-radius:12px; overflow:hidden;">
+      <div class="modal-header" style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; background:var(--bg-surface);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:34px; height:34px; border-radius:8px; background:var(--bg-subtle); display:flex; align-items:center; justify-content:center; color:var(--text-main);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M3 9h18"/>
+              <path d="M9 21V9"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title" style="font-family:var(--font-heading); font-size:15px; font-weight:700; color:var(--text-main);">Kustom Ukuran Workspace</h2>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:1px;">Atur rasio & dimensi batas ekspor kanvas secara manual</div>
+          </div>
+        </div>
+        <button id="btn-close-custom-ws" class="btn-icon" style="width:30px; height:30px; border-radius:8px;" title="Tutup (Esc)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div style="padding:20px; display:flex; flex-direction:column; gap:16px; background:var(--bg-surface);">
+        <!-- Satuan Ukuran Switcher -->
+        <div>
+          <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); display:block; margin-bottom:6px;">SATUAN UKURAN</label>
+          <div class="custom-ws-unit-selector" style="display:flex; gap:6px;">
+            <button type="button" class="btn-unit-toggle active" data-unit="px">Piksel (px)</button>
+            <button type="button" class="btn-unit-toggle" data-unit="mm">Milimeter (mm)</button>
+            <button type="button" class="btn-unit-toggle" data-unit="cm">Sentimeter (cm)</button>
+          </div>
+        </div>
+
+        <!-- Input Lebar & Tinggi -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Lebar (Width)</label>
+            <div style="position:relative; display:flex; align-items:center;">
+              <input type="number" id="input-custom-ws-w" class="prop-input-number" min="1" step="any" value="1600" style="width:100%; height:34px; padding-right:32px; text-align:left; padding-left:10px; font-size:13px; font-family:'Fira Code', monospace; font-weight:600;">
+              <span id="label-unit-w" style="position:absolute; right:10px; font-size:11px; color:var(--text-muted); pointer-events:none;">px</span>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Tinggi (Height)</label>
+            <div style="position:relative; display:flex; align-items:center;">
+              <input type="number" id="input-custom-ws-h" class="prop-input-number" min="1" step="any" value="900" style="width:100%; height:34px; padding-right:32px; text-align:left; padding-left:10px; font-size:13px; font-family:'Fira Code', monospace; font-weight:600;">
+              <span id="label-unit-h" style="position:absolute; right:10px; font-size:11px; color:var(--text-muted); pointer-events:none;">px</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Info Box -->
+        <div style="border:1px solid var(--border-color); border-radius:8px; padding:10px 14px; background:var(--bg-subtle); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:10.5px; font-weight:600; text-transform:uppercase; color:var(--text-muted);">HASIL KONVERSI KANVAS</div>
+            <div id="custom-ws-px-preview" style="font-family:'Fira Code', monospace; font-size:13.5px; font-weight:700; color:var(--text-main); margin-top:2px;">1600 × 900 px</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10.5px; font-weight:600; text-transform:uppercase; color:var(--text-muted);">RASIO ASPEK</div>
+            <div id="custom-ws-ratio-preview" style="font-size:12px; font-weight:700; color:var(--text-main); margin-top:2px;">16:9 (Landscape)</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:12px 20px 14px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:var(--bg-subtle);">
+        <button id="btn-cancel-custom-ws" class="btn-labeled" style="height:32px; font-size:12px; padding:0 14px;">Batal</button>
+        <button id="btn-apply-custom-ws" class="btn-labeled primary" style="height:32px; font-size:12px; font-weight:600; padding:0 18px; display:inline-flex; align-items:center; gap:6px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Terapkan Ukuran Workspace</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ========================================================================

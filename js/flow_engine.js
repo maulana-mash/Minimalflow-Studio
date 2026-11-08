@@ -347,7 +347,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       target: { nodeId: targetNodeId, pin: targetPin },
       handleOffset: { dx: 0, dy: 0 },
       style: {
-        stroke: isDark ? "#f4f4f5" : "#18181b",
+        stroke: defaults.stroke || (isDark ? "#f4f4f5" : "#18181b"),
         strokeWidth: defaults.strokeWidth !== undefined ? defaults.strokeWidth : 1.5,
         dashed: defaults.dashed || "solid",
         markerStart: defaults.markerStart || "none",
@@ -565,6 +565,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
       const strokeW = edge.style.strokeWidth !== undefined ? edge.style.strokeWidth : 1.5;
       const strokeColor = getEdgeStrokeColor(edge, isDark);
+      g.style.color = strokeColor;
 
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
       path.setAttribute("class", "edge-path");

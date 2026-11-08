@@ -104,20 +104,26 @@ window.MinimalFlow = window.MinimalFlow || {};
     btnSideLayerBackmost: document.getElementById("btn-side-layer-backmost"),
     btnSideLayerTopmost: document.getElementById("btn-side-layer-topmost"),
     dualToolbar: document.getElementById("dual-floating-toolbar-wrapper"),
-    btnEdgeTypeDropdown: document.getElementById("btn-edge-type-dropdown"),
-    menuEdgeTypeDropdown: document.getElementById("menu-edge-type-dropdown"),
-    iconEdgeTypeSvg: document.getElementById("icon-edge-type-svg"),
-    btnEdgeMarkerDropdown: document.getElementById("btn-edge-marker-dropdown"),
-    menuEdgeMarkerDropdown: document.getElementById("menu-edge-marker-dropdown"),
-    iconEdgeMarkerSvg: document.getElementById("icon-edge-marker-svg"),
-    btnEdgeWidthDropdown: document.getElementById("btn-edge-width-dropdown"),
-    menuEdgeWidthDropdown: document.getElementById("menu-edge-width-dropdown"),
-    btnEdgeDashDropdown: document.getElementById("btn-edge-dash-dropdown"),
-    menuEdgeDashDropdown: document.getElementById("menu-edge-dash-dropdown"),
-    iconEdgeDashSvg: document.getElementById("icon-edge-dash-svg"),
+    propEdgeType: document.getElementById("prop-edge-type"),
+    propEdgeMarker: document.getElementById("prop-edge-marker"),
+    propEdgeWidth: document.getElementById("prop-edge-width"),
+    propEdgeDash: document.getElementById("prop-edge-dash"),
+    btnEdgeColorPicker: document.getElementById("btn-edge-color-picker"),
+    edgeColorBar: document.getElementById("edge-color-bar"),
     btnResetHandle: document.getElementById("btn-reset-handle"),
     btnEdgeApplyAll: document.getElementById("btn-edge-apply-all"),
     btnEdgeSetDefault: document.getElementById("btn-edge-set-default"),
+    modalCustomWsBackdrop: document.getElementById("modal-custom-ws-backdrop"),
+    modalCustomWs: document.getElementById("modal-custom-ws"),
+    btnCloseCustomWs: document.getElementById("btn-close-custom-ws"),
+    btnCancelCustomWs: document.getElementById("btn-cancel-custom-ws"),
+    btnApplyCustomWs: document.getElementById("btn-apply-custom-ws"),
+    inputCustomWsW: document.getElementById("input-custom-ws-w"),
+    inputCustomWsH: document.getElementById("input-custom-ws-h"),
+    labelUnitW: document.getElementById("label-unit-w"),
+    labelUnitH: document.getElementById("label-unit-h"),
+    customWsPxPreview: document.getElementById("custom-ws-px-preview"),
+    customWsRatioPreview: document.getElementById("custom-ws-ratio-preview"),
     btnToggleArrowLayer: document.getElementById("btn-toggle-arrow-layer"),
     labelArrowLayerVisibility: document.getElementById("label-arrow-layer-visibility"),
     iconEyeArrowContainer: document.getElementById("icon-eye-arrow-container"),
@@ -502,73 +508,6 @@ window.MinimalFlow = window.MinimalFlow || {};
     updateSelectionVisuals();
   }
 
-  function updateEdgeTypeIcon(type) {
-    if (!dom.btnEdgeTypeDropdown) return;
-    const container = dom.btnEdgeTypeDropdown.querySelector("#icon-edge-type-container") || dom.btnEdgeTypeDropdown;
-    if (type === "bezier") {
-      container.innerHTML = '<svg id="icon-edge-type-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19C10 19 10 5 20 5"/><polyline points="16 2 20 5 17 9"/></svg>';
-    } else if (type === "straight") {
-      container.innerHTML = '<svg id="icon-edge-type-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="4"/><polyline points="14 4 20 4 20 10"/></svg>';
-    } else {
-      container.innerHTML = '<svg id="icon-edge-type-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v14h14"/><polyline points="15 15 19 19 15 23"/></svg>';
-    }
-    if (dom.menuEdgeTypeDropdown) {
-      dom.menuEdgeTypeDropdown.querySelectorAll(".dropdown-item").forEach(item => {
-        item.classList.toggle("active", item.dataset.value === type);
-      });
-    }
-  }
-
-  function updateEdgeMarkerIcon(markerVal) {
-    if (!dom.btnEdgeMarkerDropdown) return;
-    const container = dom.btnEdgeMarkerDropdown.querySelector("#icon-edge-marker-container") || dom.btnEdgeMarkerDropdown;
-    if (markerVal === "both") {
-      container.innerHTML = '<svg id="icon-edge-marker-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 3 12 9 18"/><line x1="3" y1="12" x2="21" y2="12"/><polyline points="15 6 21 12 15 18"/></svg>';
-    } else if (markerVal === "none") {
-      container.innerHTML = '<svg id="icon-edge-marker-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/></svg>';
-    } else {
-      container.innerHTML = '<svg id="icon-edge-marker-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>';
-    }
-    if (dom.menuEdgeMarkerDropdown) {
-      dom.menuEdgeMarkerDropdown.querySelectorAll(".dropdown-item").forEach(item => {
-        item.classList.toggle("active", item.dataset.value === markerVal);
-      });
-    }
-  }
-
-  function updateEdgeWidthSelection(wVal) {
-    if (!dom.menuEdgeWidthDropdown) return;
-    const num = parseFloat(wVal) || 1.5;
-    dom.menuEdgeWidthDropdown.querySelectorAll(".dropdown-item").forEach(item => {
-      const itemNum = parseFloat(item.dataset.value);
-      item.classList.toggle("active", Math.abs(itemNum - num) < 0.05);
-    });
-  }
-
-  function updateEdgeDashIcon(dashVal) {
-    if (!dom.btnEdgeDashDropdown) return;
-    const container = dom.btnEdgeDashDropdown.querySelector("#icon-edge-dash-container") || dom.btnEdgeDashDropdown;
-    if (dashVal === "dashed") {
-      container.innerHTML = '<svg id="icon-edge-dash-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-dasharray="4 3"/></svg>';
-    } else if (dashVal === "dotted") {
-      container.innerHTML = '<svg id="icon-edge-dash-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12" stroke-width="2.5" stroke-dasharray="2 3"/></svg>';
-    } else {
-      container.innerHTML = '<svg id="icon-edge-dash-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12" stroke-width="2"/></svg>';
-    }
-    if (dom.menuEdgeDashDropdown) {
-      dom.menuEdgeDashDropdown.querySelectorAll(".dropdown-item").forEach(item => {
-        item.classList.toggle("active", item.dataset.value === dashVal);
-      });
-    }
-  }
-
-  function closeEdgeDropdowns() {
-    if (dom.menuEdgeTypeDropdown) dom.menuEdgeTypeDropdown.classList.remove("show");
-    if (dom.menuEdgeMarkerDropdown) dom.menuEdgeMarkerDropdown.classList.remove("show");
-    if (dom.menuEdgeWidthDropdown) dom.menuEdgeWidthDropdown.classList.remove("show");
-    if (dom.menuEdgeDashDropdown) dom.menuEdgeDashDropdown.classList.remove("show");
-  }
-
   function syncEdgeBarUI(edgeOrDefaults) {
     if (!edgeOrDefaults) return;
     const type = edgeOrDefaults.type || "step";
@@ -577,11 +516,13 @@ window.MinimalFlow = window.MinimalFlow || {};
                       (edgeOrDefaults.style?.markerEnd === "arrow" || edgeOrDefaults.markerEnd === "arrow") ? "end" : "none";
     const wVal = String(edgeOrDefaults.style?.strokeWidth !== undefined ? edgeOrDefaults.style.strokeWidth : (edgeOrDefaults.strokeWidth !== undefined ? edgeOrDefaults.strokeWidth : 1.5));
     const dashVal = edgeOrDefaults.style?.dashed || edgeOrDefaults.dashed || "solid";
+    const strokeColor = edgeOrDefaults.style?.stroke || edgeOrDefaults.stroke || (AppState.document.theme === "dark" ? "#f4f4f5" : "#18181b");
 
-    updateEdgeTypeIcon(type);
-    updateEdgeMarkerIcon(markerVal);
-    updateEdgeWidthSelection(wVal);
-    updateEdgeDashIcon(dashVal);
+    if (dom.propEdgeType) dom.propEdgeType.value = type;
+    if (dom.propEdgeMarker) dom.propEdgeMarker.value = markerVal;
+    if (dom.propEdgeWidth) dom.propEdgeWidth.value = String(wVal);
+    if (dom.propEdgeDash) dom.propEdgeDash.value = dashVal;
+    if (dom.edgeColorBar) dom.edgeColorBar.style.background = strokeColor;
   }
 
   function updatePropertiesBar() {
@@ -595,11 +536,8 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     if (isNodeSelected) {
       if (dom.dualToolbar) dom.dualToolbar.classList.add("show");
-      if (dom.nodeBar) dom.nodeBar.classList.remove("disabled-pod");
-      if (dom.edgeBar) dom.edgeBar.classList.add("disabled-pod");
-
-      // Sinkronisasi ikon panel panah dengan nilai default agar tetap rapi saat mengabu
-      syncEdgeBarUI(AppState.defaults?.edge || {});
+      if (dom.nodeBar) dom.nodeBar.classList.add("show");
+      if (dom.edgeBar) dom.edgeBar.classList.remove("show");
 
       const primaryId = AppState.ui.selectedId || Array.from(AppState.ui.selectedNodeIds)[0];
       const node = AppState.document.nodes[primaryId];
@@ -725,8 +663,8 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     if (isEdgeSelected) {
       if (dom.dualToolbar) dom.dualToolbar.classList.add("show");
-      if (dom.nodeBar) dom.nodeBar.classList.add("disabled-pod");
-      if (dom.edgeBar) dom.edgeBar.classList.remove("disabled-pod");
+      if (dom.nodeBar) dom.nodeBar.classList.remove("show");
+      if (dom.edgeBar) dom.edgeBar.classList.add("show");
 
       const edge = AppState.document.edges[AppState.ui.selectedId];
       if (edge) {
@@ -737,16 +675,14 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     if (AppState.ui.isToolbarPinned) {
       if (dom.dualToolbar) dom.dualToolbar.classList.add("show");
-      if (dom.nodeBar) dom.nodeBar.classList.add("disabled-pod");
-      if (dom.edgeBar) dom.edgeBar.classList.add("disabled-pod");
+      if (dom.nodeBar) dom.nodeBar.classList.add("show");
+      if (dom.edgeBar) dom.edgeBar.classList.remove("show");
       if (dom.nodeBarTitle) dom.nodeBarTitle.textContent = "Node";
-      syncEdgeBarUI(AppState.defaults?.edge || {});
     } else {
       if (dom.dualToolbar) dom.dualToolbar.classList.remove("show");
-      if (dom.nodeBar) dom.nodeBar.classList.add("disabled-pod");
-      if (dom.edgeBar) dom.edgeBar.classList.add("disabled-pod");
+      if (dom.nodeBar) dom.nodeBar.classList.remove("show");
+      if (dom.edgeBar) dom.edgeBar.classList.remove("show");
     }
-    closeEdgeDropdowns();
   }
 
   // Tap-to-Connect Workflow
@@ -3035,7 +2971,150 @@ window.MinimalFlow = window.MinimalFlow || {};
     dom.btnZoomFit.addEventListener("click", fitToContentOrBoundary);
   }
 
+  // --------------------------------------------------------------------------
+  // MODAL KUSTOM UKURAN WORKSPACE (px, mm, cm)
+  // --------------------------------------------------------------------------
+  let customWsUnit = "px"; // "px" | "mm" | "cm"
+
+  function pxToUnit(px, unit) {
+    if (unit === "mm") return parseFloat((px * 0.26458333).toFixed(1));
+    if (unit === "cm") return parseFloat((px * 0.02645833).toFixed(2));
+    return Math.round(px);
+  }
+
+  function unitToPx(val, unit) {
+    if (unit === "mm") return Math.round(val * 3.77952756);
+    if (unit === "cm") return Math.round(val * 37.7952756);
+    return Math.round(val);
+  }
+
+  function calcGcd(a, b) {
+    let x = Math.abs(a);
+    let y = Math.abs(b);
+    while (y) {
+      const t = y;
+      y = x % y;
+      x = t;
+    }
+    return x;
+  }
+
+  function updateCustomWsPreview() {
+    if (!dom.inputCustomWsW || !dom.inputCustomWsH) return;
+    const curW = parseFloat(dom.inputCustomWsW.value) || 0;
+    const curH = parseFloat(dom.inputCustomWsH.value) || 0;
+    const wPx = Math.max(50, unitToPx(curW, customWsUnit));
+    const hPx = Math.max(50, unitToPx(curH, customWsUnit));
+
+    if (dom.customWsPxPreview) {
+      dom.customWsPxPreview.textContent = `${wPx} × ${hPx} px`;
+    }
+
+    if (dom.customWsRatioPreview) {
+      const g = calcGcd(wPx, hPx);
+      const simpW = Math.round(wPx / g);
+      const simpH = Math.round(hPx / g);
+      let ratioStr = `${simpW}:${simpH}`;
+      if (simpW > 40 || simpH > 40) {
+        ratioStr = (wPx / hPx).toFixed(2) + ":1";
+      }
+      const ori = wPx >= hPx ? "Landscape" : "Portrait";
+      dom.customWsRatioPreview.textContent = `${ratioStr} (${ori})`;
+    }
+  }
+
+  function openCustomWorkspaceModal() {
+    if (!dom.modalCustomWsBackdrop) return;
+    const ws = AppState.document.canvas.workspace;
+    customWsUnit = "px";
+
+    document.querySelectorAll(".btn-unit-toggle").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.unit === "px");
+    });
+    if (dom.labelUnitW) dom.labelUnitW.textContent = "px";
+    if (dom.labelUnitH) dom.labelUnitH.textContent = "px";
+    if (dom.inputCustomWsW) dom.inputCustomWsW.value = Math.round(ws.width);
+    if (dom.inputCustomWsH) dom.inputCustomWsH.value = Math.round(ws.height);
+
+    updateCustomWsPreview();
+    dom.modalCustomWsBackdrop.classList.add("show");
+  }
+
+  function closeCustomWorkspaceModal(revert = false) {
+    if (dom.modalCustomWsBackdrop) {
+      dom.modalCustomWsBackdrop.classList.remove("show");
+    }
+    if (revert && dom.selectWorkspace) {
+      const ws = AppState.document.canvas.workspace;
+      dom.selectWorkspace.value = ws.preset || "16:9_landscape";
+    }
+  }
+
+  if (dom.btnCloseCustomWs) {
+    dom.btnCloseCustomWs.addEventListener("click", () => closeCustomWorkspaceModal(true));
+  }
+  if (dom.btnCancelCustomWs) {
+    dom.btnCancelCustomWs.addEventListener("click", () => closeCustomWorkspaceModal(true));
+  }
+  if (dom.modalCustomWsBackdrop) {
+    dom.modalCustomWsBackdrop.addEventListener("click", (e) => {
+      if (e.target === dom.modalCustomWsBackdrop) closeCustomWorkspaceModal(true);
+    });
+  }
+
+  document.querySelectorAll(".btn-unit-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const newUnit = btn.dataset.unit;
+      if (newUnit === customWsUnit) return;
+      const curW = parseFloat(dom.inputCustomWsW.value) || 0;
+      const curH = parseFloat(dom.inputCustomWsH.value) || 0;
+      const wPx = unitToPx(curW, customWsUnit);
+      const hPx = unitToPx(curH, customWsUnit);
+
+      customWsUnit = newUnit;
+      document.querySelectorAll(".btn-unit-toggle").forEach(b => {
+        b.classList.toggle("active", b.dataset.unit === newUnit);
+      });
+      if (dom.labelUnitW) dom.labelUnitW.textContent = newUnit;
+      if (dom.labelUnitH) dom.labelUnitH.textContent = newUnit;
+
+      if (dom.inputCustomWsW) dom.inputCustomWsW.value = pxToUnit(wPx, newUnit);
+      if (dom.inputCustomWsH) dom.inputCustomWsH.value = pxToUnit(hPx, newUnit);
+      updateCustomWsPreview();
+    });
+  });
+
+  if (dom.inputCustomWsW) {
+    dom.inputCustomWsW.addEventListener("input", updateCustomWsPreview);
+  }
+  if (dom.inputCustomWsH) {
+    dom.inputCustomWsH.addEventListener("input", updateCustomWsPreview);
+  }
+
+  if (dom.btnApplyCustomWs) {
+    dom.btnApplyCustomWs.addEventListener("click", () => {
+      const curW = parseFloat(dom.inputCustomWsW.value) || 0;
+      const curH = parseFloat(dom.inputCustomWsH.value) || 0;
+      const wPx = Math.max(100, Math.min(10000, unitToPx(curW, customWsUnit)));
+      const hPx = Math.max(100, Math.min(10000, unitToPx(curH, customWsUnit)));
+
+      saveSnapshot();
+      const ws = AppState.document.canvas.workspace;
+      ws.preset = "custom";
+      ws.width = wPx;
+      ws.height = hPx;
+      ws.orientation = ws.width >= ws.height ? "landscape" : "portrait";
+      updateWorkspaceUI();
+      closeCustomWorkspaceModal(false);
+      showToast(`Batas Workspace Kustom Diterapkan: ${wPx} × ${hPx} px`);
+    });
+  }
+
   dom.selectWorkspace.addEventListener("change", (e) => {
+    if (e.target.value === "custom") {
+      openCustomWorkspaceModal();
+      return;
+    }
     saveSnapshot();
     Canvas.setWorkspacePreset(e.target.value, AppState.document, (ws, name) => {
       updateWorkspaceUI();
@@ -3382,11 +3461,23 @@ window.MinimalFlow = window.MinimalFlow || {};
     "#c00000", "#ff0000", "#ffc000", "#ffff00", "#92d050", "#00b050", "#00b0f0", "#0070c0", "#002060", "#7030a0"
   ];
 
-  let activeWordColorTarget = null; // "fill" | "stroke" | "textColor"
-  let previewOriginalColors = {}; // { [nodeId]: { fill, stroke, textColor } }
+  let activeWordColorTarget = null; // "fill" | "stroke" | "textColor" | "edgeStroke"
+  let previewOriginalColors = {}; // { [nodeId/edgeId]: { fill, stroke, textColor, edgeStroke } }
 
   function previewWordColor(color) {
     if (!activeWordColorTarget) return;
+
+    if (activeWordColorTarget === "edgeStroke") {
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge) {
+        if (!edge.style) edge.style = {};
+        edge.style.stroke = color;
+        if (dom.edgeColorBar) dom.edgeColorBar.style.background = color === "transparent" ? "none" : color;
+        renderAll();
+      }
+      return;
+    }
+
     const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
       ? Array.from(AppState.ui.selectedNodeIds)
       : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
@@ -3408,6 +3499,18 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   function revertWordColorPreview() {
     if (!activeWordColorTarget || Object.keys(previewOriginalColors).length === 0) return;
+
+    if (activeWordColorTarget === "edgeStroke") {
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge && previewOriginalColors[edge.id]) {
+        if (!edge.style) edge.style = {};
+        edge.style.stroke = previewOriginalColors[edge.id].edgeStroke;
+        if (dom.edgeColorBar) dom.edgeColorBar.style.background = edge.style.stroke;
+        renderAll();
+      }
+      return;
+    }
+
     Object.entries(previewOriginalColors).forEach(([id, orig]) => {
       const n = AppState.document.nodes[id];
       if (n) {
@@ -3470,32 +3573,42 @@ window.MinimalFlow = window.MinimalFlow || {};
   function openWordColorPicker(target, triggerEl) {
     activeWordColorTarget = target;
     previewOriginalColors = {};
-
-    const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
-      ? Array.from(AppState.ui.selectedNodeIds)
-      : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
-    nodeIds.forEach(id => {
-      const n = AppState.document.nodes[id];
-      if (n) {
-        previewOriginalColors[id] = {
-          fill: n.style ? n.style.fill : null,
-          stroke: n.style ? n.style.stroke : null,
-          textColor: n.text ? n.text.color : null
-        };
-      }
-    });
-
     const isDark = AppState.document.theme === "dark";
 
-    if (target === "textColor") {
-      dom.wordColorAutoBox.style.background = isDark ? "#fafafa" : "#18181b";
-      dom.wordColorAutoText.textContent = "Automatic (Warna Font Teks)";
-    } else if (target === "fill") {
-      dom.wordColorAutoBox.style.background = isDark ? "#18181b" : "#ffffff";
-      dom.wordColorAutoText.textContent = "Automatic (Warna Latar Putih/Hitam)";
-    } else {
+    if (target === "edgeStroke") {
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge) {
+        previewOriginalColors[edge.id] = {
+          edgeStroke: edge.style?.stroke || edge.stroke || (isDark ? "#f4f4f5" : "#18181b")
+        };
+      }
       dom.wordColorAutoBox.style.background = isDark ? "#f4f4f5" : "#18181b";
-      dom.wordColorAutoText.textContent = "Automatic (Warna Garis Tepi)";
+      dom.wordColorAutoText.textContent = "Automatic (Warna Garis Panah)";
+    } else {
+      const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
+        ? Array.from(AppState.ui.selectedNodeIds)
+        : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
+      nodeIds.forEach(id => {
+        const n = AppState.document.nodes[id];
+        if (n) {
+          previewOriginalColors[id] = {
+            fill: n.style ? n.style.fill : null,
+            stroke: n.style ? n.style.stroke : null,
+            textColor: n.text ? n.text.color : null
+          };
+        }
+      });
+
+      if (target === "textColor") {
+        dom.wordColorAutoBox.style.background = isDark ? "#fafafa" : "#18181b";
+        dom.wordColorAutoText.textContent = "Automatic (Warna Font Teks)";
+      } else if (target === "fill") {
+        dom.wordColorAutoBox.style.background = isDark ? "#18181b" : "#ffffff";
+        dom.wordColorAutoText.textContent = "Automatic (Warna Latar Putih/Hitam)";
+      } else {
+        dom.wordColorAutoBox.style.background = isDark ? "#f4f4f5" : "#18181b";
+        dom.wordColorAutoText.textContent = "Automatic (Warna Garis Tepi)";
+      }
     }
 
     const rect = triggerEl.getBoundingClientRect();
@@ -3517,6 +3630,24 @@ window.MinimalFlow = window.MinimalFlow || {};
   function applyWordChosenColor(color) {
     if (!activeWordColorTarget) return;
     previewOriginalColors = {}; // Kosongkan agar tidak di-revert saat popover ditutup
+
+    if (activeWordColorTarget === "edgeStroke") {
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge) {
+        saveSnapshot();
+        if (!edge.style) edge.style = {};
+        edge.style.stroke = color;
+        if (dom.edgeColorBar) dom.edgeColorBar.style.background = color === "transparent" ? "none" : color;
+        if (AppState.defaults?.edge) {
+          AppState.defaults.edge.stroke = color;
+        }
+        renderAll();
+        showToast("Warna garis panah diubah");
+      }
+      closeWordColorPicker();
+      return;
+    }
+
     const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
       ? Array.from(AppState.ui.selectedNodeIds)
       : (AppState.ui.selectedId ? [AppState.ui.selectedId] : []);
@@ -3575,6 +3706,13 @@ window.MinimalFlow = window.MinimalFlow || {};
     });
   }
 
+  if (dom.btnEdgeColorPicker) {
+    dom.btnEdgeColorPicker.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openWordColorPicker("edgeStroke", dom.btnEdgeColorPicker);
+    });
+  }
+
   if (dom.btnWordColorAuto) {
     dom.btnWordColorAuto.addEventListener("mouseenter", () => {
       const isDark = AppState.document.theme === "dark";
@@ -3620,12 +3758,6 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
     if (dom.menuAlignDropdown && !dom.menuAlignDropdown.contains(e.target) && !e.target.closest("#btn-align-menu")) {
       dom.menuAlignDropdown.classList.remove("show");
-    }
-    if (!e.target.closest("#btn-edge-type-dropdown") && !e.target.closest("#menu-edge-type-dropdown") &&
-        !e.target.closest("#btn-edge-marker-dropdown") && !e.target.closest("#menu-edge-marker-dropdown") &&
-        !e.target.closest("#btn-edge-width-dropdown") && !e.target.closest("#menu-edge-width-dropdown") &&
-        !e.target.closest("#btn-edge-dash-dropdown") && !e.target.closest("#menu-edge-dash-dropdown")) {
-      closeEdgeDropdowns();
     }
   });
 
@@ -3874,104 +4006,69 @@ window.MinimalFlow = window.MinimalFlow || {};
     });
   }
 
-  // Edge / Arrow Property Bar Controls (SVG Icon Buttons & Popover Dropdowns)
-  function toggleEdgeDropdown(menuEl, e) {
-    if (e) e.stopPropagation();
-    const willShow = !menuEl.classList.contains("show");
-    closeEdgeDropdowns();
-    if (dom.menuAlignDropdown) dom.menuAlignDropdown.classList.remove("show");
-    closeWordColorPicker();
-    if (willShow) {
-      menuEl.classList.add("show");
-    }
-  }
-
-  if (dom.btnEdgeTypeDropdown && dom.menuEdgeTypeDropdown) {
-    dom.btnEdgeTypeDropdown.addEventListener("click", (e) => toggleEdgeDropdown(dom.menuEdgeTypeDropdown, e));
-    dom.menuEdgeTypeDropdown.querySelectorAll(".dropdown-item").forEach(item => {
-      item.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const val = item.dataset.value;
-        const edge = AppState.document.edges[AppState.ui.selectedId];
-        if (edge) {
-          saveSnapshot();
-          edge.type = val;
-          renderAll();
-          updatePropertiesBar();
-        }
-        if (AppState.defaults?.edge) {
-          AppState.defaults.edge.type = val;
-        }
-        closeEdgeDropdowns();
-      });
+  // Edge / Arrow Property Bar Controls (Select Dropdowns, Color, and Actions)
+  if (dom.propEdgeType) {
+    dom.propEdgeType.addEventListener("change", (e) => {
+      const val = e.target.value;
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge) {
+        saveSnapshot();
+        edge.type = val;
+        renderAll();
+      }
+      if (AppState.defaults?.edge) {
+        AppState.defaults.edge.type = val;
+      }
     });
   }
 
-  if (dom.btnEdgeMarkerDropdown && dom.menuEdgeMarkerDropdown) {
-    dom.btnEdgeMarkerDropdown.addEventListener("click", (e) => toggleEdgeDropdown(dom.menuEdgeMarkerDropdown, e));
-    dom.menuEdgeMarkerDropdown.querySelectorAll(".dropdown-item").forEach(item => {
-      item.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const val = item.dataset.value;
-        const edge = AppState.document.edges[AppState.ui.selectedId];
-        if (edge) {
-          saveSnapshot();
-          edge.style = edge.style || {};
-          edge.style.markerStart = val === "both" ? "arrow" : "none";
-          edge.style.markerEnd = val === "none" ? "none" : "arrow";
-          renderAll();
-          updatePropertiesBar();
-        }
-        if (AppState.defaults?.edge) {
-          AppState.defaults.edge.markerStart = val === "both" ? "arrow" : "none";
-          AppState.defaults.edge.markerEnd = val === "none" ? "none" : "arrow";
-        }
-        closeEdgeDropdowns();
-      });
+  if (dom.propEdgeMarker) {
+    dom.propEdgeMarker.addEventListener("change", (e) => {
+      const val = e.target.value;
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge) {
+        saveSnapshot();
+        edge.style = edge.style || {};
+        edge.style.markerStart = val === "both" ? "arrow" : "none";
+        edge.style.markerEnd = val === "none" ? "none" : "arrow";
+        renderAll();
+      }
+      if (AppState.defaults?.edge) {
+        AppState.defaults.edge.markerStart = val === "both" ? "arrow" : "none";
+        AppState.defaults.edge.markerEnd = val === "none" ? "none" : "arrow";
+      }
     });
   }
 
-  if (dom.btnEdgeWidthDropdown && dom.menuEdgeWidthDropdown) {
-    dom.btnEdgeWidthDropdown.addEventListener("click", (e) => toggleEdgeDropdown(dom.menuEdgeWidthDropdown, e));
-    dom.menuEdgeWidthDropdown.querySelectorAll(".dropdown-item").forEach(item => {
-      item.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const val = parseFloat(item.dataset.value) || 1.5;
-        const edge = AppState.document.edges[AppState.ui.selectedId];
-        if (edge) {
-          saveSnapshot();
-          edge.style = edge.style || {};
-          edge.style.strokeWidth = val;
-          renderAll();
-          updatePropertiesBar();
-        }
-        if (AppState.defaults?.edge) {
-          AppState.defaults.edge.strokeWidth = val;
-        }
-        closeEdgeDropdowns();
-      });
+  if (dom.propEdgeWidth) {
+    dom.propEdgeWidth.addEventListener("change", (e) => {
+      const val = parseFloat(e.target.value) || 1.5;
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge) {
+        saveSnapshot();
+        edge.style = edge.style || {};
+        edge.style.strokeWidth = val;
+        renderAll();
+      }
+      if (AppState.defaults?.edge) {
+        AppState.defaults.edge.strokeWidth = val;
+      }
     });
   }
 
-  if (dom.btnEdgeDashDropdown && dom.menuEdgeDashDropdown) {
-    dom.btnEdgeDashDropdown.addEventListener("click", (e) => toggleEdgeDropdown(dom.menuEdgeDashDropdown, e));
-    dom.menuEdgeDashDropdown.querySelectorAll(".dropdown-item").forEach(item => {
-      item.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const val = item.dataset.value || "solid";
-        const edge = AppState.document.edges[AppState.ui.selectedId];
-        if (edge) {
-          saveSnapshot();
-          edge.style = edge.style || {};
-          edge.style.dashed = val;
-          renderAll();
-          updatePropertiesBar();
-        }
-        if (AppState.defaults?.edge) {
-          AppState.defaults.edge.dashed = val;
-        }
-        closeEdgeDropdowns();
-      });
+  if (dom.propEdgeDash) {
+    dom.propEdgeDash.addEventListener("change", (e) => {
+      const val = e.target.value || "solid";
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge) {
+        saveSnapshot();
+        edge.style = edge.style || {};
+        edge.style.dashed = val;
+        renderAll();
+      }
+      if (AppState.defaults?.edge) {
+        AppState.defaults.edge.dashed = val;
+      }
     });
   }
 
@@ -4003,7 +4100,8 @@ window.MinimalFlow = window.MinimalFlow || {};
           strokeWidth: selEdge.style?.strokeWidth !== undefined ? selEdge.style.strokeWidth : 1.5,
           dashed: selEdge.style?.dashed || "solid",
           markerStart: selEdge.style?.markerStart || "none",
-          markerEnd: selEdge.style?.markerEnd || "arrow"
+          markerEnd: selEdge.style?.markerEnd || "arrow",
+          stroke: selEdge.style?.stroke || null
         };
       } else {
         template = AppState.defaults?.edge || {
@@ -4011,7 +4109,8 @@ window.MinimalFlow = window.MinimalFlow || {};
           strokeWidth: 1.5,
           dashed: "solid",
           markerStart: "none",
-          markerEnd: "arrow"
+          markerEnd: "arrow",
+          stroke: null
         };
       }
 
@@ -4024,6 +4123,9 @@ window.MinimalFlow = window.MinimalFlow || {};
           ed.style.dashed = template.dashed;
           ed.style.markerStart = template.markerStart;
           ed.style.markerEnd = template.markerEnd;
+          if (template.stroke) {
+            ed.style.stroke = template.stroke;
+          }
         }
       });
       renderAll();
@@ -4041,7 +4143,8 @@ window.MinimalFlow = window.MinimalFlow || {};
           strokeWidth: selEdge.style?.strokeWidth !== undefined ? selEdge.style.strokeWidth : 1.5,
           dashed: selEdge.style?.dashed || "solid",
           markerStart: selEdge.style?.markerStart || "none",
-          markerEnd: selEdge.style?.markerEnd || "arrow"
+          markerEnd: selEdge.style?.markerEnd || "arrow",
+          stroke: selEdge.style?.stroke || null
         };
       } else {
         defaults = AppState.defaults?.edge || {
@@ -4049,7 +4152,8 @@ window.MinimalFlow = window.MinimalFlow || {};
           strokeWidth: 1.5,
           dashed: "solid",
           markerStart: "none",
-          markerEnd: "arrow"
+          markerEnd: "arrow",
+          stroke: null
         };
       }
       AppState.defaults.edge = defaults;
@@ -4501,25 +4605,261 @@ window.MinimalFlow = window.MinimalFlow || {};
       }
     });
   }
+  // --------------------------------------------------------------------------
+  // MESIN NORMALISASI CERDAS & PROMPT-TO-FLOWCHART (100% LOKAL CLIENT-SIDE)
+  // Mampu merapikan JSON standar, menerjemahkan format AI non-standar,
+  // serta mengubah prompt alur teks bebas / list langkah menjadi JSON MinimalFlow 1.5.0 valid.
+  // --------------------------------------------------------------------------
+  function inferShapeFromText(text) {
+    if (!text) return "rectangle";
+    const lower = text.toLowerCase();
+    if (/\b(mulai|start|begin|selesai|finish|end|berhenti|stop)\b/i.test(lower)) {
+      return "rounded";
+    }
+    if (/\?|\bapakah\b|\bjika\b|\bif\b|\bkondisi\b|\bvalid\?|\bcek\b|\bevaluasi\b|\bdecision\b/i.test(lower)) {
+      return "diamond";
+    }
+    if (/\b(input|output|masukkan|keluaran|baca|read|print|cetak|tampilkan|display)\b/i.test(lower)) {
+      return "parallelogram";
+    }
+    if (/\b(database|db|basis data|tabel|table|simpan ke db|storage|penyimpanan)\b/i.test(lower)) {
+      return "cylinder";
+    }
+    return "rectangle";
+  }
+
+  function extractStepsFromAnyInput(rawText) {
+    if (!rawText) return [];
+    let rawClean = rawText.trim();
+    // Hilangkan markdown code fences jika pengguna menempelkan dari chat AI (```json ... ``` atau ```mermaid ... ```)
+    rawClean = rawClean.replace(/^```[a-zA-Z0-9_-]*\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+
+    // 1. Coba deteksi jika input berupa JSON objek/array yang tidak standar dari AI
+    try {
+      const parsed = JSON.parse(rawClean);
+      if (parsed) {
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => {
+            if (typeof item === "string") return { label: item.trim() };
+            return { label: (item.title || item.name || item.text || item.label || item.step || item.action || JSON.stringify(item)).trim() };
+          }).filter(s => s.label.length > 0);
+        }
+        const possibleArrayKeys = ["steps", "alur", "tasks", "flow", "nodes", "process", "workflow", "items", "data", "pipeline", "stages", "lanjutan"];
+        for (const k of possibleArrayKeys) {
+          if (Array.isArray(parsed[k])) {
+            return parsed[k].map(item => {
+              if (typeof item === "string") return { label: item.trim() };
+              return { label: (item.title || item.name || item.text || item.label || item.step || item.action || item.id || JSON.stringify(item)).trim() };
+            }).filter(s => s.label.length > 0);
+          }
+        }
+      }
+    } catch (e) {
+      // Bukan JSON, lanjutkan ke ekstraksi prompt teks bebas
+    }
+
+    // 2. Deteksi teks alur dengan pemisah panah horizontal: A -> B -> C -> D
+    if (/->|-->|=>|➔|→/.test(rawClean)) {
+      const parts = rawClean.split(/->|-->|=>|➔|→/);
+      const steps = parts.map(p => p.trim()).filter(p => p.length > 0);
+      if (steps.length > 1) {
+        return steps.map(s => {
+          const cleaned = s.replace(/^\[?\d+[\]\.\:\-\)]\s*/, "").trim();
+          return { label: cleaned || s };
+        });
+      }
+    }
+
+    // 3. Deteksi baris langkah bertingkat (numbered list, bullet points, atau baris baru alur)
+    const lines = rawClean.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+    const steps = [];
+    lines.forEach(line => {
+      // Abaikan baris komentar atau instruksi umum yang tidak relevan
+      if (line.startsWith("#") || line.startsWith("//")) return;
+      let cleaned = line.replace(/^(?:(?:\d+[\.\)\:-])|[-*•]|\b(?:langkah|step)\s+\d+[:\.\-]?)\s*/i, "").trim();
+      if (cleaned.length > 0) {
+        steps.push({ label: cleaned });
+      }
+    });
+
+    return steps;
+  }
+
+  function buildFlowchartFromStepList(steps, isDark) {
+    const nodes = {};
+    const edges = {};
+    const strokeColor = isDark ? "#f4f4f5" : "#18181b";
+    const fillColor = isDark ? "#27272a" : "#ffffff";
+    const textColor = isDark ? "#f4f4f5" : "#18181b";
+
+    const ws = AppState.document?.canvas?.workspace || {
+      x: 40, y: 40, width: 1600, height: 900, preset: "16:9_landscape", orientation: "landscape"
+    };
+
+    const centerX = Math.round(ws.x + ws.width / 2);
+    let curY = ws.y + 70;
+
+    steps.forEach((step, idx) => {
+      const id = "node_step_" + (idx + 1);
+      const shape = inferShapeFromText(step.label);
+      let width = 160, height = 80;
+      if (shape === "circle") { width = 110; height = 110; }
+      else if (shape === "diamond") { width = 140; height = 110; }
+      else if (shape === "triangle") { width = 140; height = 96; }
+      else if (shape === "cylinder") { width = 160; height = 80; }
+      else if (shape === "parallelogram") { width = 170; height = 76; }
+
+      nodes[id] = {
+        id,
+        type: shape,
+        x: Math.round(centerX - width / 2),
+        y: curY,
+        width,
+        height,
+        baseWidth: width,
+        baseHeight: height,
+        rotation: 0,
+        locked: false,
+        groupId: null,
+        src: null,
+        style: {
+          fill: fillColor,
+          stroke: strokeColor,
+          strokeWidth: 1.5,
+          dashed: "solid"
+        },
+        text: {
+          content: step.label,
+          fontFamily: "Poppins, sans-serif",
+          fontSize: 14,
+          bold: false,
+          italic: false,
+          underline: false,
+          align: "center",
+          valign: "middle",
+          paddingX: 14,
+          color: textColor
+        }
+      };
+
+      if (idx > 0) {
+        const prevId = "node_step_" + idx;
+        const edgeId = "edge_step_" + idx;
+        edges[edgeId] = {
+          id: edgeId,
+          type: "step",
+          source: { nodeId: prevId, pin: "S" },
+          target: { nodeId: id, pin: "N" },
+          handleOffset: { dx: 0, dy: 0 },
+          style: {
+            stroke: strokeColor,
+            strokeWidth: 1.5,
+            dashed: "solid",
+            markerStart: "none",
+            markerEnd: "arrow"
+          }
+        };
+      }
+
+      curY += height + 50;
+    });
+
+    return {
+      version: "1.5.0",
+      canvas: {
+        pan: { x: 0, y: 0 },
+        zoom: 1,
+        gridSize: 24,
+        workspace: {
+          preset: ws.preset || "16:9_landscape",
+          orientation: ws.orientation || "landscape",
+          x: ws.x || 40,
+          y: ws.y || 40,
+          width: Math.max(ws.width || 1600, 1000),
+          height: Math.max(curY + 100, ws.height || 900)
+        }
+      },
+      nodes,
+      edges,
+      theme: isDark ? "dark" : "light"
+    };
+  }
+
+  function normalizeOrGenerateFlowchart(rawText, isDark) {
+    if (!rawText || !rawText.trim()) return null;
+    let clean = rawText.trim();
+    clean = clean.replace(/^```[a-zA-Z0-9_-]*\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+
+    // A. Periksa apakah sudah berupa JSON MinimalFlow native valid
+    try {
+      const parsed = JSON.parse(clean);
+      if (parsed && parsed.nodes && typeof parsed.nodes === "object" && !Array.isArray(parsed.nodes)) {
+        return {
+          formatted: JSON.stringify(parsed, null, 2),
+          message: "Format JSON MinimalFlow berhasil dirapikan!"
+        };
+      }
+    } catch (e) {}
+
+    // B. Periksa apakah modul Universal Adapter bisa menerjemahkan (Mermaid, Mashimurelay, React Flow)
+    const adapter = window.MinimalFlow && window.MinimalFlow.Adapter;
+    if (adapter && typeof adapter.parseUniversal === "function") {
+      const res = adapter.parseUniversal(clean, isDark);
+      if (res.success && res.document) {
+        return {
+          formatted: JSON.stringify(res.document, null, 2),
+          message: `Diagram alir berhasil dikompilasi ke format MinimalFlow (${res.nodeCount} node, ${res.edgeCount} kabel)!`
+        };
+      }
+    }
+
+    // C. Jika bukan, lakukan ekstraksi langkah otomatis dari prompt teks bebas atau JSON AI non-standar
+    const steps = extractStepsFromAnyInput(clean);
+    if (steps && steps.length > 0) {
+      const doc = buildFlowchartFromStepList(steps, isDark);
+      return {
+        formatted: JSON.stringify(doc, null, 2),
+        message: `Prompt alur berhasil digenerate menjadi kode MinimalFlow (${steps.length} langkah)!`
+      };
+    }
+
+    // D. Fallback jika parsing sederhana masih valid JSON
+    try {
+      const parsed = JSON.parse(clean);
+      return {
+        formatted: JSON.stringify(parsed, null, 2),
+        message: "Format JSON berhasil dirapikan!"
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
   if (dom.btnFormatJson) {
     dom.btnFormatJson.addEventListener("click", () => {
       if (!dom.inputJsonRaw) return;
       const raw = dom.inputJsonRaw.value.trim();
-      if (!raw) return;
-      try {
-        const parsed = JSON.parse(raw);
-        dom.inputJsonRaw.value = JSON.stringify(parsed, null, 2);
+      if (!raw) {
+        showToast("Masukkan teks prompt atau kode diagram terlebih dahulu");
+        return;
+      }
+      const isDark = AppState.document.theme === "dark";
+      const res = normalizeOrGenerateFlowchart(raw, isDark);
+      if (res && res.formatted) {
+        dom.inputJsonRaw.value = res.formatted;
         updateJsonImportStatus();
-        showToast("Format JSON dirapikan!");
-      } catch (e) {
-        // Jika bukan JSON, rapikan baris diagram Mermaid / teks
+        showToast(res.message);
+      } else {
+        // Fallback Mermaid indentation
         const lines = raw.split("\n").map(l => l.trim()).filter(l => l.length > 0);
         if (lines.length > 0) {
           const header = lines[0];
           const body = lines.slice(1).map(l => "    " + l);
           dom.inputJsonRaw.value = [header, ...body].join("\n");
           updateJsonImportStatus();
-          showToast("Format skrip Mermaid dirapikan!");
+          showToast("Format skrip alir dirapikan!");
+        } else {
+          showToast("Format tidak dapat dirapikan atau tidak dikenali");
         }
       }
     });

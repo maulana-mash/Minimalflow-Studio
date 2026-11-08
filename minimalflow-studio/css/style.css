@@ -629,7 +629,7 @@ main.canvas-viewport.space-pan {
 }
 
 /* --------------------------------------------------------------------------
-   DUAL FLOATING TOOLBAR WRAPPER (CHART POD + ARROW POD)
+   CONTEXTUAL FLOATING TOOLBAR (CHART BAR OR ARROW BAR)
    -------------------------------------------------------------------------- */
 .dual-floating-wrapper {
   position: absolute;
@@ -637,10 +637,9 @@ main.canvas-viewport.space-pan {
   left: 50%;
   transform: translateX(-50%);
   display: none;
-  align-items: stretch;
-  gap: 5px;
+  align-items: center;
+  justify-content: center;
   z-index: 35;
-  max-width: calc(100vw - 260px);
   pointer-events: none;
   animation: fadeIn 0.15s ease;
 }
@@ -652,9 +651,54 @@ main.canvas-viewport.space-pan {
 .context-bar-pod {
   position: static !important;
   transform: none !important;
-  display: flex !important;
   pointer-events: auto;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.context-bar-pod.show {
+  display: flex !important;
+}
+
+.context-bar-pod:not(.show) {
+  display: none !important;
+}
+
+/* Custom Workspace Modal Styles */
+.custom-ws-unit-selector {
+  display: flex;
+  background: var(--bg-subtle);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  gap: 4px;
+}
+
+.btn-unit-toggle {
+  flex: 1;
+  height: 28px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-unit-toggle:hover {
+  color: var(--text-main);
+}
+
+.btn-unit-toggle.active {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 /* Pod yang sedang tidak aktif / mengabu (Solid 100% Opacity, agak gelap/mengabu, tidak tembus pandang) */
