@@ -504,11 +504,19 @@ window.MinimalFlow = window.MinimalFlow || {};
       activeEditingFinishFn = null;
 
       const rawText = editor.textContent.trim();
-      if (!rawText || rawText.toLowerCase() === "insert text") {
+      const hasOnlyNewlines = !rawText && /<br\b|<div|<p/i.test(editor.innerHTML);
+      const isPlaceholder = rawText.toLowerCase() === "insert text";
+
+      if (isPlaceholder || (!rawText && !hasOnlyNewlines)) {
         node.text.content = "";
         node.text.isPlaceholder = false;
       } else {
-        node.text.content = serializeEditorHtml(editor.innerHTML).trim();
+        let serialized = serializeEditorHtml(editor.innerHTML);
+        // Hapus newline di awal teks jika ada, tapi pertahankan newline di akhir yang dibuat user via Enter
+        if (serialized.startsWith("\n")) {
+          serialized = serialized.replace(/^\n+/, "");
+        }
+        node.text.content = serialized;
         node.text.isPlaceholder = false;
       }
 
