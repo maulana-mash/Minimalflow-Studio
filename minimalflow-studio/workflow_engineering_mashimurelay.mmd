@@ -1,0 +1,76 @@
+flowchart TD
+    subgraph FASE_01 ["FASE 1: VISUALISASI & DESAIN SIMBOL KOMPONEN"]
+        p1_standarisasi["Standarisasi Simbol IEC 60617 & NEMA<br/>(Benchmarking Simbol Internasional)"]
+        p1_svg["Digitalisasi: 117 Komponen Format Vektor (SVG)<br/>(viewBox 120x120 Relatif)"]
+    end
+
+    subgraph FASE_02 ["FASE 2: ARSITEKTUR DATA & MODEL SIRKUIT"]
+        p2_registry["Native Component Registry<br/>(Pin-Oriented Bounding Box & O(1) Lookup)"]
+        p2_models["Struktur Data CadElement & Format Terstandarisasi<br/>(Serialisasi .smrl & Legacy .txt)"]
+    end
+
+    subgraph FASE_03 ["FASE 3: MESIN KANVAS CAD NATIVE ANDROID"]
+        p3_canvas["CadCanvasView (Android Custom View 60 FPS)<br/>(Matriks Transformasi 2D Virtual World)"]
+        p3_snap["Algoritma Snap-Grid Ortogonal Kelipatan 30px<br/>(Kuantisasi Koordinat Sub-Pixel)"]
+        p3_routing["Manhattan Wire Router (Jalur Siku 90 Derajat)<br/>(Routing Ortogonal Tanpa Sudut Miring)"]
+    end
+
+    subgraph FASE_04 ["FASE 4: SOLVER SIRKUIT TOPOLOGI & PROTEKSI"]
+        p4_solver["Topological Circuit Solver<br/>(BFS/DFS Adjacency Matrix 3-Fasa L1,L2,L3,PE,N)"]
+        p4_decision{"Evaluasi:<br/>Terdeteksi Hubung Singkat / Korsleting?"}
+        p4_trip["Trip Pengaman Elektrik (<16ms)<br/>(Spanduk Peringatan SHORT CIRCUIT!)"]
+        p4_dynamics["Dinamika Hub. Self-Holding KM1,<br/>Timer & Motor Induksi 3-Fasa 60 FPS"]
+    end
+
+    subgraph FASE_05 ["FASE 5: KOMUNIKASI LAB & PEMINDAI KODE QR"]
+        p5_modal["Floating Modal QR Scanner<br/>(ZXing Embedded 4.3 & Kamera Terintegrasi)"]
+        p5_decision{"Evaluasi:<br/>Tipe Muatan QR Code?"}
+        p5_import_direct["Impor Sirkuit Mandiri<br/>Langsung ke Kanvas CAD (.smrl/.txt)"]
+        p5_submit_teacher["Pengiriman Tugas Siswa via HTTP POST<br/>ke Server Guru di LAN (Hotspot Offline)"]
+    end
+
+    subgraph FASE_06 ["FASE 6: GENERATOR LAPORAN PDF & MANAJEMEN PENYIMPANAN"]
+        p6_pdf["NativePdfReportGenerator<br/>(Hal 1 Skematik CAD + Hal 2 Tabel BOM)"]
+        p6_storage["Dual Storage Scoped Engine (Android 10 - 15)<br/>(FileProvider App-Specific + MediaStore Downloads)"]
+        p6_ui["Modern Save As Dialog<br/>(Format Berkas Vektor .smrl, .txt, .pdf)"]
+    end
+
+    subgraph FASE_07 ["FASE 7: PUSAT INSTRUKSI INTERAKTIF & ENSIKLOPEDIA"]
+        p7_webview["Hybrid Instruction Hub<br/>(Chromium WebView & WebSettings Otomatis)"]
+        p7_encyclo["Ensiklopedia 117 Komponen Elektroteknik<br/>(Filter Kategori, Pin I/O & Deskripsi Fisis)"]
+        p7_video["Pemutar Video Simulasi Mini<br/>(Autoplay Muted & Instant First Frame Decoding)"]
+    end
+
+    subgraph FASE_08 ["FASE 8: KOMPILASI RILIS, AUDIT MEMORI & DISTRIBUSI"]
+        p8_decision{"Evaluasi:<br/>Zipalign 4-Byte Memori Lolos?"}
+        p8_signing["Penandatanganan SDK apksigner<br/>(Signature Scheme v2 & v3 Terverifikasi)"]
+        p8_dist["Pencerminan 0-Diff Repositori Ganda<br/>& Distribusi Mashimurelay.apk"]
+        p8_gradle["Kompilasi Ulang Gradle Akar APK<br/>(assembleDebug / Daemon)"]
+    end
+
+
+    p1_standarisasi --> p1_svg
+    p2_registry --> p2_models
+    p3_canvas --> p3_snap
+    p3_snap --> p3_routing
+    p4_solver --> p4_decision
+    p4_decision -->|"Korsleting (Ya)"| p4_trip
+    p4_decision -->|"Normal (Tidak)"| p4_dynamics
+    p5_modal --> p5_decision
+    p5_decision -->|"Sirkuit Mandiri"| p5_import_direct
+    p5_decision -->|"Tugas Guru (HTTP)"| p5_submit_teacher
+    p6_pdf --> p6_storage
+    p6_storage --> p6_ui
+    p7_webview --> p7_encyclo
+    p7_encyclo --> p7_video
+    p8_decision -->|"Lolos (Exit Code 0)"| p8_signing
+    p8_signing --> p8_dist
+    p8_decision -->|"Gagal (Exit != 0)"| p8_gradle
+    p8_gradle -->|"Kompilasi Ulang"| p8_decision
+    p1_svg --> p2_registry
+    p2_models --> p3_canvas
+    p3_routing --> p4_solver
+    p4_dynamics -->|"Kondisi Normal"| p5_modal
+    p5_submit_teacher --> p6_pdf
+    p6_ui --> p7_webview
+    p7_video --> p8_decision

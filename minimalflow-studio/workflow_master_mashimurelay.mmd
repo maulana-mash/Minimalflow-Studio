@@ -1,0 +1,174 @@
+flowchart TD
+    subgraph eng_FASE_01 ["eng_FASE_01"]
+        eng_p1_standarisasi["Standarisasi Simbol IEC 60617 & NEMA<br/>(Benchmarking Simbol Internasional)"]
+        eng_p1_svg["Digitalisasi: 117 Komponen Format Vektor (SVG)<br/>(viewBox 120x120 Relatif)"]
+    end
+
+    subgraph eng_FASE_02 ["eng_FASE_02"]
+        eng_p2_registry["Native Component Registry<br/>(Pin-Oriented Bounding Box & O(1) Lookup)"]
+        eng_p2_models["Struktur Data CadElement & Format Terstandarisasi<br/>(Serialisasi .smrl & Legacy .txt)"]
+    end
+
+    subgraph eng_FASE_03 ["eng_FASE_03"]
+        eng_p3_canvas["CadCanvasView (Android Custom View 60 FPS)<br/>(Matriks Transformasi 2D Virtual World)"]
+        eng_p3_snap["Algoritma Snap-Grid Ortogonal Kelipatan 30px<br/>(Kuantisasi Koordinat Sub-Pixel)"]
+        eng_p3_routing["Manhattan Wire Router (Jalur Siku 90 Derajat)<br/>(Routing Ortogonal Tanpa Sudut Miring)"]
+    end
+
+    subgraph eng_FASE_04 ["eng_FASE_04"]
+        eng_p4_solver["Topological Circuit Solver<br/>(BFS/DFS Adjacency Matrix 3-Fasa L1,L2,L3,PE,N)"]
+        eng_p4_decision{"Evaluasi:<br/>Terdeteksi Hubung Singkat / Korsleting?"}
+        eng_p4_trip["Trip Pengaman Elektrik (<16ms)<br/>(Spanduk Peringatan SHORT CIRCUIT!)"]
+        eng_p4_dynamics["Dinamika Hub. Self-Holding KM1,<br/>Timer & Motor Induksi 3-Fasa 60 FPS"]
+    end
+
+    subgraph eng_FASE_05 ["eng_FASE_05"]
+        eng_p5_modal["Floating Modal QR Scanner<br/>(ZXing Embedded 4.3 & Kamera Terintegrasi)"]
+        eng_p5_decision{"Evaluasi:<br/>Tipe Muatan QR Code?"}
+        eng_p5_import_direct["Impor Sirkuit Mandiri<br/>Langsung ke Kanvas CAD (.smrl/.txt)"]
+        eng_p5_submit_teacher["Pengiriman Tugas Siswa via HTTP POST<br/>ke Server Guru di LAN (Hotspot Offline)"]
+    end
+
+    subgraph eng_FASE_06 ["eng_FASE_06"]
+        eng_p6_pdf["NativePdfReportGenerator<br/>(Hal 1 Skematik CAD + Hal 2 Tabel BOM)"]
+        eng_p6_storage["Dual Storage Scoped Engine (Android 10 - 15)<br/>(FileProvider App-Specific + MediaStore Downloads)"]
+        eng_p6_ui["Modern Save As Dialog<br/>(Format Berkas Vektor .smrl, .txt, .pdf)"]
+    end
+
+    subgraph eng_FASE_07 ["eng_FASE_07"]
+        eng_p7_webview["Hybrid Instruction Hub<br/>(Chromium WebView & WebSettings Otomatis)"]
+        eng_p7_encyclo["Ensiklopedia 117 Komponen Elektroteknik<br/>(Filter Kategori, Pin I/O & Deskripsi Fisis)"]
+        eng_p7_video["Pemutar Video Simulasi Mini<br/>(Autoplay Muted & Instant First Frame Decoding)"]
+    end
+
+    subgraph eng_FASE_08 ["eng_FASE_08"]
+        eng_p8_decision{"Evaluasi:<br/>Zipalign 4-Byte Memori Lolos?"}
+        eng_p8_signing["Penandatanganan SDK apksigner<br/>(Signature Scheme v2 & v3 Terverifikasi)"]
+        eng_p8_dist["Pencerminan 0-Diff Repositori Ganda<br/>& Distribusi Mashimurelay.apk"]
+        eng_p8_gradle["Kompilasi Ulang Gradle Akar APK<br/>(assembleDebug / Daemon)"]
+    end
+
+    subgraph run_GROUP_CORE ["run_GROUP_CORE"]
+        run_START(["Mulai Aplikasi Mashimurelay"])
+        run_INIT_CAD["Inisialisasi CAD Engine, Registry Komponen & Database Proyek"]
+        run_LOAD_WORKSPACE["Muat Kanvas Workspace (Proyek Terakhir / Proyek Baru)"]
+        run_WAIT_USER["Menunggu Interaksi Pengguna di Kanvas CAD"]
+        run_DECIDE_ACTION{"Pilihan Aksi Pengguna"}
+    end
+
+    subgraph run_GROUP_EDIT ["run_GROUP_EDIT"]
+        run_ACT_EDIT["Penempatan Komponen, Rotasi, Tagging & Penarikan Kabel Manhattan"]
+        run_SAVE_STATE["Simpan Riwayat Perubahan ke Stack Undo/Redo"]
+    end
+
+    subgraph run_GROUP_SAVE ["run_GROUP_SAVE"]
+        run_ACT_SAVE_EXPORT["Pengguna Membuka Menu Save As / Ekspor"]
+        run_SHOW_SAVE_MODAL["Tampilkan Modal Save As dengan Ikon SVG (.smrl, .txt, .pdf)"]
+        run_CHOOSE_FORMAT{"Format Apa yang Dipilih?"}
+        run_EXPORT_SMRL["Simpan Berkas Sirkuit CAD Standar (.smrl)"]
+        run_EXPORT_TXT["Simpan Berkas Teks Simurelay Legacy (.txt)"]
+        run_EXPORT_PDF["Generate Laporan Praktikum PDF 2 Halaman (Skematik & BOM)"]
+        run_DUAL_STORAGE_SAVE["Simpan via Dual Storage: App-Specific + MediaStore Public Download"]
+        run_OPEN_VIEWER["Buka Penampil PDF Otomatis via FileProvider Intent"]
+    end
+
+    subgraph run_GROUP_SIM ["run_GROUP_SIM"]
+        run_ACT_SIM["Pengguna Menekan Tombol RUN (Mode Simulasi Aktif)"]
+        run_SOLVE_CIRCUIT["Penyelesaian Graf Rangkaian & Tracing Aliran Fasa/Netral"]
+        run_CHECK_FAULT{"Apakah Terjadi Hubung Singkat (Short Circuit)?"}
+        run_TRIP_PROTECTION["Trip Pengaman Seketika: Banner SHORT CIRCUIT! & Pemutusan Daya"]
+        run_RUN_DYNAMICS["Simulasi Dinamis: Eksitasi Koil, Self-Holding, Timer & Rotasi Motor"]
+        run_STOP_SIM["Pengguna Menekan Tombol STOP (Kembali ke Mode Edit)"]
+    end
+
+    subgraph run_GROUP_QR ["run_GROUP_QR"]
+        run_ACT_QR["Pengguna Membuka Pemindai QR (Icon Header Workspace)"]
+        run_SHOW_QR_MODAL["Tampilkan Floating Dialog QR Scanner (Kamera / Galeri)"]
+        run_PARSE_QR{"Deteksi Format Payload Kode QR"}
+        run_QR_CIRCUIT["Payload Sirkuit Mandiri (.smrl / .txt / JSON)"]
+        run_LOAD_DIRECT["Muat Rangkaian Langsung ke Kanvas"]
+        run_QR_TEACHER["Payload Tugas Guru (HTTP / IP LAN Hotspot)"]
+        run_SHOW_STUDENT_ID["Tampilkan Dialog Identitas Siswa (Nama & No. Presensi)"]
+        run_SUBMIT_TEACHER["Kirim Rangkaian JSON + Laporan PDF via HTTP POST ke Laptop Guru"]
+    end
+
+    subgraph run_GROUP_INST ["run_GROUP_INST"]
+        run_ACT_INSTRUCTIONS["Pengguna Membuka Menu Petunjuk Penggunaan"]
+        run_SHOW_INST_MODAL["Tampilkan Dialog Petunjuk (Hybrid WebView)"]
+        run_INST_SUBNAV{"Navigasi Konten Petunjuk"}
+        run_VIEW_VIDEO["Putar Video Simulasi Interaktif MP4 + Live Telemetri Teks"]
+        run_VIEW_ENCYCLO["Jelajahi Galeri Ensiklopedia 117 Komponen Industri & I/O Terminal"]
+        run_VIEW_GUIDE["Baca Panduan CAD, Tata Cara Wiring & K3 Keselamatan Kerja Listrik"]
+    end
+
+
+    eng_p1_standarisasi --> eng_p1_svg
+    eng_p2_registry --> eng_p2_models
+    eng_p3_canvas --> eng_p3_snap
+    eng_p3_snap --> eng_p3_routing
+    eng_p4_solver --> eng_p4_decision
+    eng_p4_decision -->|"Korsleting (Ya)"| eng_p4_trip
+    eng_p4_decision -->|"Normal (Tidak)"| eng_p4_dynamics
+    eng_p5_modal --> eng_p5_decision
+    eng_p5_decision -->|"Sirkuit Mandiri"| eng_p5_import_direct
+    eng_p5_decision -->|"Tugas Guru (HTTP)"| eng_p5_submit_teacher
+    eng_p6_pdf --> eng_p6_storage
+    eng_p6_storage --> eng_p6_ui
+    eng_p7_webview --> eng_p7_encyclo
+    eng_p7_encyclo --> eng_p7_video
+    eng_p8_decision -->|"Lolos (Exit Code 0)"| eng_p8_signing
+    eng_p8_signing --> eng_p8_dist
+    eng_p8_decision -->|"Gagal (Exit != 0)"| eng_p8_gradle
+    eng_p8_gradle -->|"Kompilasi Ulang"| eng_p8_decision
+    eng_p1_svg --> eng_p2_registry
+    eng_p2_models --> eng_p3_canvas
+    eng_p3_routing --> eng_p4_solver
+    eng_p4_dynamics -->|"Kondisi Normal"| eng_p5_modal
+    eng_p5_submit_teacher --> eng_p6_pdf
+    eng_p6_ui --> eng_p7_webview
+    eng_p7_video --> eng_p8_decision
+    run_START --> run_INIT_CAD
+    run_INIT_CAD --> run_LOAD_WORKSPACE
+    run_LOAD_WORKSPACE --> run_WAIT_USER
+    run_WAIT_USER --> run_DECIDE_ACTION
+    run_DECIDE_ACTION -->|"Edit Kanvas"| run_ACT_EDIT
+    run_DECIDE_ACTION -->|"Uji Rangkaian (RUN)"| run_ACT_SIM
+    run_DECIDE_ACTION -->|"Pindai QR Code"| run_ACT_QR
+    run_DECIDE_ACTION -->|"Simpan / Ekspor"| run_ACT_SAVE_EXPORT
+    run_DECIDE_ACTION -->|"Buka Petunjuk & Ensiklopedia"| run_ACT_INSTRUCTIONS
+    run_ACT_EDIT --> run_SAVE_STATE
+    run_SAVE_STATE --> run_WAIT_USER
+    run_ACT_SIM --> run_SOLVE_CIRCUIT
+    run_SOLVE_CIRCUIT --> run_CHECK_FAULT
+    run_CHECK_FAULT -->|"Korsleting (Ya)"| run_TRIP_PROTECTION
+    run_CHECK_FAULT -->|"Normal (Tidak)"| run_RUN_DYNAMICS
+    run_TRIP_PROTECTION --> run_STOP_SIM
+    run_RUN_DYNAMICS --> run_STOP_SIM
+    run_STOP_SIM --> run_WAIT_USER
+    run_ACT_QR --> run_SHOW_QR_MODAL
+    run_SHOW_QR_MODAL --> run_PARSE_QR
+    run_PARSE_QR -->|"Sirkuit Offline"| run_QR_CIRCUIT
+    run_QR_CIRCUIT --> run_LOAD_DIRECT
+    run_LOAD_DIRECT --> run_WAIT_USER
+    run_PARSE_QR -->|"Tugas Guru (HTTP/IP)"| run_QR_TEACHER
+    run_QR_TEACHER --> run_SHOW_STUDENT_ID
+    run_SHOW_STUDENT_ID --> run_SUBMIT_TEACHER
+    run_SUBMIT_TEACHER --> run_WAIT_USER
+    run_ACT_SAVE_EXPORT --> run_SHOW_SAVE_MODAL
+    run_SHOW_SAVE_MODAL --> run_CHOOSE_FORMAT
+    run_CHOOSE_FORMAT -->|".smrl"| run_EXPORT_SMRL
+    run_CHOOSE_FORMAT -->|".txt"| run_EXPORT_TXT
+    run_CHOOSE_FORMAT -->|".pdf"| run_EXPORT_PDF
+    run_EXPORT_SMRL --> run_DUAL_STORAGE_SAVE
+    run_EXPORT_TXT --> run_DUAL_STORAGE_SAVE
+    run_EXPORT_PDF --> run_DUAL_STORAGE_SAVE
+    run_DUAL_STORAGE_SAVE --> run_OPEN_VIEWER
+    run_OPEN_VIEWER --> run_WAIT_USER
+    run_ACT_INSTRUCTIONS --> run_SHOW_INST_MODAL
+    run_SHOW_INST_MODAL --> run_INST_SUBNAV
+    run_INST_SUBNAV -->|"Tab Video Simulasi"| run_VIEW_VIDEO
+    run_INST_SUBNAV -->|"Tab Ensiklopedia"| run_VIEW_ENCYCLO
+    run_INST_SUBNAV -->|"Tab Cara Penggunaan & K3"| run_VIEW_GUIDE
+    run_VIEW_VIDEO --> run_WAIT_USER
+    run_VIEW_ENCYCLO --> run_WAIT_USER
+    run_VIEW_GUIDE --> run_WAIT_USER

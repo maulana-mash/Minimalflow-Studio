@@ -1,0 +1,100 @@
+flowchart TD
+    subgraph GROUP_CORE ["INISIALISASI CAD & SIKLUS UTAMA (WORKSPACE LOOP)"]
+        START(["Mulai Aplikasi Mashimurelay"])
+        INIT_CAD["Inisialisasi CAD Engine, Registry Komponen & Database Proyek"]
+        LOAD_WORKSPACE["Muat Kanvas Workspace (Proyek Terakhir / Proyek Baru)"]
+        WAIT_USER["Menunggu Interaksi Pengguna di Kanvas CAD"]
+        DECIDE_ACTION{"Pilihan Aksi Pengguna"}
+    end
+
+    subgraph GROUP_EDIT ["MANIPULASI ELEMEN & WIRING KANVAS"]
+        ACT_EDIT["Penempatan Komponen, Rotasi, Tagging & Penarikan Kabel Manhattan"]
+        SAVE_STATE["Simpan Riwayat Perubahan ke Stack Undo/Redo"]
+    end
+
+    subgraph GROUP_SAVE ["GENERATOR DOKUMEN PDF & DUAL STORAGE"]
+        ACT_SAVE_EXPORT["Pengguna Membuka Menu Save As / Ekspor"]
+        SHOW_SAVE_MODAL["Tampilkan Modal Save As dengan Ikon SVG (.smrl, .txt, .pdf)"]
+        CHOOSE_FORMAT{"Format Apa yang Dipilih?"}
+        EXPORT_SMRL["Simpan Berkas Sirkuit CAD Standar (.smrl)"]
+        EXPORT_TXT["Simpan Berkas Teks Simurelay Legacy (.txt)"]
+        EXPORT_PDF["Generate Laporan Praktikum PDF 2 Halaman (Skematik & BOM)"]
+        DUAL_STORAGE_SAVE["Simpan via Dual Storage: App-Specific + MediaStore Public Download"]
+        OPEN_VIEWER["Buka Penampil PDF Otomatis via FileProvider Intent"]
+    end
+
+    subgraph GROUP_SIM ["MESIN SIMULASI ELEKTROMAGNETIK & PROTEKSI KORSLETING"]
+        ACT_SIM["Pengguna Menekan Tombol RUN (Mode Simulasi Aktif)"]
+        SOLVE_CIRCUIT["Penyelesaian Graf Rangkaian & Tracing Aliran Fasa/Netral"]
+        CHECK_FAULT{"Apakah Terjadi Hubung Singkat (Short Circuit)?"}
+        TRIP_PROTECTION["Trip Pengaman Seketika: Banner SHORT CIRCUIT! & Pemutusan Daya"]
+        RUN_DYNAMICS["Simulasi Dinamis: Eksitasi Koil, Self-Holding, Timer & Rotasi Motor"]
+        STOP_SIM["Pengguna Menekan Tombol STOP (Kembali ke Mode Edit)"]
+    end
+
+    subgraph GROUP_QR ["TELEMETRI QR CODE & PENGUMPULAN TUGAS LAB LAN"]
+        ACT_QR["Pengguna Membuka Pemindai QR (Icon Header Workspace)"]
+        SHOW_QR_MODAL["Tampilkan Floating Dialog QR Scanner (Kamera / Galeri)"]
+        PARSE_QR{"Deteksi Format Payload Kode QR"}
+        QR_CIRCUIT["Payload Sirkuit Mandiri (.smrl / .txt / JSON)"]
+        LOAD_DIRECT["Muat Rangkaian Langsung ke Kanvas"]
+        QR_TEACHER["Payload Tugas Guru (HTTP / IP LAN Hotspot)"]
+        SHOW_STUDENT_ID["Tampilkan Dialog Identitas Siswa (Nama & No. Presensi)"]
+        SUBMIT_TEACHER["Kirim Rangkaian JSON + Laporan PDF via HTTP POST ke Laptop Guru"]
+    end
+
+    subgraph GROUP_INST ["ENSIKLOPEDIA INTERAKTIF & VIDEO PLAYER"]
+        ACT_INSTRUCTIONS["Pengguna Membuka Menu Petunjuk Penggunaan"]
+        SHOW_INST_MODAL["Tampilkan Dialog Petunjuk (Hybrid WebView)"]
+        INST_SUBNAV{"Navigasi Konten Petunjuk"}
+        VIEW_VIDEO["Putar Video Simulasi Interaktif MP4 + Live Telemetri Teks"]
+        VIEW_ENCYCLO["Jelajahi Galeri Ensiklopedia 117 Komponen Industri & I/O Terminal"]
+        VIEW_GUIDE["Baca Panduan CAD, Tata Cara Wiring & K3 Keselamatan Kerja Listrik"]
+    end
+
+
+    START --> INIT_CAD
+    INIT_CAD --> LOAD_WORKSPACE
+    LOAD_WORKSPACE --> WAIT_USER
+    WAIT_USER --> DECIDE_ACTION
+    DECIDE_ACTION -->|"Edit Kanvas"| ACT_EDIT
+    DECIDE_ACTION -->|"Uji Rangkaian (RUN)"| ACT_SIM
+    DECIDE_ACTION -->|"Pindai QR Code"| ACT_QR
+    DECIDE_ACTION -->|"Simpan / Ekspor"| ACT_SAVE_EXPORT
+    DECIDE_ACTION -->|"Buka Petunjuk & Ensiklopedia"| ACT_INSTRUCTIONS
+    ACT_EDIT --> SAVE_STATE
+    SAVE_STATE --> WAIT_USER
+    ACT_SIM --> SOLVE_CIRCUIT
+    SOLVE_CIRCUIT --> CHECK_FAULT
+    CHECK_FAULT -->|"Korsleting (Ya)"| TRIP_PROTECTION
+    CHECK_FAULT -->|"Normal (Tidak)"| RUN_DYNAMICS
+    TRIP_PROTECTION --> STOP_SIM
+    RUN_DYNAMICS --> STOP_SIM
+    STOP_SIM --> WAIT_USER
+    ACT_QR --> SHOW_QR_MODAL
+    SHOW_QR_MODAL --> PARSE_QR
+    PARSE_QR -->|"Sirkuit Offline"| QR_CIRCUIT
+    QR_CIRCUIT --> LOAD_DIRECT
+    LOAD_DIRECT --> WAIT_USER
+    PARSE_QR -->|"Tugas Guru (HTTP/IP)"| QR_TEACHER
+    QR_TEACHER --> SHOW_STUDENT_ID
+    SHOW_STUDENT_ID --> SUBMIT_TEACHER
+    SUBMIT_TEACHER --> WAIT_USER
+    ACT_SAVE_EXPORT --> SHOW_SAVE_MODAL
+    SHOW_SAVE_MODAL --> CHOOSE_FORMAT
+    CHOOSE_FORMAT -->|".smrl"| EXPORT_SMRL
+    CHOOSE_FORMAT -->|".txt"| EXPORT_TXT
+    CHOOSE_FORMAT -->|".pdf"| EXPORT_PDF
+    EXPORT_SMRL --> DUAL_STORAGE_SAVE
+    EXPORT_TXT --> DUAL_STORAGE_SAVE
+    EXPORT_PDF --> DUAL_STORAGE_SAVE
+    DUAL_STORAGE_SAVE --> OPEN_VIEWER
+    OPEN_VIEWER --> WAIT_USER
+    ACT_INSTRUCTIONS --> SHOW_INST_MODAL
+    SHOW_INST_MODAL --> INST_SUBNAV
+    INST_SUBNAV -->|"Tab Video Simulasi"| VIEW_VIDEO
+    INST_SUBNAV -->|"Tab Ensiklopedia"| VIEW_ENCYCLO
+    INST_SUBNAV -->|"Tab Cara Penggunaan & K3"| VIEW_GUIDE
+    VIEW_VIDEO --> WAIT_USER
+    VIEW_ENCYCLO --> WAIT_USER
+    VIEW_GUIDE --> WAIT_USER

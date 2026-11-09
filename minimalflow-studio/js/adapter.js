@@ -56,6 +56,11 @@ window.MinimalFlow = window.MinimalFlow || {};
         return { type: "mashimurelay", data: parsed };
       }
 
+      // Format 1b: Mashimurelay Architecture & Runtime Workflow JSON
+      if (parsed.runtime_flowchart || parsed.engineering_workflow) {
+        return { type: "mashimurelay_workflow", data: parsed };
+      }
+
       // Format 2: MinimalFlow Native Schema
       if (parsed.nodes && typeof parsed.nodes === "object" && !Array.isArray(parsed.nodes)) {
         return { type: "minimalflow", data: parsed };
@@ -76,6 +81,13 @@ window.MinimalFlow = window.MinimalFlow || {};
       // Jika JSON error tapi ada tanda konektor panah, coba fallback ke Mermaid
       if (hasMermaidConnections) {
         return { type: "mermaid", raw: trimmed };
+      }
+      // Deteksi jika berupa daftar langkah bernomor, bullet points, atau prompt alur teks bebas
+      const lines = trimmed.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const isNumbered = lines.some(l => /^(?:\d+[\.\)\:-]|[-*•]|\b(?:langkah|step)\s+\d+)/i.test(l));
+      const hasArrowChain = /->|-->|=>|➔|→/.test(trimmed);
+      if (isNumbered || hasArrowChain || lines.length >= 2) {
+        return { type: "step_list", raw: trimmed };
       }
       return { type: "syntax_error", error: e.message };
     }
@@ -250,7 +262,7 @@ window.MinimalFlow = window.MinimalFlow || {};
   // ==========================================================================
   // 3. SUBGRAPH & SWIMLANE-AWARE HIERARCHICAL LAYOUT ENGINE
   // ==========================================================================
-  function layoutGraph(nodes, edges, orientation = 'TD', isDark = false, subgraphs = {}) {
+  function layoutGraph(nodes, edges, orientation = 'TD', isDark = false, subgraphs = {}, fontOptions = {}) {
     const nodeIds = Object.keys(nodes);
     if (nodeIds.length === 0) return { nodes: {}, edges: {}, totalWidth: 1600, totalHeight: 900 };
 
@@ -373,8 +385,8 @@ window.MinimalFlow = window.MinimalFlow || {};
             },
             text: {
               content: text,
-              fontFamily: "Poppins, sans-serif",
-              fontSize: 12.5,
+              fontFamily: fontOptions.fontFamily || "Poppins, sans-serif",
+              fontSize: fontOptions.fontSize || 12.5,
               bold: false,
               italic: false,
               underline: false,
@@ -418,8 +430,8 @@ window.MinimalFlow = window.MinimalFlow || {};
           },
           text: {
             content: `[ ${sub.title.toUpperCase()} ]`,
-            fontFamily: "Inter, sans-serif",
-            fontSize: 12,
+            fontFamily: fontOptions.fontFamily || "Inter, sans-serif",
+            fontSize: fontOptions.fontSize || 12,
             bold: true,
             italic: false,
             underline: false,
@@ -544,8 +556,8 @@ window.MinimalFlow = window.MinimalFlow || {};
             },
             text: {
               content: text,
-              fontFamily: "Poppins, sans-serif",
-              fontSize: 13,
+              fontFamily: fontOptions.fontFamily || "Poppins, sans-serif",
+              fontSize: fontOptions.fontSize || 13,
               bold: false,
               italic: false,
               underline: false,
@@ -696,6 +708,162 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   // ==========================================================================
+  // 4b. ADAPTER MASHIMURELAY ARCHITECTURE & RUNTIME WORKFLOW
+  // ==========================================================================
+  function parseMashimurelayWorkflowJson(data, isDark = false) {
+    const fontOptions = {
+      fontFamily: "'Book Antiqua', Palatino, serif",
+      fontSize: 10
+    };
+
+    if (data.runtime_flowchart && Array.isArray(data.runtime_flowchart.nodes)) {
+      const rawNodes = data.runtime_flowchart.nodes;
+      const rawEdges = Array.isArray(data.runtime_flowchart.edges) ? data.runtime_flowchart.edges : [];
+
+      const intermediateNodes = {};
+      const intermediateEdges = {};
+      const subgraphs = {
+        "GROUP_CORE": { id: "GROUP_CORE", title: "Inisialisasi CAD & Siklus Utama (Workspace Loop)", nodeIds: [] },
+        "GROUP_EDIT": { id: "GROUP_EDIT", title: "Manipulasi Elemen & Wiring Kanvas", nodeIds: [] },
+        "GROUP_SIM": { id: "GROUP_SIM", title: "Mesin Simulasi Elektromagnetik & Proteksi Korsleting", nodeIds: [] },
+        "GROUP_QR": { id: "GROUP_QR", title: "Telemetri QR Code & Pengumpulan Tugas Lab LAN", nodeIds: [] },
+        "GROUP_SAVE": { id: "GROUP_SAVE", title: "Generator Dokumen PDF & Dual Storage", nodeIds: [] },
+        "GROUP_INST": { id: "GROUP_INST", title: "Ensiklopedia Interaktif & Video Player", nodeIds: [] }
+      };
+
+      const groupMapping = {
+        "START": "GROUP_CORE", "INIT_CAD": "GROUP_CORE", "LOAD_WORKSPACE": "GROUP_CORE", "WAIT_USER": "GROUP_CORE", "DECIDE_ACTION": "GROUP_CORE",
+        "ACT_EDIT": "GROUP_EDIT", "SAVE_STATE": "GROUP_EDIT",
+        "ACT_SIM": "GROUP_SIM", "SOLVE_CIRCUIT": "GROUP_SIM", "CHECK_FAULT": "GROUP_SIM", "TRIP_PROTECTION": "GROUP_SIM", "RUN_DYNAMICS": "GROUP_SIM", "STOP_SIM": "GROUP_SIM",
+        "ACT_QR": "GROUP_QR", "SHOW_QR_MODAL": "GROUP_QR", "PARSE_QR": "GROUP_QR", "QR_CIRCUIT": "GROUP_QR", "LOAD_DIRECT": "GROUP_QR", "QR_TEACHER": "GROUP_QR", "SHOW_STUDENT_ID": "GROUP_QR", "SUBMIT_TEACHER": "GROUP_QR",
+        "ACT_SAVE_EXPORT": "GROUP_SAVE", "SHOW_SAVE_MODAL": "GROUP_SAVE", "CHOOSE_FORMAT": "GROUP_SAVE", "EXPORT_SMRL": "GROUP_SAVE", "EXPORT_TXT": "GROUP_SAVE", "EXPORT_PDF": "GROUP_SAVE", "DUAL_STORAGE_SAVE": "GROUP_SAVE", "OPEN_VIEWER": "GROUP_SAVE",
+        "ACT_INSTRUCTIONS": "GROUP_INST", "SHOW_INST_MODAL": "GROUP_INST", "INST_SUBNAV": "GROUP_INST", "VIEW_VIDEO": "GROUP_INST", "VIEW_ENCYCLO": "GROUP_INST", "VIEW_GUIDE": "GROUP_INST"
+      };
+
+      rawNodes.forEach(n => {
+        const id = String(n.id);
+        const text = n.label || id;
+        const ntype = n.type === 'decision' ? 'diamond' : (n.type === 'start_end' ? 'rounded' : 'rectangle');
+        intermediateNodes[id] = {
+          id,
+          type: ntype,
+          rawText: cleanLabelText(text),
+          inDegree: 0,
+          outDegree: 0
+        };
+        const gid = groupMapping[id] || "GROUP_CORE";
+        if (subgraphs[gid]) subgraphs[gid].nodeIds.push(id);
+      });
+
+      let edgeIdx = 1;
+      rawEdges.forEach(e => {
+        const srcId = String(e.from || e.source || '');
+        const tgtId = String(e.to || e.target || '');
+        if (srcId && tgtId) {
+          const edgeId = `edge_${edgeIdx++}`;
+          intermediateEdges[edgeId] = {
+            id: edgeId,
+            sourceId: srcId,
+            targetId: tgtId,
+            dashed: (tgtId === 'WAIT_USER') ? 'dashed' : 'solid',
+            label: e.label || ''
+          };
+          if (intermediateNodes[srcId]) intermediateNodes[srcId].outDegree++;
+          if (intermediateNodes[tgtId]) intermediateNodes[tgtId].inDegree++;
+        }
+      });
+
+      const layout = layoutGraph(intermediateNodes, intermediateEdges, 'TD', isDark, subgraphs, fontOptions);
+      return {
+        version: "1.5.0",
+        theme: isDark ? "dark" : "light",
+        canvas: {
+          pan: { x: 50, y: 50 },
+          zoom: 0.65,
+          gridSize: 24,
+          workspace: {
+            preset: "16:9_landscape",
+            orientation: "landscape",
+            x: 40,
+            y: 40,
+            width: layout.totalWidth,
+            height: layout.totalHeight
+          }
+        },
+        nodes: layout.nodes,
+        edges: layout.edges
+      };
+    }
+
+    if (data.engineering_workflow && Array.isArray(data.engineering_workflow.phases)) {
+      const intermediateNodes = {};
+      const intermediateEdges = {};
+      const subgraphs = {};
+      let edgeIdx = 1;
+
+      data.engineering_workflow.phases.forEach((p, pIdx) => {
+        const pId = p.phase_id || `PHASE_${pIdx + 1}`;
+        subgraphs[pId] = {
+          id: pId,
+          title: p.phase_name || pId,
+          nodeIds: []
+        };
+
+        const tasks = Array.isArray(p.tasks) ? p.tasks : [];
+        let prevTaskId = null;
+        tasks.forEach((t, tIdx) => {
+          const tId = `${pId}_task_${tIdx + 1}`;
+          intermediateNodes[tId] = {
+            id: tId,
+            type: "rectangle",
+            rawText: cleanLabelText(t),
+            inDegree: 0,
+            outDegree: 0
+          };
+          subgraphs[pId].nodeIds.push(tId);
+
+          if (prevTaskId) {
+            const edgeId = `edge_${edgeIdx++}`;
+            intermediateEdges[edgeId] = {
+              id: edgeId,
+              sourceId: prevTaskId,
+              targetId: tId,
+              dashed: "solid",
+              label: ""
+            };
+            intermediateNodes[prevTaskId].outDegree++;
+            intermediateNodes[tId].inDegree++;
+          }
+          prevTaskId = tId;
+        });
+      });
+
+      const layout = layoutGraph(intermediateNodes, intermediateEdges, 'TD', isDark, subgraphs, fontOptions);
+      return {
+        version: "1.5.0",
+        theme: isDark ? "dark" : "light",
+        canvas: {
+          pan: { x: 50, y: 50 },
+          zoom: 0.60,
+          gridSize: 24,
+          workspace: {
+            preset: "custom_portrait",
+            orientation: "portrait",
+            x: 40,
+            y: 40,
+            width: layout.totalWidth,
+            height: layout.totalHeight
+          }
+        },
+        nodes: layout.nodes,
+        edges: layout.edges
+      };
+    }
+
+    return parseGenericJson(data, isDark);
+  }
+
+  // ==========================================================================
   // 5. ADAPTER GENERIC DIAGRAM JSON (ARRAY FORMAT)
   // ==========================================================================
   function parseGenericJson(data, isDark = false) {
@@ -805,6 +973,138 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   // ==========================================================================
+  // 6b. ADAPTER NATURAL LANGUAGE PROMPT & STEP LIST
+  // ==========================================================================
+  function parseStepListToDocument(rawText, isDark = false) {
+    if (!rawText) {
+      return {
+        nodes: {}, edges: {},
+        canvas: { pan: { x: 50, y: 50 }, zoom: 1, gridSize: 24, workspace: { preset: "16:9_landscape", orientation: "landscape", x: 40, y: 40, width: 1600, height: 900 } }
+      };
+    }
+
+    let clean = rawText.trim().replace(/^```[a-zA-Z0-9_-]*\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+    let steps = [];
+
+    if (/->|-->|=>|➔|→/.test(clean)) {
+      const parts = clean.split(/->|-->|=>|➔|→/);
+      steps = parts.map(p => p.trim()).filter(p => p.length > 0).map(s => {
+        return { label: s.replace(/^\[?\d+[\]\.\:\-\)]\s*/, "").trim() || s };
+      });
+    } else {
+      const lines = clean.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      lines.forEach(l => {
+        if (l.startsWith("#") || l.startsWith("//")) return;
+        const cleaned = l.replace(/^(?:(?:\d+[\.\)\:-])|[-*•]|\b(?:langkah|step)\s+\d+[:\.\-]?)\s*/i, "").trim();
+        if (cleaned.length > 0) steps.push({ label: cleaned });
+      });
+    }
+
+    if (steps.length === 0) steps.push({ label: clean });
+
+    const nodes = {};
+    const edges = {};
+    const strokeColor = isDark ? "#f4f4f5" : "#18181b";
+    const fillColor = isDark ? "#27272a" : "#ffffff";
+    const textColor = isDark ? "#f4f4f5" : "#18181b";
+
+    const width = 1600;
+    const height = Math.max(900, steps.length * 150 + 160);
+    const centerX = 800;
+    let curY = 80;
+
+    steps.forEach((step, idx) => {
+      const id = "node_step_" + (idx + 1);
+      const lower = step.label.toLowerCase();
+      let type = "rectangle";
+      if (/\b(mulai|start|begin|selesai|finish|end|berhenti|stop)\b/i.test(lower)) type = "rounded";
+      else if (/\?|\bapakah\b|\bjika\b|\bif\b|\bkondisi\b|\bvalid\?|\bcek\b|\bevaluasi\b|\bdecision\b/i.test(lower)) type = "diamond";
+      else if (/\b(input|output|masukkan|keluaran|baca|read|print|cetak|tampilkan|display)\b/i.test(lower)) type = "parallelogram";
+      else if (/\b(database|db|basis data|tabel|table|simpan ke db|storage|penyimpanan)\b/i.test(lower)) type = "cylinder";
+
+      let nw = 160, nh = 80;
+      if (type === "diamond") { nw = 150; nh = 100; }
+      else if (type === "parallelogram") { nw = 170; nh = 76; }
+
+      nodes[id] = {
+        id,
+        type,
+        x: Math.round(centerX - nw / 2),
+        y: curY,
+        width: nw,
+        height: nh,
+        baseWidth: nw,
+        baseHeight: nh,
+        rotation: 0,
+        locked: false,
+        groupId: null,
+        src: null,
+        zIndex: (idx + 1) * 10,
+        style: {
+          fill: fillColor,
+          stroke: strokeColor,
+          strokeWidth: 1.5,
+          dashed: "solid"
+        },
+        text: {
+          content: step.label,
+          fontFamily: "Poppins, sans-serif",
+          fontSize: 13,
+          bold: false,
+          italic: false,
+          underline: false,
+          align: "center",
+          valign: "middle",
+          paddingX: 14,
+          color: textColor
+        }
+      };
+
+      if (idx > 0) {
+        const prevId = "node_step_" + idx;
+        const edgeId = "edge_step_" + idx;
+        edges[edgeId] = {
+          id: edgeId,
+          type: "step",
+          source: { nodeId: prevId, pin: "S" },
+          target: { nodeId: id, pin: "N" },
+          handleOffset: { dx: 0, dy: 0 },
+          zIndex: (idx + 1) * 10 - 5,
+          style: {
+            stroke: strokeColor,
+            strokeWidth: 1.5,
+            dashed: "solid",
+            markerStart: "none",
+            markerEnd: "arrow"
+          }
+        };
+      }
+
+      curY += nh + 50;
+    });
+
+    return {
+      version: "1.5.0",
+      theme: isDark ? "dark" : "light",
+      canvas: {
+        pan: { x: 50, y: 50 },
+        zoom: 0.85,
+        gridSize: 24,
+        workspace: {
+          preset: height > 1000 ? "a4_portrait" : "16:9_landscape",
+          orientation: height > 1000 ? "portrait" : "landscape",
+          x: 40,
+          y: 40,
+          width: 1600,
+          height: Math.max(curY + 60, 900)
+        }
+      },
+      nodes,
+      edges
+    };
+  }
+
+  // ==========================================================================
   // 7. ENTRYPOINT UTAMA (UNIVERSAL TRANSLATOR)
   // ==========================================================================
   function parseUniversal(rawInput, isDark = false) {
@@ -843,6 +1143,21 @@ window.MinimalFlow = window.MinimalFlow || {};
         };
       }
 
+      case "mashimurelay_workflow": {
+        const doc = parseMashimurelayWorkflowJson(detection.data, isDark);
+        const nodeCount = Object.keys(doc.nodes).filter(k => !doc.nodes[k].isContainer).length;
+        const edgeCount = Object.keys(doc.edges).length;
+        const subCount = Object.keys(doc.nodes).filter(k => doc.nodes[k].isContainer).length;
+        return {
+          success: true,
+          detectedType: "mashimurelay_workflow",
+          formatTitle: `Mashimurelay Workflow [Book Antiqua 10px] (${subCount} Modul)`,
+          document: doc,
+          nodeCount,
+          edgeCount
+        };
+      }
+
       case "mermaid": {
         const doc = parseMermaidToDocument(detection.raw, isDark);
         const nodeCount = Object.keys(doc.nodes).filter(k => !doc.nodes[k].isContainer).length;
@@ -852,6 +1167,20 @@ window.MinimalFlow = window.MinimalFlow || {};
           success: true,
           detectedType: "mermaid",
           formatTitle: `Diagram Alur Mermaid (${doc.canvas.workspace.orientation.toUpperCase()}${subCount > 0 ? ' - ' + subCount + ' Subgraph' : ''})`,
+          document: doc,
+          nodeCount,
+          edgeCount
+        };
+      }
+
+      case "step_list": {
+        const doc = parseStepListToDocument(detection.raw, isDark);
+        const nodeCount = Object.keys(doc.nodes).length;
+        const edgeCount = Object.keys(doc.edges).length;
+        return {
+          success: true,
+          detectedType: "step_list",
+          formatTitle: `Teks Prompt Alur (${nodeCount} Langkah)`,
           document: doc,
           nodeCount,
           edgeCount

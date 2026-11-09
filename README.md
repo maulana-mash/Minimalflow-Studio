@@ -1,6 +1,21 @@
-# minimalflow-studio
+<p align="center">
+  <a href="https://minimalflow-studio.vercel.app/">
+    <img src="assets/branding/logo_black_transparent.png" alt="MinimalFlow Studio Logo" width="160" height="160" />
+  </a>
+</p>
 
-Aplikasi web editor flowchart dan diagram alur berdesain monokrom. Memiliki fitur AI Vision untuk mendeteksi gambar atau sketsa menjadi diagram otomatis, parser file Mermaid dan JSON, perutean garis magnetik cerdas, pengelompokan chart, serta ekspor resolusi tinggi ke format SVG, PNG, dan PDF.
+<h1 align="center">MinimalFlow Studio</h1>
+
+<p align="center">
+  <strong>Studio Diagram Alur & Flowchart Monokrom Presisi Tinggi</strong><br>
+  Didukung AI Vision Scanner, Kompilasi Mermaid Universal, Parser Prompt Bahasa Alami, dan Ekspor Vektor Retina.
+</p>
+
+<p align="center">
+  <a href="https://minimalflow-studio.vercel.app/"><img src="https://img.shields.io/badge/Live%20Demo-Vercel%20Production-18181b?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel Live Demo"></a>
+  <img src="https://img.shields.io/badge/Architecture-Vanilla%20Web%20Standards-18181b?style=for-the-badge&logo=javascript&logoColor=white" alt="Pure Web Standards">
+  <img src="https://img.shields.io/badge/License-MIT-18181b?style=for-the-badge" alt="MIT License">
+</p>
 
 ---
 

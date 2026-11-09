@@ -3502,6 +3502,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (edge) {
         if (!edge.style) edge.style = {};
         edge.style.stroke = color;
+        edge.stroke = color;
         if (dom.edgeColorBar) dom.edgeColorBar.style.background = color === "transparent" ? "none" : color;
         renderAll();
       }
@@ -3534,8 +3535,10 @@ window.MinimalFlow = window.MinimalFlow || {};
       const edge = AppState.document.edges[AppState.ui.selectedId];
       if (edge && previewOriginalColors[edge.id]) {
         if (!edge.style) edge.style = {};
-        edge.style.stroke = previewOriginalColors[edge.id].edgeStroke;
-        if (dom.edgeColorBar) dom.edgeColorBar.style.background = edge.style.stroke;
+        const origColor = previewOriginalColors[edge.id].edgeStroke;
+        edge.style.stroke = origColor;
+        edge.stroke = origColor;
+        if (dom.edgeColorBar) dom.edgeColorBar.style.background = origColor;
         renderAll();
       }
       return;
@@ -3667,6 +3670,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         saveSnapshot();
         if (!edge.style) edge.style = {};
         edge.style.stroke = color;
+        edge.stroke = color;
         if (dom.edgeColorBar) dom.edgeColorBar.style.background = color === "transparent" ? "none" : color;
         if (AppState.defaults?.edge) {
           AppState.defaults.edge.stroke = color;
@@ -4155,9 +4159,13 @@ window.MinimalFlow = window.MinimalFlow || {};
           ed.style.markerEnd = template.markerEnd;
           if (template.stroke) {
             ed.style.stroke = template.stroke;
+            ed.stroke = template.stroke;
           }
         }
       });
+      if (AppState.defaults?.edge && template.stroke) {
+        AppState.defaults.edge.stroke = template.stroke;
+      }
       renderAll();
       showToast(`Format panah berhasil diterapkan ke semua (${edgeKeys.length}) panah`);
     });

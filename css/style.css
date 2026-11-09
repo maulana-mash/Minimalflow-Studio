@@ -156,7 +156,7 @@ header.app-header {
   border-radius: 8px;
   color: var(--text-main);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out, transform 100ms ease-out, box-shadow 140ms ease-out;
 }
 
 .btn-icon:hover {
@@ -194,12 +194,16 @@ header.app-header {
   border-radius: 8px;
   color: var(--text-main);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out, transform 100ms ease-out, box-shadow 140ms ease-out;
 }
 
 .btn-labeled:hover {
   background: var(--bg-subtle);
   border-color: var(--border-dark);
+}
+
+.btn-labeled:active {
+  transform: scale(0.97);
 }
 
 .btn-labeled.primary {
@@ -314,7 +318,7 @@ aside.shapes-sidebar {
   justify-content: center;
   gap: 6px;
   cursor: grab;
-  transition: all 0.15s ease;
+  transition: border-color 150ms ease-out, transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms ease-out;
   user-select: none;
 }
 
@@ -326,7 +330,7 @@ aside.shapes-sidebar {
 
 .shape-card:active {
   cursor: grabbing;
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 .shape-card svg {
@@ -361,7 +365,7 @@ aside.shapes-sidebar {
   font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out, box-shadow 140ms ease-out, transform 100ms ease-out;
 }
 
 .sidebar-guide-btn:hover {
@@ -371,10 +375,14 @@ aside.shapes-sidebar {
   color: var(--accent-black);
 }
 
+.sidebar-guide-btn:active {
+  transform: scale(0.97);
+}
+
 .sidebar-guide-btn .guide-arrow-icon {
   margin-left: auto;
   opacity: 0.5;
-  transition: transform 0.15s ease;
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sidebar-guide-btn:hover .guide-arrow-icon {
@@ -404,11 +412,15 @@ aside.shapes-sidebar {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 140ms ease-out, border-color 140ms ease-out, transform 100ms ease-out;
 }
 
 .guide-tab-btn:hover {
   color: var(--text-main);
+}
+
+.guide-tab-btn:active {
+  transform: scale(0.97);
 }
 
 .guide-tab-btn.active {
@@ -620,8 +632,12 @@ aside.layers-sidebar.show {
   cursor: pointer;
   border: 1px solid transparent;
   user-select: none;
-  transition: all 0.1s ease;
+  transition: background-color 100ms ease-out, border-color 100ms ease-out, transform 100ms ease-out;
   font-size: 12px;
+}
+
+.layer-item:active {
+  transform: scale(0.98);
 }
 
 .layer-item:hover {
@@ -797,7 +813,7 @@ main.canvas-viewport.space-pan {
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 140ms ease-out, background-color 140ms ease-out, box-shadow 140ms ease-out, transform 100ms ease-out;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -805,6 +821,10 @@ main.canvas-viewport.space-pan {
 
 .btn-unit-toggle:hover {
   color: var(--text-main);
+}
+
+.btn-unit-toggle:active {
+  transform: scale(0.96);
 }
 
 .btn-unit-toggle.active {
@@ -961,8 +981,12 @@ body.dark-mode .context-bar-pod.disabled-pod div[style*="background:var(--border
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: background-color 140ms ease-out, color 140ms ease-out, border-color 140ms ease-out, transform 100ms ease-out;
   flex-shrink: 0;
+}
+
+.btn-layer-toggle-arrow:active {
+  transform: scale(0.96);
 }
 
 .btn-layer-toggle-arrow:hover {
@@ -1076,6 +1100,7 @@ body.dark-mode .layer-item.layer-item-edge.selected {
 .prop-input-number {
   height: 28px;
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background: var(--bg-surface);
@@ -1268,6 +1293,7 @@ body.dark-mode .layer-item.layer-item-edge.selected {
 .zoom-level-text {
   font-size: 11px;
   font-family: 'Fira Code', monospace;
+  font-variant-numeric: tabular-nums;
   font-weight: 500;
   min-width: 44px;
   text-align: center;
@@ -1306,8 +1332,12 @@ body.dark-mode .layer-item.layer-item-edge.selected {
   animation: modalSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.modal-title {
+  text-wrap: balance;
+}
+
 @keyframes modalSlideUp {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -1335,12 +1365,16 @@ body.dark-mode .layer-item.layer-item-edge.selected {
   justify-content: space-between;
   gap: 14px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 140ms ease-out, box-shadow 140ms ease-out, transform 100ms ease-out;
 }
 
 .project-card:hover {
   border-color: var(--border-dark);
   box-shadow: var(--shadow-sm);
+}
+
+.project-card:active {
+  transform: scale(0.99);
 }
 
 .project-card.active-project {
@@ -1406,12 +1440,16 @@ body.dark-mode .layer-item.layer-item-edge.selected {
   border-radius: 6px;
   color: var(--text-main);
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out, transform 100ms ease-out;
 }
 
 .project-action-btn:hover {
   background: var(--bg-subtle);
   border-color: var(--border-dark);
+}
+
+.project-action-btn:active {
+  transform: scale(0.95);
 }
 
 .project-action-btn.danger {
@@ -1438,7 +1476,7 @@ body.dark-mode .layer-item.layer-item-edge.selected {
   box-shadow: var(--shadow-lg);
   opacity: 0;
   pointer-events: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease-out;
   z-index: 3000;
 }
 
@@ -1524,22 +1562,33 @@ body.is-tap-connecting .pin-circle {
   fill: var(--bg-surface);
   stroke: var(--text-main);
   stroke-width: 1.8;
-  transition: all 0.15s ease;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms cubic-bezier(0.16, 1, 0.3, 1), transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.edge-group:hover .edge-handle,
+.edge-group.selected .edge-handle {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .edge-group.selected .edge-handle {
   fill: #3b82f6 !important;
   stroke: #ffffff !important;
   stroke-width: 2.2px !important;
+  r: 5.5;
 }
 
 .edge-handle:hover {
   fill: var(--text-main);
   stroke: var(--bg-surface);
+  transform: scale(1.15);
 }
 
 .edge-handle:active {
   cursor: grabbing;
+  transform: scale(1.25);
 }
 
 .selection-bounding-box {
@@ -1669,7 +1718,8 @@ body.dark-mode .group-bounding-rect {
   font-family: 'Fira Code', monospace;
   padding: 4px 8px;
   border-radius: 4px;
-  transition: all 0.15s ease;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out;
 }
 
 .status-idle {
@@ -1711,11 +1761,14 @@ body.dark-mode .status-error {
 }
 
 .modal-tab-btn {
-  transition: all 0.18s ease;
+  transition: color 140ms ease-out, border-color 140ms ease-out, transform 100ms ease-out;
   user-select: none;
 }
 .modal-tab-btn:hover {
   color: var(--text-main) !important;
+}
+.modal-tab-btn:active {
+  transform: scale(0.97);
 }
 
 @keyframes spin {
@@ -1740,7 +1793,7 @@ body.dark-mode .status-error {
   border: 1.5px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 140ms ease-out, background-color 140ms ease-out, box-shadow 140ms ease-out, transform 100ms ease-out;
   user-select: none;
   position: relative;
 }
@@ -1748,6 +1801,10 @@ body.dark-mode .status-error {
 .export-format-card:hover {
   border-color: var(--border-dark);
   background: var(--bg-subtle);
+}
+
+.export-format-card:active {
+  transform: scale(0.97);
 }
 
 .export-format-card.active {
@@ -1790,13 +1847,17 @@ body.dark-mode .status-error {
   border: 1.5px solid var(--border-color);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 140ms ease-out, background-color 140ms ease-out, color 140ms ease-out, transform 100ms ease-out;
   user-select: none;
 }
 
 .export-scale-btn:hover {
   border-color: var(--border-dark);
   background: var(--bg-subtle);
+}
+
+.export-scale-btn:active {
+  transform: scale(0.96);
 }
 
 .export-scale-btn.active {
@@ -1826,7 +1887,7 @@ body.dark-mode .status-error {
   border: none !important;
   background: transparent;
   border-radius: 4px;
-  transition: all 0.12s ease;
+  transition: background-color 120ms ease-out, color 120ms ease-out, transform 100ms ease-out;
   color: var(--text-muted);
 }
 
@@ -1888,9 +1949,13 @@ body.dark-mode .status-error {
   background: var(--bg-surface);
   border-radius: 5px;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, transform 100ms ease-out;
   box-sizing: border-box;
   flex-shrink: 0;
+}
+
+.word-color-btn:active {
+  transform: scale(0.96);
 }
 
 .word-color-btn:hover {
@@ -1971,13 +2036,17 @@ body.dark-mode .status-error {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-main);
-  transition: all 0.12s ease;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, transform 100ms ease-out;
   width: 100%;
 }
 
 .btn-word-automatic:hover {
   background: var(--bg-subtle);
   border-color: var(--border-dark);
+}
+
+.btn-word-automatic:active {
+  transform: scale(0.97);
 }
 
 .btn-word-more-colors {
@@ -1991,13 +2060,17 @@ body.dark-mode .status-error {
   cursor: pointer;
   font-size: 12px;
   color: var(--text-main);
-  transition: all 0.12s ease;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, transform 100ms ease-out;
   width: 100%;
 }
 
 .btn-word-more-colors:hover {
   background: var(--bg-subtle);
   border-color: var(--border-dark);
+}
+
+.btn-word-more-colors:active {
+  transform: scale(0.97);
 }
 
 /* --------------------------------------------------------------------------

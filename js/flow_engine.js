@@ -380,11 +380,9 @@ window.MinimalFlow = window.MinimalFlow || {};
    * Menyelesaikan bug kabel hitam menghilang pada kanvas gelap
    */
   function getEdgeStrokeColor(edge, isDark) {
-    const s = edge.style && edge.style.stroke;
-    // Jika stroke bawaan hitam/putih/currentColor/kosong, sesuaikan secara dinamis
-    if (!s || s === "#18181b" || s === "#f4f4f5" || s === "#09090b" || s === "#fafafa" || 
-        s === "currentColor" || s === "#000000" || s === "#000" || s === "black" || 
-        s === "#121214" || s === "#27272a" || s === "#3f3f46") {
+    const s = (edge.style && edge.style.stroke) || edge.stroke;
+    // Jika tidak disetel atau disetel secara dinamis tema (currentColor / auto)
+    if (!s || s === "currentColor" || s === "auto") {
       return isDark ? "#f4f4f5" : "#18181b";
     }
     return s;
@@ -651,6 +649,9 @@ window.MinimalFlow = window.MinimalFlow || {};
       p.setAttribute("fill", color);
       marker.appendChild(p);
       svgDefs.appendChild(marker);
+    } else {
+      const p = marker.querySelector("path");
+      if (p) p.setAttribute("fill", color);
     }
     return `url(#${markerId})`;
   }
@@ -669,7 +670,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     g.setAttribute("class", "edge-group" + (isSelected ? " selected" : ""));
     g.setAttribute("data-id", id);
 
-    const strokeW = edge.style && edge.style.strokeWidth !== undefined ? edge.style.strokeWidth : 1.5;
+    const strokeW = edge.style && edge.style.strokeWidth !== undefined ? edge.style.strokeWidth : (edge.strokeWidth !== undefined ? edge.strokeWidth : 1.5);
     const strokeColor = getEdgeStrokeColor(edge, isDark);
     g.style.color = strokeColor;
 
@@ -682,14 +683,23 @@ window.MinimalFlow = window.MinimalFlow || {};
     path.setAttribute("stroke-width", strokeW);
     path.style.strokeWidth = `${strokeW}px`;
 
-    if (edge.style && edge.style.dashed === "dashed") path.setAttribute("stroke-dasharray", "6, 4");
-    if (edge.style && edge.style.dashed === "dotted") path.setAttribute("stroke-dasharray", "2, 3");
+    const dashStyle = (edge.style && edge.style.dashed) || edge.dashed || "solid";
+    if (dashStyle === "dashed") path.setAttribute("stroke-dasharray", "6, 4");
+    else if (dashStyle === "dotted") path.setAttribute("stroke-dasharray", "2, 3");
+    else path.removeAttribute("stroke-dasharray");
 
-    if (edge.style && edge.style.markerEnd === "arrow") {
+    const markerEndVal = (edge.style && edge.style.markerEnd) || edge.markerEnd || "arrow";
+    if (markerEndVal === "arrow") {
       path.setAttribute("marker-end", getOrCreateArrowMarker(svgDefs, "end", strokeColor));
+    } else {
+      path.removeAttribute("marker-end");
     }
-    if (edge.style && edge.style.markerStart === "arrow") {
+
+    const markerStartVal = (edge.style && edge.style.markerStart) || edge.markerStart || "none";
+    if (markerStartVal === "arrow") {
       path.setAttribute("marker-start", getOrCreateArrowMarker(svgDefs, "start", strokeColor));
+    } else {
+      path.removeAttribute("marker-start");
     }
 
     g.appendChild(path);
@@ -895,20 +905,24 @@ window.MinimalFlow = window.MinimalFlow || {};
             const strokeColor = getEdgeStrokeColor(edge, isDark);
             path.setAttribute("stroke", strokeColor);
             path.style.stroke = strokeColor;
-            const strokeW = edge.style && edge.style.strokeWidth !== undefined ? edge.style.strokeWidth : 1.5;
+            existingG.style.color = strokeColor;
+            const strokeW = edge.style && edge.style.strokeWidth !== undefined ? edge.style.strokeWidth : (edge.strokeWidth !== undefined ? edge.strokeWidth : 1.5);
             path.setAttribute("stroke-width", strokeW);
             path.style.strokeWidth = `${strokeW}px`;
 
-            if (edge.style && edge.style.dashed === "dashed") path.setAttribute("stroke-dasharray", "6, 4");
-            else if (edge.style && edge.style.dashed === "dotted") path.setAttribute("stroke-dasharray", "2, 3");
+            const dashStyle = (edge.style && edge.style.dashed) || edge.dashed || "solid";
+            if (dashStyle === "dashed") path.setAttribute("stroke-dasharray", "6, 4");
+            else if (dashStyle === "dotted") path.setAttribute("stroke-dasharray", "2, 3");
             else path.removeAttribute("stroke-dasharray");
 
-            if (edge.style && edge.style.markerEnd === "arrow") {
+            const markerEndVal = (edge.style && edge.style.markerEnd) || edge.markerEnd || "arrow";
+            if (markerEndVal === "arrow") {
               path.setAttribute("marker-end", getOrCreateArrowMarker(svgDefs, "end", strokeColor));
             } else {
               path.removeAttribute("marker-end");
             }
-            if (edge.style && edge.style.markerStart === "arrow") {
+            const markerStartVal = (edge.style && edge.style.markerStart) || edge.markerStart || "none";
+            if (markerStartVal === "arrow") {
               path.setAttribute("marker-start", getOrCreateArrowMarker(svgDefs, "start", strokeColor));
             } else {
               path.removeAttribute("marker-start");

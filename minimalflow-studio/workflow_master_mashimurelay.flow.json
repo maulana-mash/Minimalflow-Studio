@@ -1,0 +1,3790 @@
+{
+  "version": "1.5.0",
+  "theme": "dark",
+  "canvas": {
+    "pan": {
+      "x": 40,
+      "y": 40
+    },
+    "zoom": 0.45,
+    "gridSize": 24,
+    "workspace": {
+      "preset": "16:9_landscape",
+      "orientation": "landscape",
+      "x": 40,
+      "y": 40,
+      "width": 3150,
+      "height": 2850
+    }
+  },
+  "nodes": {
+    "eng_p1_standarisasi": {
+      "id": "eng_p1_standarisasi",
+      "type": "rectangle",
+      "x": 275,
+      "y": 102,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_01",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Standarisasi Simbol IEC 60617 & NEMA\n(Benchmarking Simbol Internasional)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p1_svg": {
+      "id": "eng_p1_svg",
+      "type": "rectangle",
+      "x": 275,
+      "y": 182,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_01",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Digitalisasi: 117 Komponen Format Vektor (SVG)\n(viewBox 120x120 Relatif)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_subgraph_FASE_01": {
+      "id": "eng_subgraph_FASE_01",
+      "type": "rectangle",
+      "x": 180,
+      "y": 60,
+      "width": 480,
+      "height": 198,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ FASE 1: VISUALISASI & DESAIN SIMBOL KOMPONEN ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 16,
+        "paddingY": 12
+      }
+    },
+    "eng_p2_registry": {
+      "id": "eng_p2_registry",
+      "type": "rectangle",
+      "x": 275,
+      "y": 336,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_02",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Native Component Registry\n(Pin-Oriented Bounding Box & O(1) Lookup)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p2_models": {
+      "id": "eng_p2_models",
+      "type": "rectangle",
+      "x": 275,
+      "y": 416,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_02",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Struktur Data CadElement & Format Terstandarisasi\n(Serialisasi .smrl & Legacy .txt)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_subgraph_FASE_02": {
+      "id": "eng_subgraph_FASE_02",
+      "type": "rectangle",
+      "x": 180,
+      "y": 294,
+      "width": 480,
+      "height": 198,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ FASE 2: ARSITEKTUR DATA & MODEL SIRKUIT ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 16,
+        "paddingY": 12
+      }
+    },
+    "eng_p3_canvas": {
+      "id": "eng_p3_canvas",
+      "type": "rectangle",
+      "x": 275,
+      "y": 570,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_03",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "CadCanvasView (Android Custom View 60 FPS)\n(Matriks Transformasi 2D Virtual World)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p3_snap": {
+      "id": "eng_p3_snap",
+      "type": "rectangle",
+      "x": 275,
+      "y": 650,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_03",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Algoritma Snap-Grid Ortogonal Kelipatan 30px\n(Kuantisasi Koordinat Sub-Pixel)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p3_routing": {
+      "id": "eng_p3_routing",
+      "type": "rectangle",
+      "x": 275,
+      "y": 730,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_03",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Manhattan Wire Router (Jalur Siku 90 Derajat)\n(Routing Ortogonal Tanpa Sudut Miring)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_subgraph_FASE_03": {
+      "id": "eng_subgraph_FASE_03",
+      "type": "rectangle",
+      "x": 180,
+      "y": 528,
+      "width": 480,
+      "height": 278,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ FASE 3: MESIN KANVAS CAD NATIVE ANDROID ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 16,
+        "paddingY": 12
+      }
+    },
+    "eng_p4_solver": {
+      "id": "eng_p4_solver",
+      "type": "rectangle",
+      "x": 265,
+      "y": 886,
+      "width": 310,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_04",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Topological Circuit Solver\n(BFS/DFS Adjacency Matrix 3-Fasa L1,L2,L3,PE,N)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p4_decision": {
+      "id": "eng_p4_decision",
+      "type": "diamond",
+      "x": 310,
+      "y": 968,
+      "width": 220,
+      "height": 110,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_04",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Evaluasi:\nTerdeteksi Hubung Singkat / Korsleting?",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p4_trip": {
+      "id": "eng_p4_trip",
+      "type": "rectangle",
+      "x": 135,
+      "y": 1106,
+      "width": 230,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_04",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Trip Pengaman Elektrik (<16ms)\n(Spanduk Peringatan SHORT CIRCUIT!)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p4_dynamics": {
+      "id": "eng_p4_dynamics",
+      "type": "rectangle",
+      "x": 475,
+      "y": 1106,
+      "width": 230,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_04",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Dinamika Hub. Self-Holding KM1,\nTimer & Motor Induksi 3-Fasa 60 FPS",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_subgraph_FASE_04": {
+      "id": "eng_subgraph_FASE_04",
+      "type": "rectangle",
+      "x": 100,
+      "y": 842,
+      "width": 640,
+      "height": 352,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ FASE 4: SOLVER SIRKUIT TOPOLOGI & PROTEKSI ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 16,
+        "paddingY": 12
+      }
+    },
+    "eng_p5_modal": {
+      "id": "eng_p5_modal",
+      "type": "rectangle",
+      "x": 265,
+      "y": 1274,
+      "width": 310,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_05",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Floating Modal QR Scanner\n(ZXing Embedded 4.3 & Kamera Terintegrasi)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p5_decision": {
+      "id": "eng_p5_decision",
+      "type": "diamond",
+      "x": 310,
+      "y": 1356,
+      "width": 220,
+      "height": 110,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_05",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Evaluasi:\nTipe Muatan QR Code?",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p5_import_direct": {
+      "id": "eng_p5_import_direct",
+      "type": "rectangle",
+      "x": 135,
+      "y": 1494,
+      "width": 230,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_05",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Impor Sirkuit Mandiri\nLangsung ke Kanvas CAD (.smrl/.txt)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p5_submit_teacher": {
+      "id": "eng_p5_submit_teacher",
+      "type": "rectangle",
+      "x": 475,
+      "y": 1494,
+      "width": 230,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_05",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pengiriman Tugas Siswa via HTTP POST\nke Server Guru di LAN (Hotspot Offline)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_subgraph_FASE_05": {
+      "id": "eng_subgraph_FASE_05",
+      "type": "rectangle",
+      "x": 100,
+      "y": 1230,
+      "width": 640,
+      "height": 352,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ FASE 5: KOMUNIKASI LAB & PEMINDAI KODE QR ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 16,
+        "paddingY": 12
+      }
+    },
+    "eng_p6_pdf": {
+      "id": "eng_p6_pdf",
+      "type": "rectangle",
+      "x": 275,
+      "y": 1660,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_06",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "NativePdfReportGenerator\n(Hal 1 Skematik CAD + Hal 2 Tabel BOM)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p6_storage": {
+      "id": "eng_p6_storage",
+      "type": "rectangle",
+      "x": 275,
+      "y": 1740,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_06",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Dual Storage Scoped Engine (Android 10 - 15)\n(FileProvider App-Specific + MediaStore Downloads)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p6_ui": {
+      "id": "eng_p6_ui",
+      "type": "rectangle",
+      "x": 275,
+      "y": 1820,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_06",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Modern Save As Dialog\n(Format Berkas Vektor .smrl, .txt, .pdf)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_subgraph_FASE_06": {
+      "id": "eng_subgraph_FASE_06",
+      "type": "rectangle",
+      "x": 180,
+      "y": 1618,
+      "width": 480,
+      "height": 278,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ FASE 6: GENERATOR LAPORAN PDF & MANAJEMEN PENYIMPANAN ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 16,
+        "paddingY": 12
+      }
+    },
+    "eng_p7_webview": {
+      "id": "eng_p7_webview",
+      "type": "rectangle",
+      "x": 275,
+      "y": 1974,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_07",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Hybrid Instruction Hub\n(Chromium WebView & WebSettings Otomatis)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p7_encyclo": {
+      "id": "eng_p7_encyclo",
+      "type": "rectangle",
+      "x": 275,
+      "y": 2054,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_07",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Ensiklopedia 117 Komponen Elektroteknik\n(Filter Kategori, Pin I/O & Deskripsi Fisis)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p7_video": {
+      "id": "eng_p7_video",
+      "type": "rectangle",
+      "x": 275,
+      "y": 2134,
+      "width": 290,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_07",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pemutar Video Simulasi Mini\n(Autoplay Muted & Instant First Frame Decoding)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_subgraph_FASE_07": {
+      "id": "eng_subgraph_FASE_07",
+      "type": "rectangle",
+      "x": 180,
+      "y": 1932,
+      "width": 480,
+      "height": 278,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ FASE 7: PUSAT INSTRUKSI INTERAKTIF & ENSIKLOPEDIA ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 16,
+        "paddingY": 12
+      }
+    },
+    "eng_p8_decision": {
+      "id": "eng_p8_decision",
+      "type": "diamond",
+      "x": 310,
+      "y": 2290,
+      "width": 220,
+      "height": 110,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_08",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Evaluasi:\nZipalign 4-Byte Memori Lolos?",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p8_signing": {
+      "id": "eng_p8_signing",
+      "type": "rectangle",
+      "x": 135,
+      "y": 2428,
+      "width": 230,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_08",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Penandatanganan SDK apksigner\n(Signature Scheme v2 & v3 Terverifikasi)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p8_dist": {
+      "id": "eng_p8_dist",
+      "type": "rectangle",
+      "x": 135,
+      "y": 2508,
+      "width": 230,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_08",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pencerminan 0-Diff Repositori Ganda\n& Distribusi Mashimurelay.apk",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_p8_gradle": {
+      "id": "eng_p8_gradle",
+      "type": "rectangle",
+      "x": 480,
+      "y": 2428,
+      "width": 220,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "eng_FASE_08",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Kompilasi Ulang Gradle Akar APK\n(assembleDebug / Daemon)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "eng_subgraph_FASE_08": {
+      "id": "eng_subgraph_FASE_08",
+      "type": "rectangle",
+      "x": 100,
+      "y": 2246,
+      "width": 640,
+      "height": 350,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ FASE 8: KOMPILASI RILIS, AUDIT MEMORI & DISTRIBUSI ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 16,
+        "paddingY": 12
+      }
+    },
+    "run_START": {
+      "id": "run_START",
+      "type": "rounded",
+      "x": 1050,
+      "y": 80,
+      "width": 260,
+      "height": 58,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_CORE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Mulai Aplikasi Mashimurelay",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_INIT_CAD": {
+      "id": "run_INIT_CAD",
+      "type": "rectangle",
+      "x": 1050,
+      "y": 168,
+      "width": 260,
+      "height": 58,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_CORE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Inisialisasi CAD Engine, Registry Komponen & Database Proyek",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_LOAD_WORKSPACE": {
+      "id": "run_LOAD_WORKSPACE",
+      "type": "rectangle",
+      "x": 1050,
+      "y": 256,
+      "width": 260,
+      "height": 58,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_CORE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Muat Kanvas Workspace (Proyek Terakhir / Proyek Baru)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_WAIT_USER": {
+      "id": "run_WAIT_USER",
+      "type": "rectangle",
+      "x": 1050,
+      "y": 344,
+      "width": 260,
+      "height": 58,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_CORE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Menunggu Interaksi Pengguna di Kanvas CAD",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_DECIDE_ACTION": {
+      "id": "run_DECIDE_ACTION",
+      "type": "diamond",
+      "x": 1080,
+      "y": 432,
+      "width": 200,
+      "height": 95,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_CORE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pilihan Aksi Pengguna",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_subgraph_GROUP_CORE": {
+      "id": "run_subgraph_GROUP_CORE",
+      "type": "rectangle",
+      "x": 1020,
+      "y": 40,
+      "width": 320,
+      "height": 537,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ INISIALISASI CAD & SIKLUS UTAMA (WORKSPACE LOOP) ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 14,
+        "paddingY": 10
+      }
+    },
+    "run_ACT_EDIT": {
+      "id": "run_ACT_EDIT",
+      "type": "rectangle",
+      "x": 1435,
+      "y": 84,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_EDIT",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Penempatan Komponen, Rotasi, Tagging & Penarikan Kabel Manhattan",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_SAVE_STATE": {
+      "id": "run_SAVE_STATE",
+      "type": "rectangle",
+      "x": 1435,
+      "y": 164,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_EDIT",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Simpan Riwayat Perubahan ke Stack Undo/Redo",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_subgraph_GROUP_EDIT": {
+      "id": "run_subgraph_GROUP_EDIT",
+      "type": "rectangle",
+      "x": 1390,
+      "y": 40,
+      "width": 340,
+      "height": 220,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ MANIPULASI ELEMEN & WIRING KANVAS ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 14,
+        "paddingY": 10
+      }
+    },
+    "run_ACT_SAVE_EXPORT": {
+      "id": "run_ACT_SAVE_EXPORT",
+      "type": "rectangle",
+      "x": 1435,
+      "y": 324,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SAVE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pengguna Membuka Menu Save As / Ekspor",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_SHOW_SAVE_MODAL": {
+      "id": "run_SHOW_SAVE_MODAL",
+      "type": "rectangle",
+      "x": 1435,
+      "y": 404,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SAVE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Tampilkan Modal Save As dengan Ikon SVG (.smrl, .txt, .pdf)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_CHOOSE_FORMAT": {
+      "id": "run_CHOOSE_FORMAT",
+      "type": "diamond",
+      "x": 1465,
+      "y": 484,
+      "width": 190,
+      "height": 92,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SAVE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Format Apa yang Dipilih?",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_EXPORT_SMRL": {
+      "id": "run_EXPORT_SMRL",
+      "type": "rectangle",
+      "x": 1435,
+      "y": 600,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SAVE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Simpan Berkas Sirkuit CAD Standar (.smrl)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_EXPORT_TXT": {
+      "id": "run_EXPORT_TXT",
+      "type": "rectangle",
+      "x": 1435,
+      "y": 680,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SAVE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Simpan Berkas Teks Simurelay Legacy (.txt)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_EXPORT_PDF": {
+      "id": "run_EXPORT_PDF",
+      "type": "rectangle",
+      "x": 1435,
+      "y": 760,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SAVE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Generate Laporan Praktikum PDF 2 Halaman (Skematik & BOM)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_DUAL_STORAGE_SAVE": {
+      "id": "run_DUAL_STORAGE_SAVE",
+      "type": "rectangle",
+      "x": 1435,
+      "y": 840,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SAVE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Simpan via Dual Storage: App-Specific + MediaStore Public Download",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_OPEN_VIEWER": {
+      "id": "run_OPEN_VIEWER",
+      "type": "rectangle",
+      "x": 1435,
+      "y": 920,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SAVE",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Buka Penampil PDF Otomatis via FileProvider Intent",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_subgraph_GROUP_SAVE": {
+      "id": "run_subgraph_GROUP_SAVE",
+      "type": "rectangle",
+      "x": 1390,
+      "y": 280,
+      "width": 340,
+      "height": 736,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ GENERATOR DOKUMEN PDF & DUAL STORAGE ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 14,
+        "paddingY": 10
+      }
+    },
+    "run_ACT_SIM": {
+      "id": "run_ACT_SIM",
+      "type": "rectangle",
+      "x": 1835,
+      "y": 84,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SIM",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pengguna Menekan Tombol RUN (Mode Simulasi Aktif)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_SOLVE_CIRCUIT": {
+      "id": "run_SOLVE_CIRCUIT",
+      "type": "rectangle",
+      "x": 1835,
+      "y": 164,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SIM",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Penyelesaian Graf Rangkaian & Tracing Aliran Fasa/Netral",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_CHECK_FAULT": {
+      "id": "run_CHECK_FAULT",
+      "type": "diamond",
+      "x": 1865,
+      "y": 244,
+      "width": 190,
+      "height": 92,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SIM",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Apakah Terjadi Hubung Singkat (Short Circuit)?",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_TRIP_PROTECTION": {
+      "id": "run_TRIP_PROTECTION",
+      "type": "rectangle",
+      "x": 1835,
+      "y": 360,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SIM",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Trip Pengaman Seketika: Banner SHORT CIRCUIT! & Pemutusan Daya",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_RUN_DYNAMICS": {
+      "id": "run_RUN_DYNAMICS",
+      "type": "rectangle",
+      "x": 1835,
+      "y": 440,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SIM",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Simulasi Dinamis: Eksitasi Koil, Self-Holding, Timer & Rotasi Motor",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_STOP_SIM": {
+      "id": "run_STOP_SIM",
+      "type": "rectangle",
+      "x": 1835,
+      "y": 520,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_SIM",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pengguna Menekan Tombol STOP (Kembali ke Mode Edit)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_subgraph_GROUP_SIM": {
+      "id": "run_subgraph_GROUP_SIM",
+      "type": "rectangle",
+      "x": 1790,
+      "y": 40,
+      "width": 340,
+      "height": 576,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ MESIN SIMULASI ELEKTROMAGNETIK & PROTEKSI KORSLETING ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 14,
+        "paddingY": 10
+      }
+    },
+    "run_ACT_QR": {
+      "id": "run_ACT_QR",
+      "type": "rectangle",
+      "x": 2235,
+      "y": 84,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_QR",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pengguna Membuka Pemindai QR (Icon Header Workspace)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_SHOW_QR_MODAL": {
+      "id": "run_SHOW_QR_MODAL",
+      "type": "rectangle",
+      "x": 2235,
+      "y": 164,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_QR",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Tampilkan Floating Dialog QR Scanner (Kamera / Galeri)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_PARSE_QR": {
+      "id": "run_PARSE_QR",
+      "type": "diamond",
+      "x": 2265,
+      "y": 244,
+      "width": 190,
+      "height": 92,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_QR",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Deteksi Format Payload Kode QR",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_QR_CIRCUIT": {
+      "id": "run_QR_CIRCUIT",
+      "type": "rectangle",
+      "x": 2235,
+      "y": 360,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_QR",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Payload Sirkuit Mandiri (.smrl / .txt / JSON)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_LOAD_DIRECT": {
+      "id": "run_LOAD_DIRECT",
+      "type": "rectangle",
+      "x": 2235,
+      "y": 440,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_QR",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Muat Rangkaian Langsung ke Kanvas",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_QR_TEACHER": {
+      "id": "run_QR_TEACHER",
+      "type": "rectangle",
+      "x": 2235,
+      "y": 520,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_QR",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Payload Tugas Guru (HTTP / IP LAN Hotspot)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_SHOW_STUDENT_ID": {
+      "id": "run_SHOW_STUDENT_ID",
+      "type": "rectangle",
+      "x": 2235,
+      "y": 600,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_QR",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Tampilkan Dialog Identitas Siswa (Nama & No. Presensi)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_SUBMIT_TEACHER": {
+      "id": "run_SUBMIT_TEACHER",
+      "type": "rectangle",
+      "x": 2235,
+      "y": 680,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_QR",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Kirim Rangkaian JSON + Laporan PDF via HTTP POST ke Laptop Guru",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_subgraph_GROUP_QR": {
+      "id": "run_subgraph_GROUP_QR",
+      "type": "rectangle",
+      "x": 2190,
+      "y": 40,
+      "width": 340,
+      "height": 736,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ TELEMETRI QR CODE & PENGUMPULAN TUGAS LAB LAN ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 14,
+        "paddingY": 10
+      }
+    },
+    "run_ACT_INSTRUCTIONS": {
+      "id": "run_ACT_INSTRUCTIONS",
+      "type": "rectangle",
+      "x": 2635,
+      "y": 84,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_INST",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Pengguna Membuka Menu Petunjuk Penggunaan",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_SHOW_INST_MODAL": {
+      "id": "run_SHOW_INST_MODAL",
+      "type": "rectangle",
+      "x": 2635,
+      "y": 164,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_INST",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Tampilkan Dialog Petunjuk (Hybrid WebView)",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_INST_SUBNAV": {
+      "id": "run_INST_SUBNAV",
+      "type": "diamond",
+      "x": 2665,
+      "y": 244,
+      "width": 190,
+      "height": 92,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_INST",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Navigasi Konten Petunjuk",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_VIEW_VIDEO": {
+      "id": "run_VIEW_VIDEO",
+      "type": "rectangle",
+      "x": 2635,
+      "y": 360,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_INST",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Putar Video Simulasi Interaktif MP4 + Live Telemetri Teks",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_VIEW_ENCYCLO": {
+      "id": "run_VIEW_ENCYCLO",
+      "type": "rectangle",
+      "x": 2635,
+      "y": 440,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_INST",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Jelajahi Galeri Ensiklopedia 117 Komponen Industri & I/O Terminal",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_VIEW_GUIDE": {
+      "id": "run_VIEW_GUIDE",
+      "type": "rectangle",
+      "x": 2635,
+      "y": 520,
+      "width": 250,
+      "height": 56,
+      "rotation": 0,
+      "locked": false,
+      "groupId": "run_GROUP_INST",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5
+      },
+      "text": {
+        "content": "Baca Panduan CAD, Tata Cara Wiring & K3 Keselamatan Kerja Listrik",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "color": "#f4f4f5",
+        "align": "center",
+        "paddingX": 10,
+        "paddingY": 8
+      }
+    },
+    "run_subgraph_GROUP_INST": {
+      "id": "run_subgraph_GROUP_INST",
+      "type": "rectangle",
+      "x": 2590,
+      "y": 40,
+      "width": 340,
+      "height": 576,
+      "rotation": 0,
+      "locked": true,
+      "isContainer": true,
+      "style": {
+        "fill": "rgba(24, 24, 27, 0.45)",
+        "stroke": "#3f3f46",
+        "strokeWidth": 1.5,
+        "dashed": "dashed"
+      },
+      "text": {
+        "content": "[ ENSIKLOPEDIA INTERAKTIF & VIDEO PLAYER ]",
+        "fontFamily": "'Book Antiqua', Palatino, serif",
+        "fontSize": 10,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#a1a1aa",
+        "align": "left",
+        "paddingX": 14,
+        "paddingY": 10
+      }
+    }
+  },
+  "edges": {
+    "eng_eng_edge_1": {
+      "id": "eng_eng_edge_1",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p1_standarisasi",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p1_svg",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_2": {
+      "id": "eng_eng_edge_2",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p2_registry",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p2_models",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_3": {
+      "id": "eng_eng_edge_3",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p3_canvas",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p3_snap",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_4": {
+      "id": "eng_eng_edge_4",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p3_snap",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p3_routing",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_5": {
+      "id": "eng_eng_edge_5",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p4_solver",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p4_decision",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_6": {
+      "id": "eng_eng_edge_6",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p4_decision",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "eng_p4_trip",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Korsleting (Ya)",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_7": {
+      "id": "eng_eng_edge_7",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p4_decision",
+        "pin": "E"
+      },
+      "target": {
+        "nodeId": "eng_p4_dynamics",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Normal (Tidak)",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_8": {
+      "id": "eng_eng_edge_8",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p5_modal",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p5_decision",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_9": {
+      "id": "eng_eng_edge_9",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p5_decision",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "eng_p5_import_direct",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Sirkuit Mandiri",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_10": {
+      "id": "eng_eng_edge_10",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p5_decision",
+        "pin": "E"
+      },
+      "target": {
+        "nodeId": "eng_p5_submit_teacher",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Tugas Guru (HTTP)",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_11": {
+      "id": "eng_eng_edge_11",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p6_pdf",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p6_storage",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_12": {
+      "id": "eng_eng_edge_12",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p6_storage",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p6_ui",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_13": {
+      "id": "eng_eng_edge_13",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p7_webview",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p7_encyclo",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_14": {
+      "id": "eng_eng_edge_14",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p7_encyclo",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p7_video",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_15": {
+      "id": "eng_eng_edge_15",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p8_decision",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "eng_p8_signing",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Lolos (Exit Code 0)",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_16": {
+      "id": "eng_eng_edge_16",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p8_signing",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p8_dist",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_17": {
+      "id": "eng_eng_edge_17",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p8_decision",
+        "pin": "E"
+      },
+      "target": {
+        "nodeId": "eng_p8_gradle",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Gagal (Exit != 0)",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_18": {
+      "id": "eng_eng_edge_18",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p8_gradle",
+        "pin": "E"
+      },
+      "target": {
+        "nodeId": "eng_p8_decision",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 20,
+        "dy": 0
+      },
+      "label": "Kompilasi Ulang",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_19": {
+      "id": "eng_eng_edge_19",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p1_svg",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p2_registry",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_20": {
+      "id": "eng_eng_edge_20",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p2_models",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p3_canvas",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_21": {
+      "id": "eng_eng_edge_21",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p3_routing",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p4_solver",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_22": {
+      "id": "eng_eng_edge_22",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p4_dynamics",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p5_modal",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Kondisi Normal",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_23": {
+      "id": "eng_eng_edge_23",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p5_submit_teacher",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p6_pdf",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_24": {
+      "id": "eng_eng_edge_24",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p6_ui",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p7_webview",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "eng_eng_edge_25": {
+      "id": "eng_eng_edge_25",
+      "type": "step",
+      "source": {
+        "nodeId": "eng_p7_video",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "eng_p8_decision",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_1": {
+      "id": "run_run_edge_1",
+      "type": "step",
+      "source": {
+        "nodeId": "run_START",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_INIT_CAD",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_2": {
+      "id": "run_run_edge_2",
+      "type": "step",
+      "source": {
+        "nodeId": "run_INIT_CAD",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_LOAD_WORKSPACE",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_3": {
+      "id": "run_run_edge_3",
+      "type": "step",
+      "source": {
+        "nodeId": "run_LOAD_WORKSPACE",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_4": {
+      "id": "run_run_edge_4",
+      "type": "step",
+      "source": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_DECIDE_ACTION",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_5": {
+      "id": "run_run_edge_5",
+      "type": "step",
+      "source": {
+        "nodeId": "run_DECIDE_ACTION",
+        "pin": "E"
+      },
+      "target": {
+        "nodeId": "run_ACT_EDIT",
+        "pin": "W"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Edit Kanvas",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_6": {
+      "id": "run_run_edge_6",
+      "type": "step",
+      "source": {
+        "nodeId": "run_DECIDE_ACTION",
+        "pin": "E"
+      },
+      "target": {
+        "nodeId": "run_ACT_SIM",
+        "pin": "W"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Uji Rangkaian (RUN)",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_7": {
+      "id": "run_run_edge_7",
+      "type": "step",
+      "source": {
+        "nodeId": "run_DECIDE_ACTION",
+        "pin": "E"
+      },
+      "target": {
+        "nodeId": "run_ACT_QR",
+        "pin": "W"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Pindai QR Code",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_8": {
+      "id": "run_run_edge_8",
+      "type": "step",
+      "source": {
+        "nodeId": "run_DECIDE_ACTION",
+        "pin": "E"
+      },
+      "target": {
+        "nodeId": "run_ACT_SAVE_EXPORT",
+        "pin": "W"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Simpan / Ekspor",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_9": {
+      "id": "run_run_edge_9",
+      "type": "step",
+      "source": {
+        "nodeId": "run_DECIDE_ACTION",
+        "pin": "E"
+      },
+      "target": {
+        "nodeId": "run_ACT_INSTRUCTIONS",
+        "pin": "W"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Buka Petunjuk & Ensiklopedia",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_10": {
+      "id": "run_run_edge_10",
+      "type": "step",
+      "source": {
+        "nodeId": "run_ACT_EDIT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_SAVE_STATE",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_11": {
+      "id": "run_run_edge_11",
+      "type": "step",
+      "source": {
+        "nodeId": "run_SAVE_STATE",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_12": {
+      "id": "run_run_edge_12",
+      "type": "step",
+      "source": {
+        "nodeId": "run_ACT_SIM",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_SOLVE_CIRCUIT",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_13": {
+      "id": "run_run_edge_13",
+      "type": "step",
+      "source": {
+        "nodeId": "run_SOLVE_CIRCUIT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_CHECK_FAULT",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_14": {
+      "id": "run_run_edge_14",
+      "type": "step",
+      "source": {
+        "nodeId": "run_CHECK_FAULT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_TRIP_PROTECTION",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Korsleting (Ya)",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_15": {
+      "id": "run_run_edge_15",
+      "type": "step",
+      "source": {
+        "nodeId": "run_CHECK_FAULT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_RUN_DYNAMICS",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Normal (Tidak)",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_16": {
+      "id": "run_run_edge_16",
+      "type": "step",
+      "source": {
+        "nodeId": "run_TRIP_PROTECTION",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_STOP_SIM",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_17": {
+      "id": "run_run_edge_17",
+      "type": "step",
+      "source": {
+        "nodeId": "run_RUN_DYNAMICS",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_STOP_SIM",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_18": {
+      "id": "run_run_edge_18",
+      "type": "step",
+      "source": {
+        "nodeId": "run_STOP_SIM",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_19": {
+      "id": "run_run_edge_19",
+      "type": "step",
+      "source": {
+        "nodeId": "run_ACT_QR",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_SHOW_QR_MODAL",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_20": {
+      "id": "run_run_edge_20",
+      "type": "step",
+      "source": {
+        "nodeId": "run_SHOW_QR_MODAL",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_PARSE_QR",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_21": {
+      "id": "run_run_edge_21",
+      "type": "step",
+      "source": {
+        "nodeId": "run_PARSE_QR",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_QR_CIRCUIT",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Sirkuit Offline",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_22": {
+      "id": "run_run_edge_22",
+      "type": "step",
+      "source": {
+        "nodeId": "run_QR_CIRCUIT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_LOAD_DIRECT",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_23": {
+      "id": "run_run_edge_23",
+      "type": "step",
+      "source": {
+        "nodeId": "run_LOAD_DIRECT",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_24": {
+      "id": "run_run_edge_24",
+      "type": "step",
+      "source": {
+        "nodeId": "run_PARSE_QR",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_QR_TEACHER",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Tugas Guru (HTTP/IP)",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_25": {
+      "id": "run_run_edge_25",
+      "type": "step",
+      "source": {
+        "nodeId": "run_QR_TEACHER",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_SHOW_STUDENT_ID",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_26": {
+      "id": "run_run_edge_26",
+      "type": "step",
+      "source": {
+        "nodeId": "run_SHOW_STUDENT_ID",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_SUBMIT_TEACHER",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_27": {
+      "id": "run_run_edge_27",
+      "type": "step",
+      "source": {
+        "nodeId": "run_SUBMIT_TEACHER",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_28": {
+      "id": "run_run_edge_28",
+      "type": "step",
+      "source": {
+        "nodeId": "run_ACT_SAVE_EXPORT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_SHOW_SAVE_MODAL",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_29": {
+      "id": "run_run_edge_29",
+      "type": "step",
+      "source": {
+        "nodeId": "run_SHOW_SAVE_MODAL",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_CHOOSE_FORMAT",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_30": {
+      "id": "run_run_edge_30",
+      "type": "step",
+      "source": {
+        "nodeId": "run_CHOOSE_FORMAT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_EXPORT_SMRL",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": ".smrl",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_31": {
+      "id": "run_run_edge_31",
+      "type": "step",
+      "source": {
+        "nodeId": "run_CHOOSE_FORMAT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_EXPORT_TXT",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": ".txt",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_32": {
+      "id": "run_run_edge_32",
+      "type": "step",
+      "source": {
+        "nodeId": "run_CHOOSE_FORMAT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_EXPORT_PDF",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": ".pdf",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_33": {
+      "id": "run_run_edge_33",
+      "type": "step",
+      "source": {
+        "nodeId": "run_EXPORT_SMRL",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_DUAL_STORAGE_SAVE",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_34": {
+      "id": "run_run_edge_34",
+      "type": "step",
+      "source": {
+        "nodeId": "run_EXPORT_TXT",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_DUAL_STORAGE_SAVE",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_35": {
+      "id": "run_run_edge_35",
+      "type": "step",
+      "source": {
+        "nodeId": "run_EXPORT_PDF",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_DUAL_STORAGE_SAVE",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_36": {
+      "id": "run_run_edge_36",
+      "type": "step",
+      "source": {
+        "nodeId": "run_DUAL_STORAGE_SAVE",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_OPEN_VIEWER",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_37": {
+      "id": "run_run_edge_37",
+      "type": "step",
+      "source": {
+        "nodeId": "run_OPEN_VIEWER",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_38": {
+      "id": "run_run_edge_38",
+      "type": "step",
+      "source": {
+        "nodeId": "run_ACT_INSTRUCTIONS",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_SHOW_INST_MODAL",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_39": {
+      "id": "run_run_edge_39",
+      "type": "step",
+      "source": {
+        "nodeId": "run_SHOW_INST_MODAL",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_INST_SUBNAV",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_40": {
+      "id": "run_run_edge_40",
+      "type": "step",
+      "source": {
+        "nodeId": "run_INST_SUBNAV",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_VIEW_VIDEO",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Tab Video Simulasi",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_41": {
+      "id": "run_run_edge_41",
+      "type": "step",
+      "source": {
+        "nodeId": "run_INST_SUBNAV",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_VIEW_ENCYCLO",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Tab Ensiklopedia",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_42": {
+      "id": "run_run_edge_42",
+      "type": "step",
+      "source": {
+        "nodeId": "run_INST_SUBNAV",
+        "pin": "S"
+      },
+      "target": {
+        "nodeId": "run_VIEW_GUIDE",
+        "pin": "N"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "Tab Cara Penggunaan & K3",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "solid",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_43": {
+      "id": "run_run_edge_43",
+      "type": "step",
+      "source": {
+        "nodeId": "run_VIEW_VIDEO",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_44": {
+      "id": "run_run_edge_44",
+      "type": "step",
+      "source": {
+        "nodeId": "run_VIEW_ENCYCLO",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    },
+    "run_run_edge_45": {
+      "id": "run_run_edge_45",
+      "type": "step",
+      "source": {
+        "nodeId": "run_VIEW_GUIDE",
+        "pin": "W"
+      },
+      "target": {
+        "nodeId": "run_WAIT_USER",
+        "pin": "E"
+      },
+      "handleOffset": {
+        "dx": 0,
+        "dy": 0
+      },
+      "label": "",
+      "style": {
+        "stroke": "#f4f4f5",
+        "strokeWidth": 1.5,
+        "dashed": "dashed",
+        "markerStart": "none",
+        "markerEnd": "arrow"
+      }
+    }
+  }
+}
