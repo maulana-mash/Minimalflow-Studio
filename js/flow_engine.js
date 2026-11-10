@@ -126,6 +126,14 @@ window.MinimalFlow = window.MinimalFlow || {};
           const inset = Math.min(w * 0.18, 26);
           return { x: w - inset / 2, y: h / 2 };
         }
+        if (type === "display") {
+          const rightCurve = Math.min(w * 0.14, 18);
+          return { x: w - rightCurve * 0.5, y: h / 2 };
+        }
+        if (type === "disk_storage") {
+          const arcX = Math.min(w * 0.16, 22);
+          return { x: w - arcX * 0.6, y: h / 2 };
+        }
         if (type === "offpage") return { x: w, y: h * 0.35 };
         if (type === "magnetic_tape") {
           const r = Math.min(w * 0.42, h * 0.45);
@@ -148,6 +156,10 @@ window.MinimalFlow = window.MinimalFlow || {};
         if (type === "manual_input") {
           const slope = Math.min(h * 0.28, 22);
           return { x: 0, y: (slope + h) / 2 };
+        }
+        if (type === "disk_storage") {
+          const arcX = Math.min(w * 0.16, 22);
+          return { x: arcX * 0.5, y: h / 2 };
         }
         if (type === "offpage") return { x: 0, y: h * 0.35 };
         if (type === "magnetic_tape") {
