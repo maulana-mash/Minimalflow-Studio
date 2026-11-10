@@ -2217,6 +2217,54 @@ body.dark-mode .status-error {
   margin: 3px 0;
 }
 
+.position-grid-dropdown {
+  min-width: 154px;
+  padding: 8px 10px 10px;
+  gap: 6px;
+}
+
+.position-grid-header {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 2px 2px 4px;
+  border-bottom: 1px solid var(--border-color);
+  user-select: none;
+}
+
+.position-grid-matrix {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.position-grid-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
+}
+
+.position-grid-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.position-grid-btn:active {
+  transform: translateY(0);
+}
+
 /* --------------------------------------------------------------------------
    SMART ALIGNMENT GUIDES (EFEK KAKU)
    -------------------------------------------------------------------------- */
@@ -2226,7 +2274,3 @@ body.dark-mode .status-error {
   stroke-dasharray: 4, 3;
   pointer-events: none;
 }
-
-
-
-

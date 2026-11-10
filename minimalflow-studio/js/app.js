@@ -53,6 +53,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     btnTextAlignLeft: document.getElementById("btn-text-align-left"),
     btnTextAlignCenter: document.getElementById("btn-text-align-center"),
     btnTextAlignRight: document.getElementById("btn-text-align-right"),
+    btnTextAlignJustify: document.getElementById("btn-text-align-justify"),
     btnTextValignTop: document.getElementById("btn-text-valign-top"),
     btnTextValignMiddle: document.getElementById("btn-text-valign-middle"),
     btnTextValignBottom: document.getElementById("btn-text-valign-bottom"),
@@ -71,6 +72,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     propNodeStrokeDash: document.getElementById("prop-node-stroke-dash"),
     btnAlignMenu: document.getElementById("btn-align-menu"),
     menuAlignDropdown: document.getElementById("menu-align-dropdown"),
+    btnPositionMenu: document.getElementById("btn-position-menu"),
+    menuPositionDropdown: document.getElementById("menu-position-dropdown"),
     wordColorPickerPopover: document.getElementById("word-color-picker-popover"),
     wordThemeColorsGrid: document.getElementById("word-theme-colors-grid"),
     wordStandardColorsRow: document.getElementById("word-standard-colors-row"),
@@ -613,6 +616,7 @@ window.MinimalFlow = window.MinimalFlow || {};
           if (dom.btnTextAlignLeft) dom.btnTextAlignLeft.classList.toggle("active", align === "left");
           if (dom.btnTextAlignCenter) dom.btnTextAlignCenter.classList.toggle("active", align === "center");
           if (dom.btnTextAlignRight) dom.btnTextAlignRight.classList.toggle("active", align === "right");
+          if (dom.btnTextAlignJustify) dom.btnTextAlignJustify.classList.toggle("active", align === "justify");
 
           const valign = node.text.verticalAlign || "middle";
           if (dom.btnTextValignTop) dom.btnTextValignTop.classList.toggle("active", valign === "top");
@@ -2824,6 +2828,18 @@ window.MinimalFlow = window.MinimalFlow || {};
       return;
     }
 
+    // Ctrl + J: Rata Kiri-Kanan Teks (Justify)
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === "j" || e.key === "J" || e.code === "KeyJ")) {
+      e.preventDefault();
+      const nodes = getSelectedNodesList().filter(n => n.text);
+      if (nodes.length > 0) {
+        const nextAlign = nodes[0].text.align === "justify" ? "center" : "justify";
+        setTextAlign(nextAlign);
+        showToast(nextAlign === "justify" ? "Rata Kiri-Kanan (Justify)" : "Rata Tengah (Align Center)");
+      }
+      return;
+    }
+
     // Ctrl + [: Layer Ke Bawah (Backward)
     // Ctrl + Shift + [: Layer Paling Bawah (Backmost)
     const isBracketLeft = e.code === "BracketLeft" || e.key === "[" || e.key === "{";
@@ -3299,13 +3315,30 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (dom.btnTextAlignLeft) dom.btnTextAlignLeft.classList.toggle("active", align === "left");
       if (dom.btnTextAlignCenter) dom.btnTextAlignCenter.classList.toggle("active", align === "center");
       if (dom.btnTextAlignRight) dom.btnTextAlignRight.classList.toggle("active", align === "right");
-      renderAll();
+      if (dom.btnTextAlignJustify) dom.btnTextAlignJustify.classList.toggle("active", align === "justify");
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) {
+        activeEditor.style.textAlign = align;
+        activeEditor.dispatchEvent(new Event("input"));
+      } else {
+        renderAll();
+      }
     }
   }
 
-  if (dom.btnTextAlignLeft) dom.btnTextAlignLeft.addEventListener("click", () => setTextAlign("left"));
-  if (dom.btnTextAlignCenter) dom.btnTextAlignCenter.addEventListener("click", () => setTextAlign("center"));
-  if (dom.btnTextAlignRight) dom.btnTextAlignRight.addEventListener("click", () => setTextAlign("right"));
+  [
+    [dom.btnTextAlignLeft, "left"],
+    [dom.btnTextAlignCenter, "center"],
+    [dom.btnTextAlignRight, "right"],
+    [dom.btnTextAlignJustify, "justify"]
+  ].forEach(([btn, alignVal]) => {
+    if (!btn) return;
+    btn.addEventListener("mousedown", (e) => {
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) e.preventDefault();
+    });
+    btn.addEventListener("click", () => setTextAlign(alignVal));
+  });
 
   if (dom.btnTextBold) {
     dom.btnTextBold.addEventListener("mousedown", (e) => {
@@ -3552,6 +3585,99 @@ window.MinimalFlow = window.MinimalFlow || {};
     });
 
     renderAll();
+  }
+
+  function positionSelectedNodesOnCanvas(position) {
+    const nodes = getSelectedNodesList();
+    if (nodes.length === 0) {
+      showToast("Pilih minimal 1 chart untuk mengatur posisi pada kanvas");
+      return;
+    }
+
+    const unlocked = nodes.filter(n => !n.locked);
+    if (unlocked.length === 0) {
+      showToast("Chart yang dipilih dalam keadaan terkunci");
+      return;
+    }
+
+    const ws = (AppState.document.canvas && AppState.document.canvas.workspace)
+      ? AppState.document.canvas.workspace
+      : { x: 0, y: 0, width: 1600, height: 900 };
+    const margin = 40;
+
+    const minX = Math.min(...unlocked.map(n => n.x));
+    const minY = Math.min(...unlocked.map(n => n.y));
+    const maxX = Math.max(...unlocked.map(n => n.x + n.width));
+    const maxY = Math.max(...unlocked.map(n => n.y + n.height));
+    const groupW = maxX - minX;
+    const groupH = maxY - minY;
+
+    let targetX = minX;
+    let targetY = minY;
+    let label = "";
+
+    switch (position) {
+      case "top-left":
+        targetX = ws.x + margin;
+        targetY = ws.y + margin;
+        label = "Kiri Atas Kanvas";
+        break;
+      case "top-center":
+        targetX = ws.x + (ws.width - groupW) / 2;
+        targetY = ws.y + margin;
+        label = "Tengah Atas Kanvas";
+        break;
+      case "top-right":
+        targetX = ws.x + ws.width - groupW - margin;
+        targetY = ws.y + margin;
+        label = "Kanan Atas Kanvas";
+        break;
+      case "middle-left":
+        targetX = ws.x + margin;
+        targetY = ws.y + (ws.height - groupH) / 2;
+        label = "Kiri Tengah Kanvas";
+        break;
+      case "center":
+        targetX = ws.x + (ws.width - groupW) / 2;
+        targetY = ws.y + (ws.height - groupH) / 2;
+        label = "Tepat di Tengah Kanvas";
+        break;
+      case "middle-right":
+        targetX = ws.x + ws.width - groupW - margin;
+        targetY = ws.y + (ws.height - groupH) / 2;
+        label = "Kanan Tengah Kanvas";
+        break;
+      case "bottom-left":
+        targetX = ws.x + margin;
+        targetY = ws.y + ws.height - groupH - margin;
+        label = "Kiri Bawah Kanvas";
+        break;
+      case "bottom-center":
+        targetX = ws.x + (ws.width - groupW) / 2;
+        targetY = ws.y + ws.height - groupH - margin;
+        label = "Tengah Bawah Kanvas";
+        break;
+      case "bottom-right":
+        targetX = ws.x + ws.width - groupW - margin;
+        targetY = ws.y + ws.height - groupH - margin;
+        label = "Kanan Bawah Kanvas";
+        break;
+      default:
+        return;
+    }
+
+    const dx = Math.round(targetX - minX);
+    const dy = Math.round(targetY - minY);
+
+    saveSnapshot();
+    unlocked.forEach(n => {
+      n.x += dx;
+      n.y += dy;
+    });
+
+    renderAll();
+    updatePropertiesBar();
+    showToast(`Posisi: ${label}`);
   }
 
   // Word-Style Color Palette (Gambar 3)
@@ -3870,6 +3996,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (dom.menuAlignDropdown && !dom.menuAlignDropdown.contains(e.target) && !e.target.closest("#btn-align-menu")) {
       dom.menuAlignDropdown.classList.remove("show");
     }
+    if (dom.menuPositionDropdown && !dom.menuPositionDropdown.contains(e.target) && !e.target.closest("#btn-position-menu")) {
+      dom.menuPositionDropdown.classList.remove("show");
+    }
   });
 
   // Format Painter (Salin Gaya ala Canva & Word: 1x Klik = 1x Pakai, Klik Ganda = Berkelanjutan)
@@ -4040,6 +4169,7 @@ window.MinimalFlow = window.MinimalFlow || {};
   if (dom.btnAlignMenu && dom.menuAlignDropdown) {
     dom.btnAlignMenu.addEventListener("click", (e) => {
       e.stopPropagation();
+      if (dom.menuPositionDropdown) dom.menuPositionDropdown.classList.remove("show");
       dom.menuAlignDropdown.classList.toggle("show");
     });
     dom.menuAlignDropdown.querySelectorAll(".dropdown-item").forEach(btn => {
@@ -4047,6 +4177,22 @@ window.MinimalFlow = window.MinimalFlow || {};
         e.stopPropagation();
         alignSelectedNodes(btn.dataset.align);
         dom.menuAlignDropdown.classList.remove("show");
+      });
+    });
+  }
+
+  // Word-Style 3x3 Canvas Position Menu
+  if (dom.btnPositionMenu && dom.menuPositionDropdown) {
+    dom.btnPositionMenu.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (dom.menuAlignDropdown) dom.menuAlignDropdown.classList.remove("show");
+      dom.menuPositionDropdown.classList.toggle("show");
+    });
+    dom.menuPositionDropdown.querySelectorAll(".position-grid-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        positionSelectedNodesOnCanvas(btn.dataset.position);
+        dom.menuPositionDropdown.classList.remove("show");
       });
     });
   }

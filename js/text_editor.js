@@ -107,23 +107,44 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     const lines = [];
-    let currentLine = "";
+    let currentRuns = [];
     let hasOpenBlock = false;
 
+    function pushRun(str, bold, italic) {
+      if (!str) return;
+      const last = currentRuns[currentRuns.length - 1];
+      if (last && last.bold === bold && last.italic === italic) {
+        last.text += str;
+      } else {
+        currentRuns.push({ text: str, bold, italic });
+      }
+    }
+
     function flushLine() {
-      lines.push(currentLine);
-      currentLine = "";
+      const lineHtml = currentRuns.map(run => {
+        if (!run.text) return "";
+        if (!run.text.trim()) return run.text;
+        if (run.bold && run.italic) return `<b><i>${run.text}</i></b>`;
+        if (run.bold) return `<b>${run.text}</b>`;
+        if (run.italic) return `<i>${run.text}</i>`;
+        return run.text;
+      }).join("");
+      lines.push(lineHtml);
+      currentRuns = [];
       hasOpenBlock = false;
     }
 
-    function walk(node) {
+    function walk(node, isBold = false, isItalic = false) {
       for (let child = node.firstChild; child; child = child.nextSibling) {
         if (isBlockElement(child)) {
-          if (hasOpenBlock || currentLine.length > 0) {
+          if (hasOpenBlock || currentRuns.length > 0) {
             flushLine();
           }
           hasOpenBlock = true;
-          walk(child);
+          const styleAttr = (child.getAttribute && child.getAttribute("style")) || "";
+          const blockBold = isBold || /font-weight:\s*(?:bold|[6789]00)/i.test(styleAttr);
+          const blockItalic = isItalic || /font-style:\s*italic/i.test(styleAttr);
+          walk(child, blockBold, blockItalic);
           flushLine();
         } else if (child.nodeType === 3) {
           hasOpenBlock = true;
@@ -132,11 +153,11 @@ window.MinimalFlow = window.MinimalFlow || {};
             const parts = val.split("\n");
             for (let p = 0; p < parts.length; p++) {
               if (p > 0) flushLine();
-              currentLine += parts[p];
+              pushRun(parts[p], isBold, isItalic);
             }
             hasOpenBlock = true;
           } else {
-            currentLine += val;
+            pushRun(val, isBold, isItalic);
           }
         } else if (child.nodeType === 1) {
           const tag = child.tagName;
@@ -145,26 +166,19 @@ window.MinimalFlow = window.MinimalFlow || {};
             if (!isTrailingBogusBr(child)) {
               flushLine();
             }
-          } else if (tag === "B" || tag === "STRONG") {
-            hasOpenBlock = true;
-            currentLine += "<b>";
-            walk(child);
-            currentLine += "</b>";
-          } else if (tag === "I" || tag === "EM") {
-            hasOpenBlock = true;
-            currentLine += "<i>";
-            walk(child);
-            currentLine += "</i>";
           } else {
             hasOpenBlock = true;
-            walk(child);
+            const styleAttr = (child.getAttribute && child.getAttribute("style")) || "";
+            const nextBold = isBold || tag === "B" || tag === "STRONG" || /font-weight:\s*(?:bold|[6789]00)/i.test(styleAttr);
+            const nextItalic = isItalic || tag === "I" || tag === "EM" || /font-style:\s*italic/i.test(styleAttr);
+            walk(child, nextBold, nextItalic);
           }
         }
       }
     }
 
-    walk(el);
-    if (hasOpenBlock || currentLine.length > 0) {
+    walk(el, false, false);
+    if (hasOpenBlock || currentRuns.length > 0) {
       flushLine();
     }
 
@@ -190,50 +204,54 @@ window.MinimalFlow = window.MinimalFlow || {};
     return Math.round(baseContentH);
   }
 
-  // Parse inline Markdown / HTML tags into styled spans (100% clean, ZERO asterisks)
+  // Parse inline Markdown / HTML tags into styled spans (stateful tag tokenizer, 100% clean, ZERO leaked tags)
   function parseInlineSpans(str, defaultBold = false, defaultItalic = false) {
     if (!str) return [];
-    // Decode HTML entities yang tersimpan agar teks tampil murni (tanpa &amp;)
     str = String(str)
       .replace(/&amp;/g, "&")
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .replace(/&apos;/g, "'");
-    // Otomatis bersihkan tanda bintang markdown warisan menjadi tag visual murni
     str = cleanMarkdownToHtml(str);
 
-    const regex = /(<b><i>([\s\S]*?)<\/i><\/b>|<i><b>([\s\S]*?)<\/b><\/i>|<b>([\s\S]*?)<\/b>|<strong>([\s\S]*?)<\/strong>|<i>([\s\S]*?)<\/i>|<em>([\s\S]*?)<\/em>)/gi;
+    const tagRegex = /<\/?(b|strong|i|em)\b[^>]*>/gi;
     const tokens = [];
+    let boldDepth = 0;
+    let italicDepth = 0;
     let lastIndex = 0;
     let match;
 
-    while ((match = regex.exec(str)) !== null) {
+    function emitText(rawChunk) {
+      if (!rawChunk) return;
+      const cleanText = rawChunk.replace(/<\/?(?:b|strong|i|em|span|font|u)\b[^>]*>/gi, "");
+      if (!cleanText) return;
+      const isBold = defaultBold || boldDepth > 0;
+      const isItalic = defaultItalic || italicDepth > 0;
+      const prev = tokens[tokens.length - 1];
+      if (prev && prev.bold === isBold && prev.italic === isItalic) {
+        prev.text += cleanText;
+      } else {
+        tokens.push({ text: cleanText, bold: isBold, italic: isItalic });
+      }
+    }
+
+    while ((match = tagRegex.exec(str)) !== null) {
       if (match.index > lastIndex) {
-        tokens.push({
-          text: str.slice(lastIndex, match.index),
-          bold: defaultBold,
-          italic: defaultItalic
-        });
+        emitText(str.slice(lastIndex, match.index));
       }
-
-      const full = match[0];
-      if (match[2] !== undefined || match[3] !== undefined) {
-        tokens.push({ text: match[2] || match[3], bold: true, italic: true });
-      } else if (match[4] !== undefined || match[5] !== undefined) {
-        tokens.push({ text: match[4] || match[5], bold: true, italic: defaultItalic });
-      } else if (match[6] !== undefined || match[7] !== undefined) {
-        tokens.push({ text: match[6] || match[7], bold: defaultBold, italic: true });
+      const fullTag = match[0];
+      const tagName = match[1].toLowerCase();
+      const isClosing = fullTag.charAt(1) === "/";
+      if (tagName === "b" || tagName === "strong") {
+        boldDepth = isClosing ? Math.max(0, boldDepth - 1) : boldDepth + 1;
+      } else if (tagName === "i" || tagName === "em") {
+        italicDepth = isClosing ? Math.max(0, italicDepth - 1) : italicDepth + 1;
       }
-
-      lastIndex = regex.lastIndex;
+      lastIndex = tagRegex.lastIndex;
     }
 
     if (lastIndex < str.length) {
-      tokens.push({
-        text: str.slice(lastIndex),
-        bold: defaultBold,
-        italic: defaultItalic
-      });
+      emitText(str.slice(lastIndex));
     }
 
     return tokens;
@@ -250,7 +268,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   function layoutNodeText(node) {
     if (!node.text) {
-      return { lines: [], xPos: 0, startY: 0, lineHeight: 14, anchor: "middle", totalTextHeight: 0 };
+      return { lines: [], xPos: 0, startY: 0, lineHeight: 14, anchor: "middle", totalTextHeight: 0, maxWidth: 0 };
     }
 
     const { width, height, text } = node;
@@ -308,7 +326,12 @@ window.MinimalFlow = window.MinimalFlow || {};
       return chunks.length > 0 ? chunks : [{ word, bold, italic }];
     }
 
-    const paragraphs = (text.content || "").split("\n");
+    // Normalisasi tag yang melintasi baris baru agar setiap baris 100% seimbang
+    const rawTextContent = String(text.content || "");
+    const normalizedContent = /<\/?(?:b|strong|i|em)\b/i.test(rawTextContent)
+      ? serializeEditorDOM(cleanMarkdownToHtml(rawTextContent))
+      : rawTextContent;
+    const paragraphs = normalizedContent.split("\n");
     const lines = [];
 
     for (const para of paragraphs) {
@@ -335,8 +358,10 @@ window.MinimalFlow = window.MinimalFlow || {};
         continue;
       }
 
+      const paraLines = [];
       let currentSpans = [];
       let currentLineWidth = 0;
+      let currentWordCount = 0;
 
       for (let i = 0; i < words.length; i++) {
         const item = words[i];
@@ -359,21 +384,36 @@ window.MinimalFlow = window.MinimalFlow || {};
             currentSpans.push({ text: item.word, bold: item.bold, italic: item.italic });
           }
           currentLineWidth += additionalW;
+          currentWordCount += 1;
         } else {
-          lines.push(currentSpans);
+          currentSpans.wordCount = currentWordCount;
+          currentSpans.lineWidth = currentLineWidth;
+          paraLines.push(currentSpans);
           currentSpans = [{ text: item.word, bold: item.bold, italic: item.italic }];
           currentLineWidth = itemW;
+          currentWordCount = 1;
         }
       }
 
       if (currentSpans.length > 0) {
-        lines.push(currentSpans);
+        currentSpans.wordCount = currentWordCount;
+        currentSpans.lineWidth = currentLineWidth;
+        paraLines.push(currentSpans);
+      }
+
+      for (let idx = 0; idx < paraLines.length; idx++) {
+        const pl = paraLines[idx];
+        const isLastInPara = idx === paraLines.length - 1;
+        if (text.align === "justify" && pl.wordCount > 1 && (!isLastInPara || paraLines.length === 1 || pl.lineWidth >= maxWidth * 0.7)) {
+          pl.justify = true;
+        }
+        lines.push(pl);
       }
     }
 
     let anchor = "middle";
     let xPos = width / 2;
-    if (text.align === "left") {
+    if (text.align === "left" || text.align === "justify") {
       anchor = "start";
       xPos = paddingX + (shapeSafeReduction / 2);
     }
@@ -416,7 +456,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       startY = paddingY + fontSize * 0.85;
     }
 
-    return { lines, xPos, startY, lineHeight, anchor, totalTextHeight };
+    return { lines, xPos, startY, lineHeight, anchor, totalTextHeight, maxWidth };
   }
 
   let activeEditingNodeId = null;
@@ -502,9 +542,14 @@ window.MinimalFlow = window.MinimalFlow || {};
     const rawContent = (node.text.content || "").trim();
     const isPh = !rawContent || rawContent.toLowerCase() === "insert text" || !!node.text.isPlaceholder;
 
-    // Bersihkan sintaks markdown bintang dan span liar menjadi HTML visual murni
+    // Bersihkan sintaks markdown bintang dan span liar menjadi HTML visual murni per baris
     const cleanContent = sanitizeHtmlFormatting(String(node.text.content || "").replace(/&amp;/g, "&"));
-    const initialHtml = isPh ? "" : cleanMarkdownToHtml(cleanContent).replace(/&(?!(amp|lt|gt|quot|apos|nbsp);)/g, "&amp;");
+    const balancedContent = serializeEditorDOM(cleanMarkdownToHtml(cleanContent));
+    const initialHtml = isPh
+      ? ""
+      : balancedContent
+          .replace(/&(?!(amp|lt|gt|quot|apos|nbsp);)/g, "&amp;")
+          .replace(/\n/g, "<br>");
     editor.innerHTML = initialHtml;
     editor.setAttribute("data-placeholder", "Ketik teks di sini...");
 
@@ -663,6 +708,24 @@ window.MinimalFlow = window.MinimalFlow || {};
       if ((e.ctrlKey || e.metaKey) && (e.key === "i" || e.key === "I" || e.code === "KeyI")) {
         e.preventDefault();
         document.execCommand("italic", false, null);
+        onLiveInput();
+        return;
+      }
+
+      // Ctrl + J: Rata Kiri-Kanan (Justify) seperti di Word
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === "j" || e.key === "J" || e.code === "KeyJ")) {
+        e.preventDefault();
+        const nextAlign = node.text.align === "justify" ? "center" : "justify";
+        node.text.align = nextAlign;
+        editor.style.textAlign = nextAlign;
+        const bLeft = document.getElementById("btn-text-align-left");
+        const bCenter = document.getElementById("btn-text-align-center");
+        const bRight = document.getElementById("btn-text-align-right");
+        const bJustify = document.getElementById("btn-text-align-justify");
+        if (bLeft) bLeft.classList.toggle("active", nextAlign === "left");
+        if (bCenter) bCenter.classList.toggle("active", nextAlign === "center");
+        if (bRight) bRight.classList.toggle("active", nextAlign === "right");
+        if (bJustify) bJustify.classList.toggle("active", nextAlign === "justify");
         onLiveInput();
         return;
       }

@@ -568,6 +568,10 @@ window.MinimalFlow = window.MinimalFlow || {};
             if (index > 0) tspan.setAttribute("dy", layout.lineHeight);
 
             if (Array.isArray(lineSpans)) {
+              if (lineSpans.justify && layout.maxWidth > 0) {
+                tspan.setAttribute("textLength", layout.maxWidth);
+                tspan.setAttribute("lengthAdjust", "spacing");
+              }
               if (lineSpans.length === 0 || (lineSpans.length === 1 && !lineSpans[0].text)) {
                 tspan.textContent = " ";
               } else {
