@@ -369,6 +369,51 @@ window.MinimalFlow = window.MinimalFlow || {};
     updateLayerPanel();
   }
 
+  function renderResizeLive() {
+    FlowEngine.renderDiagram(dom.layerElements, AppState.document, AppState.ui, (nodeId) => {
+      selectSingleNode(nodeId, false);
+      openInlineEditor(nodeId);
+    });
+    FlowEngine.renderOverlays(dom.overlaySelection, AppState.document, AppState.ui);
+    const rs = AppState.ui.resizeStart;
+    const node = rs && AppState.document.nodes[rs.nodeId];
+    if (node) {
+      if (dom.propNodeW) dom.propNodeW.value = node.width;
+      if (dom.propNodeH) dom.propNodeH.value = node.height;
+    }
+  }
+
+  function setCursorLock(cursorStyle, modeClass, cornerClass = null) {
+    const root = document.documentElement;
+    const body = document.body;
+    if (modeClass) {
+      root.classList.add(modeClass);
+      body.classList.add(modeClass);
+    }
+    if (cornerClass) {
+      root.classList.add(cornerClass);
+      body.classList.add(cornerClass);
+    }
+    if (cursorStyle) {
+      root.style.setProperty("cursor", cursorStyle, "important");
+      body.style.setProperty("cursor", cursorStyle, "important");
+    }
+  }
+
+  function clearCursorLock() {
+    const root = document.documentElement;
+    const body = document.body;
+    const lockClasses = [
+      "is-resizing", "is-dragging-node", "is-dragging-edge-handle", "is-drawing-wire", "panning",
+      "resizing-nw", "resizing-se", "resizing-ne", "resizing-sw",
+      "resizing-n", "resizing-s", "resizing-w", "resizing-e"
+    ];
+    root.classList.remove(...lockClasses);
+    body.classList.remove(...lockClasses);
+    root.style.removeProperty("cursor");
+    body.style.removeProperty("cursor");
+  }
+
   function updateSelectionVisuals() {
     const selectedIds = AppState.ui.selectedNodeIds;
     const isNodeSelected = AppState.ui.selectedType === "node";
@@ -1937,7 +1982,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     const world = Canvas.screenToWorld(e.clientX, e.clientY, dom.svg, AppState.document.canvas);
 
     // 1. Resize Handle
-    const resizeHandle = e.target.closest(".resize-handle");
+    const resizeHandle = e.target.closest(".resize-handle") || e.target.closest(".resize-handle-hit");
     if (resizeHandle) {
       const nodeId = resizeHandle.dataset.nodeId;
       const corner = resizeHandle.dataset.corner;
@@ -1945,6 +1990,9 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (node && !node.locked) {
         saveSnapshot();
         AppState.ui.mode = "RESIZING_NODE";
+        const cursorStyle = FlowEngine.getResizeCursor(corner, node.rotation || 0);
+        setCursorLock(cursorStyle, "is-resizing", `resizing-${corner}`);
+
         AppState.ui.resizeStart = {
           x: world.x,
           y: world.y,
@@ -1957,6 +2005,7 @@ window.MinimalFlow = window.MinimalFlow || {};
           rot: node.rotation || 0,
           corner,
           nodeId,
+          cursorStyle,
           multiNodes: {}
         };
         if (AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 1) {
@@ -2003,7 +2052,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     // 3. Edge Handle
-    const handleEl = e.target.closest(".edge-handle");
+    const handleEl = e.target.closest(".edge-handle") || e.target.closest(".edge-handle-hit");
     if (handleEl) {
       const edgeId = handleEl.dataset.edgeId;
       const edge = AppState.document.edges[edgeId];
@@ -2014,6 +2063,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         AppState.ui.selectedType = "edge";
         AppState.ui.dragStartPos = { x: world.x, y: world.y };
         AppState.ui.handleInitialOffset = { ...(edge.handleOffset || { dx: 0, dy: 0 }) };
+        setCursorLock("grabbing", "is-dragging-edge-handle");
         renderAll();
         return;
       }
@@ -2165,6 +2215,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         if (!AppState.ui.hasMovedNode) {
           saveSnapshot();
           AppState.ui.hasMovedNode = true;
+          setCursorLock("move", "is-dragging-node");
         }
 
         const nodeIds = AppState.ui.selectedNodeIds && AppState.ui.selectedNodeIds.size > 0
@@ -2394,7 +2445,7 @@ window.MinimalFlow = window.MinimalFlow || {};
           });
         }
 
-        renderAll();
+        renderResizeLive();
       }
       return;
     }
@@ -2427,7 +2478,7 @@ window.MinimalFlow = window.MinimalFlow || {};
           dx: newDx,
           dy: newDy
         };
-        renderAll();
+        renderResizeLive();
       }
       return;
     }
@@ -2482,6 +2533,8 @@ window.MinimalFlow = window.MinimalFlow || {};
   });
 
   window.addEventListener("mouseup", (e) => {
+    clearCursorLock();
+
     if (AppState.ui.mode === "PANNING" || e.button === 1) {
       AppState.ui.mode = "IDLE";
       if (!AppState.ui.isSpacePressed) {
@@ -2543,6 +2596,13 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (!AppState.ui.hasMovedNode && AppState.ui.lastClickNodeId && !e.shiftKey) {
         selectSingleNode(AppState.ui.lastClickNodeId, true);
       }
+      renderAll();
+      return;
+    }
+
+    if (AppState.ui.mode === "DRAGGING_HANDLE") {
+      AppState.ui.mode = "IDLE";
+      renderAll();
       return;
     }
 
@@ -2560,6 +2620,9 @@ window.MinimalFlow = window.MinimalFlow || {};
           }
         });
       }
+      AppState.ui.mode = "IDLE";
+      renderAll();
+      return;
     }
 
     if (AppState.ui.mode !== "EDITING_TEXT") {
@@ -2573,7 +2636,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       return;
     }
 
-    const handleEl = e.target.closest(".edge-handle");
+    const handleEl = e.target.closest(".edge-handle") || e.target.closest(".edge-handle-hit");
     if (handleEl) {
       const edgeId = handleEl.dataset.edgeId;
       const edge = AppState.document.edges[edgeId];
@@ -2643,6 +2706,12 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     if (e.key === "Escape") {
+      clearCursorLock();
+      if (AppState.ui.mode === "RESIZING_NODE" || AppState.ui.mode === "DRAGGING_NODE" || AppState.ui.mode === "DRAGGING_HANDLE") {
+        AppState.ui.mode = "IDLE";
+        renderAll();
+        return;
+      }
       if (AppState.ui.formatPainter && AppState.ui.formatPainter.active) {
         deactivateFormatPainter();
         showToast("Kuas Cat dibatalkan");
@@ -2860,6 +2929,14 @@ window.MinimalFlow = window.MinimalFlow || {};
         AppState.ui.mode = "IDLE";
         dom.container.classList.remove("panning");
       }
+    }
+  });
+
+  window.addEventListener("blur", () => {
+    clearCursorLock();
+    if (AppState.ui.mode === "RESIZING_NODE" || AppState.ui.mode === "DRAGGING_NODE" || AppState.ui.mode === "DRAGGING_HANDLE") {
+      AppState.ui.mode = "IDLE";
+      renderAll();
     }
   });
 
@@ -5390,6 +5467,7 @@ window.MinimalFlow = window.MinimalFlow || {};
   });
 
   // Initialization & Bootstrap
+  window.MinimalFlow.AppState = AppState;
   const savedTheme = localStorage.getItem("minimalflow_theme") || AppState.document.theme || "light";
   applyTheme(savedTheme);
   updateWorkspaceUI();

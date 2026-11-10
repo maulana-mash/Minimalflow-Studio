@@ -755,6 +755,16 @@ window.MinimalFlow = window.MinimalFlow || {};
       g.appendChild(textG);
     }
 
+    const handleHit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    handleHit.setAttribute("class", "edge-handle-hit");
+    handleHit.setAttribute("cx", handlePos.x);
+    handleHit.setAttribute("cy", handlePos.y);
+    handleHit.setAttribute("r", 14);
+    handleHit.setAttribute("fill", "transparent");
+    handleHit.setAttribute("stroke", "transparent");
+    handleHit.setAttribute("data-edge-id", id);
+    handleHit.setAttribute("title", "Tarik untuk membelokkan jalur garis / Double-click untuk reset");
+
     const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     handle.setAttribute("class", "edge-handle");
     handle.setAttribute("cx", handlePos.x);
@@ -767,12 +777,14 @@ window.MinimalFlow = window.MinimalFlow || {};
       const n2 = getNodePinNormal(edge.target.pin, targetNode.rotation || 0);
       const isSourceH = Math.abs(n1.x) > Math.abs(n1.y);
       const isTargetH = Math.abs(n2.x) > Math.abs(n2.y);
-      if (isSourceH && isTargetH) handle.style.cursor = "ew-resize";
-      else if (!isSourceH && !isTargetH) handle.style.cursor = "ns-resize";
-      else handle.style.cursor = "move";
+      const cur = (isSourceH && isTargetH) ? "ew-resize" : (!isSourceH && !isTargetH ? "ns-resize" : "move");
+      handle.style.cursor = cur;
+      handleHit.style.cursor = cur;
     } else {
       handle.style.cursor = "move";
+      handleHit.style.cursor = "move";
     }
+    g.appendChild(handleHit);
     g.appendChild(handle);
 
     return g;
@@ -932,6 +944,11 @@ window.MinimalFlow = window.MinimalFlow || {};
           const hitPath = existingG.querySelector(".edge-hit-area");
           if (hitPath) hitPath.setAttribute("d", pathD);
 
+          const handleHit = existingG.querySelector(".edge-handle-hit");
+          if (handleHit) {
+            handleHit.setAttribute("cx", handlePos.x);
+            handleHit.setAttribute("cy", handlePos.y);
+          }
           const handle = existingG.querySelector(".edge-handle");
           if (handle) {
             handle.setAttribute("cx", handlePos.x);
@@ -967,6 +984,25 @@ window.MinimalFlow = window.MinimalFlow || {};
     for (const [id, edge] of sortedEdges) {
       const g = createEdgeElement(id, edge, doc, uiState, svgDefs);
       if (g) layerEdgesEl.appendChild(g);
+    }
+  }
+
+  function getResizeCursor(corner, rotation = 0) {
+    const rot = ((rotation % 360) + 360) % 360;
+    const angleMap = {
+      n: 0, ne: 45, e: 90, se: 135,
+      s: 180, sw: 225, w: 270, nw: 315
+    };
+    const baseAngle = angleMap[corner] !== undefined ? angleMap[corner] : 0;
+    const totalAngle = (baseAngle + rot) % 360;
+    if ((totalAngle >= 337.5 || totalAngle < 22.5) || (totalAngle >= 157.5 && totalAngle < 202.5)) {
+      return "ns-resize";
+    } else if ((totalAngle >= 22.5 && totalAngle < 67.5) || (totalAngle >= 202.5 && totalAngle < 247.5)) {
+      return "nesw-resize";
+    } else if ((totalAngle >= 67.5 && totalAngle < 112.5) || (totalAngle >= 247.5 && totalAngle < 292.5)) {
+      return "ew-resize";
+    } else {
+      return "nwse-resize";
     }
   }
 
@@ -1026,16 +1062,35 @@ window.MinimalFlow = window.MinimalFlow || {};
 
       handles.forEach(h => {
         const rotP = rotatePoint(h.x, h.y, node.width / 2, node.height / 2, rot);
+        const cursorStyle = getResizeCursor(h.id, rot);
+
+        // Target sentuh / klik tak terlihat yang luas (18px x 18px) mencegah kursor tergelincir atau bergetar
+        const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        hit.setAttribute("class", `resize-handle-hit ${h.id}`);
+        hit.setAttribute("x", node.x + rotP.x - 9);
+        hit.setAttribute("y", node.y + rotP.y - 9);
+        hit.setAttribute("width", 18);
+        hit.setAttribute("height", 18);
+        hit.setAttribute("fill", "transparent");
+        hit.setAttribute("stroke", "transparent");
+        hit.setAttribute("data-node-id", node.id);
+        hit.setAttribute("data-corner", h.id);
+        hit.setAttribute("title", titleMap[h.id] || "Tarik pin pojok untuk mengubah ukuran chart");
+        hit.style.cursor = cursorStyle;
+        overlaySelectionEl.appendChild(hit);
+
+        // Visual handle tajam & presisi (8px x 8px)
         const handle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         handle.setAttribute("class", `resize-handle ${h.id}`);
-        handle.setAttribute("x", node.x + rotP.x - 3.5);
-        handle.setAttribute("y", node.y + rotP.y - 3.5);
-        handle.setAttribute("width", 7);
-        handle.setAttribute("height", 7);
+        handle.setAttribute("x", node.x + rotP.x - 4);
+        handle.setAttribute("y", node.y + rotP.y - 4);
+        handle.setAttribute("width", 8);
+        handle.setAttribute("height", 8);
         handle.setAttribute("rx", 1.5);
         handle.setAttribute("data-node-id", node.id);
         handle.setAttribute("data-corner", h.id);
         handle.setAttribute("title", titleMap[h.id] || "Tarik pin pojok untuk mengubah ukuran chart");
+        handle.style.cursor = cursorStyle;
         overlaySelectionEl.appendChild(handle);
       });
     });
@@ -1092,7 +1147,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     renderDiagram,
     renderNodes,
     renderEdges,
-    renderOverlays
+    renderOverlays,
+    getResizeCursor
   };
 
 })(window.MinimalFlow);

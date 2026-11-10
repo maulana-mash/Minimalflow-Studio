@@ -1557,6 +1557,20 @@ body.is-tap-connecting .pin-circle {
   transition: fill 0.15s ease;
 }
 
+.edge-handle-hit {
+  cursor: grab;
+  fill: transparent;
+  stroke: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.edge-group:hover .edge-handle-hit,
+.edge-group.selected .edge-handle-hit {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .edge-handle {
   cursor: grab;
   fill: var(--bg-surface);
@@ -1564,6 +1578,8 @@ body.is-tap-connecting .pin-circle {
   stroke-width: 1.8;
   opacity: 0;
   pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
   transition: opacity 150ms cubic-bezier(0.16, 1, 0.3, 1), transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1580,19 +1596,30 @@ body.is-tap-connecting .pin-circle {
   r: 5.5;
 }
 
+.edge-handle-hit:hover + .edge-handle,
 .edge-handle:hover {
   fill: var(--text-main);
   stroke: var(--bg-surface);
   transform: scale(1.15);
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .edge-handle:active {
   cursor: grabbing;
   transform: scale(1.25);
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .selection-bounding-box {
   pointer-events: none;
+}
+
+.resize-handle-hit {
+  fill: transparent;
+  stroke: transparent;
+  pointer-events: all;
 }
 
 .resize-handle {
@@ -1601,17 +1628,70 @@ body.is-tap-connecting .pin-circle {
   stroke-width: 1.5;
   cursor: pointer;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  pointer-events: all;
+  transition: fill 0.12s ease, stroke 0.12s ease;
 }
 
+.resize-handle-hit:hover + .resize-handle,
 .resize-handle:hover {
   fill: #3b82f6;
   stroke: var(--bg-surface);
 }
 
+.resize-handle-hit.nw, .resize-handle-hit.se,
 .resize-handle.nw, .resize-handle.se { cursor: nwse-resize; }
+.resize-handle-hit.ne, .resize-handle-hit.sw,
 .resize-handle.ne, .resize-handle.sw { cursor: nesw-resize; }
+.resize-handle-hit.n, .resize-handle-hit.s,
 .resize-handle.n, .resize-handle.s { cursor: ns-resize; }
+.resize-handle-hit.w, .resize-handle-hit.e,
 .resize-handle.w, .resize-handle.e { cursor: ew-resize; }
+
+/* Global Drag / Resize Cursor Locks & Anti-Jitter Shields */
+html.is-resizing,
+body.is-resizing {
+  user-select: none !important;
+}
+html.is-resizing,
+html.is-resizing *,
+body.is-resizing,
+body.is-resizing * {
+  cursor: inherit !important;
+  pointer-events: none !important;
+}
+
+html.is-dragging-node,
+body.is-dragging-node {
+  user-select: none !important;
+}
+html.is-dragging-node,
+html.is-dragging-node *,
+body.is-dragging-node,
+body.is-dragging-node * {
+  cursor: move !important;
+  pointer-events: none !important;
+}
+
+html.is-dragging-edge-handle,
+body.is-dragging-edge-handle {
+  user-select: none !important;
+}
+html.is-dragging-edge-handle,
+html.is-dragging-edge-handle *,
+body.is-dragging-edge-handle,
+body.is-dragging-edge-handle * {
+  cursor: grabbing !important;
+  pointer-events: none !important;
+}
+
+html.resizing-nw, html.resizing-nw *, body.resizing-nw, body.resizing-nw *,
+html.resizing-se, html.resizing-se *, body.resizing-se, body.resizing-se * { cursor: nwse-resize !important; }
+html.resizing-ne, html.resizing-ne *, body.resizing-ne, body.resizing-ne *,
+html.resizing-sw, html.resizing-sw *, body.resizing-sw, body.resizing-sw * { cursor: nesw-resize !important; }
+html.resizing-n, html.resizing-n *, body.resizing-n, body.resizing-n *,
+html.resizing-s, html.resizing-s *, body.resizing-s, body.resizing-s * { cursor: ns-resize !important; }
+html.resizing-w, html.resizing-w *, body.resizing-w, body.resizing-w *,
+html.resizing-e, html.resizing-e *, body.resizing-e, body.resizing-e * { cursor: ew-resize !important; }
 
 /* Shift + Drag Rubberband Selection Marquee */
 .marquee-selection-box {
