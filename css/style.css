@@ -1097,6 +1097,13 @@ body.dark-mode .layer-item.layer-item-edge.selected {
   border-color: var(--border-dark);
 }
 
+.prop-select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--border-color);
+  background: var(--bg-hover);
+}
+
 .prop-input-number {
   height: 28px;
   font-size: 12px;

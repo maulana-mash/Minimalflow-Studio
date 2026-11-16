@@ -604,6 +604,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       finalEdges[e.id] = {
         id: e.id,
         type: "step",
+        radius: 8,
         source: { nodeId: e.sourceId, pin: srcPin },
         target: { nodeId: e.targetId, pin: tgtPin },
         handleOffset: { dx: 0, dy: 0 },
@@ -613,7 +614,8 @@ window.MinimalFlow = window.MinimalFlow || {};
           strokeWidth: 1.5,
           dashed: e.dashed || "solid",
           markerStart: "none",
-          markerEnd: "arrow"
+          markerEnd: "arrow",
+          radius: 8
         }
       };
     });
@@ -1066,6 +1068,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         edges[edgeId] = {
           id: edgeId,
           type: "step",
+          radius: 8,
           source: { nodeId: prevId, pin: "S" },
           target: { nodeId: id, pin: "N" },
           handleOffset: { dx: 0, dy: 0 },
@@ -1075,7 +1078,8 @@ window.MinimalFlow = window.MinimalFlow || {};
             strokeWidth: 1.5,
             dashed: "solid",
             markerStart: "none",
-            markerEnd: "arrow"
+            markerEnd: "arrow",
+            radius: 8
           }
         };
       }

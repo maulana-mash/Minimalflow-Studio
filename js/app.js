@@ -109,6 +109,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     btnSideLayerTopmost: document.getElementById("btn-side-layer-topmost"),
     dualToolbar: document.getElementById("dual-floating-toolbar-wrapper"),
     propEdgeType: document.getElementById("prop-edge-type"),
+    propEdgeRadius: document.getElementById("prop-edge-radius"),
     propEdgeMarker: document.getElementById("prop-edge-marker"),
     propEdgeWidth: document.getElementById("prop-edge-width"),
     propEdgeDash: document.getElementById("prop-edge-dash"),
@@ -210,10 +211,15 @@ window.MinimalFlow = window.MinimalFlow || {};
       edge: (() => {
         try {
           const saved = localStorage.getItem("minimalflow_edge_defaults");
-          if (saved) return JSON.parse(saved);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.radius === undefined) parsed.radius = 8;
+            return parsed;
+          }
         } catch (e) {}
         return {
           type: "step",
+          radius: 8,
           strokeWidth: 1.5,
           dashed: "solid",
           markerStart: "none",
@@ -565,8 +571,16 @@ window.MinimalFlow = window.MinimalFlow || {};
     const wVal = String(edgeOrDefaults.style?.strokeWidth !== undefined ? edgeOrDefaults.style.strokeWidth : (edgeOrDefaults.strokeWidth !== undefined ? edgeOrDefaults.strokeWidth : 1.5));
     const dashVal = edgeOrDefaults.style?.dashed || edgeOrDefaults.dashed || "solid";
     const strokeColor = edgeOrDefaults.style?.stroke || edgeOrDefaults.stroke || (AppState.document.theme === "dark" ? "#f4f4f5" : "#18181b");
+    const radVal = edgeOrDefaults.radius !== undefined ? edgeOrDefaults.radius : (edgeOrDefaults.style?.radius !== undefined ? edgeOrDefaults.style.radius : 8);
 
     if (dom.propEdgeType) dom.propEdgeType.value = type;
+    if (dom.propEdgeRadius) {
+      dom.propEdgeRadius.value = String(radVal);
+      dom.propEdgeRadius.disabled = (type !== "step");
+      dom.propEdgeRadius.title = (type === "step") 
+        ? "Radius Sudut Siku (Corner Radius)" 
+        : "Radius hanya berlaku untuk garis Siku-siku (Orthogonal)";
+    }
     if (dom.propEdgeMarker) dom.propEdgeMarker.value = markerVal;
     if (dom.propEdgeWidth) dom.propEdgeWidth.value = String(wVal);
     if (dom.propEdgeDash) dom.propEdgeDash.value = dashVal;
@@ -4276,6 +4290,29 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (AppState.defaults?.edge) {
         AppState.defaults.edge.type = val;
       }
+      if (dom.propEdgeRadius) {
+        dom.propEdgeRadius.disabled = (val !== "step");
+        dom.propEdgeRadius.title = (val === "step") 
+          ? "Radius Sudut Siku (Corner Radius)" 
+          : "Radius hanya berlaku untuk garis Siku-siku (Orthogonal)";
+      }
+    });
+  }
+
+  if (dom.propEdgeRadius) {
+    dom.propEdgeRadius.addEventListener("change", (e) => {
+      const val = parseInt(e.target.value, 10);
+      const edge = AppState.document.edges[AppState.ui.selectedId];
+      if (edge) {
+        saveSnapshot();
+        edge.radius = val;
+        edge.style = edge.style || {};
+        edge.style.radius = val;
+        renderAll();
+      }
+      if (AppState.defaults?.edge) {
+        AppState.defaults.edge.radius = val;
+      }
     });
   }
 
@@ -4354,6 +4391,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         const selEdge = AppState.document.edges[AppState.ui.selectedId];
         template = {
           type: selEdge.type || "step",
+          radius: selEdge.radius !== undefined ? selEdge.radius : (selEdge.style?.radius !== undefined ? selEdge.style.radius : 8),
           strokeWidth: selEdge.style?.strokeWidth !== undefined ? selEdge.style.strokeWidth : 1.5,
           dashed: selEdge.style?.dashed || "solid",
           markerStart: selEdge.style?.markerStart || "none",
@@ -4363,6 +4401,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       } else {
         template = AppState.defaults?.edge || {
           type: "step",
+          radius: 8,
           strokeWidth: 1.5,
           dashed: "solid",
           markerStart: "none",
@@ -4375,7 +4414,9 @@ window.MinimalFlow = window.MinimalFlow || {};
         const ed = AppState.document.edges[eId];
         if (ed) {
           ed.type = template.type;
+          ed.radius = template.radius;
           ed.style = ed.style || {};
+          ed.style.radius = template.radius;
           ed.style.strokeWidth = template.strokeWidth;
           ed.style.dashed = template.dashed;
           ed.style.markerStart = template.markerStart;
@@ -4401,6 +4442,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         const selEdge = AppState.document.edges[AppState.ui.selectedId];
         defaults = {
           type: selEdge.type || "step",
+          radius: selEdge.radius !== undefined ? selEdge.radius : (selEdge.style?.radius !== undefined ? selEdge.style.radius : 8),
           strokeWidth: selEdge.style?.strokeWidth !== undefined ? selEdge.style.strokeWidth : 1.5,
           dashed: selEdge.style?.dashed || "solid",
           markerStart: selEdge.style?.markerStart || "none",
@@ -4410,6 +4452,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       } else {
         defaults = AppState.defaults?.edge || {
           type: "step",
+          radius: 8,
           strokeWidth: 1.5,
           dashed: "solid",
           markerStart: "none",

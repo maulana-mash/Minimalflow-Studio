@@ -219,6 +219,68 @@ window.MinimalFlow = window.MinimalFlow || {};
     return clean;
   }
 
+  /**
+   * Menghasilkan jalur SVG dengan sudut siku membulat (rounded orthogonal corners)
+   * menggunakan Quadratic Bezier Q dengan clamping adaptif pada segmen sempit.
+   */
+  function buildRoundedOrthogonalPath(points, radius = 8) {
+    if (!points || points.length === 0) return "";
+    if (points.length <= 2 || !radius || radius <= 0) {
+      return points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(" ");
+    }
+
+    let d = `M ${points[0].x} ${points[0].y}`;
+
+    for (let i = 1; i < points.length - 1; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const next = points[i + 1];
+
+      const v1x = curr.x - prev.x;
+      const v1y = curr.y - prev.y;
+      const d1 = Math.hypot(v1x, v1y);
+
+      const v2x = next.x - curr.x;
+      const v2y = next.y - curr.y;
+      const d2 = Math.hypot(v2x, v2y);
+
+      if (d1 < 0.5 || d2 < 0.5) {
+        d += ` L ${curr.x} ${curr.y}`;
+        continue;
+      }
+
+      const u1x = v1x / d1;
+      const u1y = v1y / d1;
+      const u2x = v2x / d2;
+      const u2y = v2y / d2;
+
+      // Safe corner radius: clamp to at most half of the adjacent segments
+      const r = Math.min(radius, d1 / 2, d2 / 2);
+
+      if (r <= 0.5) {
+        d += ` L ${curr.x} ${curr.y}`;
+      } else {
+        const startX = curr.x - u1x * r;
+        const startY = curr.y - u1y * r;
+        const endX = curr.x + u2x * r;
+        const endY = curr.y + u2y * r;
+
+        const sx = Number.isInteger(startX) ? startX : Math.round(startX * 10) / 10;
+        const sy = Number.isInteger(startY) ? startY : Math.round(startY * 10) / 10;
+        const cx = Number.isInteger(curr.x) ? curr.x : Math.round(curr.x * 10) / 10;
+        const cy = Number.isInteger(curr.y) ? curr.y : Math.round(curr.y * 10) / 10;
+        const ex = Number.isInteger(endX) ? endX : Math.round(endX * 10) / 10;
+        const ey = Number.isInteger(endY) ? endY : Math.round(endY * 10) / 10;
+
+        d += ` L ${sx} ${sy} Q ${cx} ${cy}, ${ex} ${ey}`;
+      }
+    }
+
+    const last = points[points.length - 1];
+    d += ` L ${last.x} ${last.y}`;
+    return d;
+  }
+
   function calculateEdgePath(edge, nodes) {
     const sourceNode = nodes[edge.source.nodeId];
     const targetNode = nodes[edge.target.nodeId];
@@ -369,7 +431,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     const simplified = simplifyOrthogonalPoints(rawPoints);
-    const pathD = simplified.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(" ");
+    const radius = typeof edge.radius === "number" ? edge.radius : (typeof edge.style?.radius === "number" ? edge.style.radius : 8);
+    const pathD = buildRoundedOrthogonalPath(simplified, radius);
 
     return { pathD, handlePos };
   }
@@ -448,9 +511,11 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   function createEdgeData(sourceNodeId, sourcePin, targetNodeId, targetPin, isDark = false, defaults = {}) {
     const edgeId = "edge_" + Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
+    const defaultRadius = defaults.radius !== undefined ? defaults.radius : 8;
     return {
       id: edgeId,
       type: defaults.type || "step",
+      radius: defaultRadius,
       source: { nodeId: sourceNodeId, pin: sourcePin },
       target: { nodeId: targetNodeId, pin: targetPin },
       handleOffset: { dx: 0, dy: 0 },
@@ -459,7 +524,8 @@ window.MinimalFlow = window.MinimalFlow || {};
         strokeWidth: defaults.strokeWidth !== undefined ? defaults.strokeWidth : 1.5,
         dashed: defaults.dashed || "solid",
         markerStart: defaults.markerStart || "none",
-        markerEnd: defaults.markerEnd !== undefined ? defaults.markerEnd : "arrow"
+        markerEnd: defaults.markerEnd !== undefined ? defaults.markerEnd : "arrow",
+        radius: defaultRadius
       }
     };
   }
@@ -1155,6 +1221,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     getNodePinCoordinates,
     getNodePinNormal,
     simplifyOrthogonalPoints,
+    buildRoundedOrthogonalPath,
     calculateEdgePath,
     isDarkColor,
     getEdgeStrokeColor,
