@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://minimalflow-studio.vercel.app/">
-    <img src="assets/branding/logo_black_transparent.png" alt="MinimalFlow Studio Logo" width="160" height="160" />
+    <img src="assets/branding/logo_badge_white.png" alt="MinimalFlow Studio Logo" width="160" height="160" />
   </a>
 </p>
 
