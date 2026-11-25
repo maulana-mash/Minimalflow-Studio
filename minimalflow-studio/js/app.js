@@ -3286,17 +3286,57 @@ window.MinimalFlow = window.MinimalFlow || {};
     return nodeIds.map(id => AppState.document.nodes[id]).filter(n => n && !n.locked);
   }
 
-  // Node Property Bar Controls (Tersinkronisasi ke seluruh chart yang dipilih)
-  document.getElementById("prop-font-family").addEventListener("change", (e) => {
-    const nodes = getSelectedNodesList().filter(n => n.text);
-    if (nodes.length > 0) {
-      saveSnapshot();
-      nodes.forEach(n => { n.text.fontFamily = e.target.value; });
-      renderAll();
-    }
-  });
+  // Node Property Bar Controls (Mendukung per-kata / per-paragraf saat edit teks, atau keseluruhan chart saat di luar edit)
+  const propFontFamilyEl = document.getElementById("prop-font-family");
+  if (propFontFamilyEl) {
+    propFontFamilyEl.addEventListener("mousedown", () => {
+      if (document.querySelector(".node-seamless-editor") && window.MinimalFlow?.TextEditor?.holdFocusForToolbar) {
+        window.MinimalFlow.TextEditor.holdFocusForToolbar(true);
+      }
+    });
+    propFontFamilyEl.addEventListener("blur", () => {
+      if (window.MinimalFlow?.TextEditor?.holdFocusForToolbar) {
+        setTimeout(() => window.MinimalFlow.TextEditor.holdFocusForToolbar(false), 60);
+      }
+    });
+    propFontFamilyEl.addEventListener("change", (e) => {
+      const val = e.target.value;
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      const TE = window.MinimalFlow && window.MinimalFlow.TextEditor;
+      if (activeEditor && TE && TE.applyInlineOrParagraphStyle) {
+        const nodeId = activeEditor.dataset.nodeId;
+        const activeNode = nodeId ? AppState.document.nodes[nodeId] : AppState.document.nodes[AppState.ui.selectedId];
+        if (activeNode) {
+          TE.applyInlineOrParagraphStyle(activeEditor, activeNode, "fontFamily", val);
+          TE.holdFocusForToolbar(false);
+          syncTextFormatToolbar(activeEditor, activeNode);
+          return;
+        }
+      }
+      const nodes = getSelectedNodesList().filter(n => n.text);
+      if (nodes.length > 0) {
+        saveSnapshot();
+        nodes.forEach(n => { n.text.fontFamily = val; });
+        renderAll();
+      }
+    });
+  }
 
   function updateBatchFontSize(val) {
+    const activeEditor = document.querySelector(".node-seamless-editor");
+    const TE = window.MinimalFlow && window.MinimalFlow.TextEditor;
+    if (activeEditor && TE && TE.applyInlineOrParagraphStyle) {
+      const nodeId = activeEditor.dataset.nodeId;
+      const activeNode = nodeId ? AppState.document.nodes[nodeId] : AppState.document.nodes[AppState.ui.selectedId];
+      if (activeNode) {
+        TE.applyInlineOrParagraphStyle(activeEditor, activeNode, "fontSize", val);
+        if (dom.propFontSizeNum) dom.propFontSizeNum.value = val;
+        if (dom.propFontSize) dom.propFontSize.value = String(val);
+        TE.holdFocusForToolbar(false);
+        syncTextFormatToolbar(activeEditor, activeNode);
+        return;
+      }
+    }
     const nodes = getSelectedNodesList().filter(n => n.text);
     if (nodes.length > 0) {
       saveSnapshot();
@@ -3307,19 +3347,39 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
   }
 
+  dom.propFontSize.addEventListener("mousedown", () => {
+    if (document.querySelector(".node-seamless-editor") && window.MinimalFlow?.TextEditor?.holdFocusForToolbar) {
+      window.MinimalFlow.TextEditor.holdFocusForToolbar(true);
+    }
+  });
+  dom.propFontSize.addEventListener("blur", () => {
+    if (window.MinimalFlow?.TextEditor?.holdFocusForToolbar) {
+      setTimeout(() => window.MinimalFlow.TextEditor.holdFocusForToolbar(false), 60);
+    }
+  });
   dom.propFontSize.addEventListener("change", (e) => {
-    const val = parseInt(e.target.value) || 14;
+    const val = parseFloat(e.target.value) || 14;
     updateBatchFontSize(val);
   });
 
   if (dom.propFontSizeNum) {
+    dom.propFontSizeNum.addEventListener("mousedown", () => {
+      if (document.querySelector(".node-seamless-editor") && window.MinimalFlow?.TextEditor?.holdFocusForToolbar) {
+        window.MinimalFlow.TextEditor.holdFocusForToolbar(true);
+      }
+    });
+    dom.propFontSizeNum.addEventListener("blur", () => {
+      if (window.MinimalFlow?.TextEditor?.holdFocusForToolbar) {
+        setTimeout(() => window.MinimalFlow.TextEditor.holdFocusForToolbar(false), 60);
+      }
+    });
     dom.propFontSizeNum.addEventListener("change", (e) => {
-      const val = Math.max(8, Math.min(96, parseInt(e.target.value) || 14));
+      const val = Math.max(8, Math.min(96, parseFloat(e.target.value) || 14));
       updateBatchFontSize(val);
     });
     dom.propFontSizeNum.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        const val = Math.max(8, Math.min(96, parseInt(e.target.value) || 14));
+        const val = Math.max(8, Math.min(96, parseFloat(e.target.value) || 14));
         updateBatchFontSize(val);
         dom.propFontSizeNum.blur();
       }
@@ -3340,6 +3400,21 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (dom.btnTextBold) dom.btnTextBold.classList.toggle("active", !!st.bold);
     if (dom.btnTextItalic) dom.btnTextItalic.classList.toggle("active", !!st.italic);
     if (dom.btnTextUnderline) dom.btnTextUnderline.classList.toggle("active", !!st.underline);
+
+    if (st.fontSize) {
+      if (dom.propFontSizeNum && document.activeElement !== dom.propFontSizeNum) {
+        dom.propFontSizeNum.value = st.fontSize;
+      }
+      if (dom.propFontSize && document.activeElement !== dom.propFontSize) {
+        dom.propFontSize.value = String(st.fontSize);
+      }
+    }
+    if (st.fontFamily && propFontFamilyEl && document.activeElement !== propFontFamilyEl) {
+      propFontFamilyEl.value = st.fontFamily;
+    }
+    if (st.color && dom.textColorBar) {
+      dom.textColorBar.style.background = st.color;
+    }
 
     if (dom.btnTextNumbering) {
       dom.btnTextNumbering.classList.toggle("active", !!st.list);
@@ -3856,6 +3931,11 @@ window.MinimalFlow = window.MinimalFlow || {};
       nodes.forEach(n => { n.style.stroke = color; });
       if (dom.strokeColorBar) dom.strokeColorBar.style.background = color === "transparent" ? "none" : color;
     } else if (activeWordColorTarget === "textColor") {
+      // Jika sedang dalam mode edit teks, jangan timpa seluruh kotak atau renderAll() agar editor & seleksi tetap hidup!
+      if (document.querySelector(".node-seamless-editor")) {
+        if (dom.textColorBar) dom.textColorBar.style.background = color === "transparent" ? "#000000" : color;
+        return;
+      }
       nodes.forEach(n => { if (n.text) n.text.color = color; });
       if (dom.textColorBar) dom.textColorBar.style.background = color === "transparent" ? "#000000" : color;
     }
@@ -4025,6 +4105,24 @@ window.MinimalFlow = window.MinimalFlow || {};
       return;
     }
 
+    if (activeWordColorTarget === "textColor") {
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      const TE = window.MinimalFlow && window.MinimalFlow.TextEditor;
+      if (activeEditor && TE && TE.applyInlineOrParagraphStyle) {
+        const nodeId = activeEditor.dataset.nodeId;
+        const activeNode = nodeId ? AppState.document.nodes[nodeId] : nodes[0];
+        if (activeNode) {
+          const resolvedColor = color === "transparent" ? null : color;
+          TE.applyInlineOrParagraphStyle(activeEditor, activeNode, "color", resolvedColor);
+          if (dom.textColorBar) dom.textColorBar.style.background = resolvedColor || "#000000";
+          TE.holdFocusForToolbar(false);
+          closeWordColorPicker();
+          showToast(`Warna teks pada bagian terpilih diubah`);
+          return;
+        }
+      }
+    }
+
     saveSnapshot();
 
     if (activeWordColorTarget === "fill") {
@@ -4048,7 +4146,13 @@ window.MinimalFlow = window.MinimalFlow || {};
   initWordColorPalette();
 
   if (dom.wordColorPickerPopover) {
+    dom.wordColorPickerPopover.addEventListener("mousedown", (e) => {
+      if (document.querySelector(".node-seamless-editor")) {
+        e.preventDefault();
+      }
+    });
     dom.wordColorPickerPopover.addEventListener("mouseleave", () => {
+      if (activeWordColorTarget === "textColor" && document.querySelector(".node-seamless-editor")) return;
       revertWordColorPreview();
     });
   }
@@ -4068,6 +4172,11 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   if (dom.btnTextColorPicker) {
+    dom.btnTextColorPicker.addEventListener("mousedown", (e) => {
+      if (document.querySelector(".node-seamless-editor")) {
+        e.preventDefault();
+      }
+    });
     dom.btnTextColorPicker.addEventListener("click", (e) => {
       e.stopPropagation();
       openWordColorPicker("textColor", dom.btnTextColorPicker);
@@ -4112,10 +4221,18 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   if (dom.btnWordMoreColors && dom.wordHiddenNativeColor) {
     dom.btnWordMoreColors.addEventListener("click", () => {
+      if (document.querySelector(".node-seamless-editor") && window.MinimalFlow?.TextEditor?.holdFocusForToolbar) {
+        window.MinimalFlow.TextEditor.holdFocusForToolbar(true);
+      }
       dom.wordHiddenNativeColor.click();
     });
     dom.wordHiddenNativeColor.addEventListener("input", (e) => {
       applyWordChosenColor(e.target.value);
+    });
+    dom.wordHiddenNativeColor.addEventListener("change", () => {
+      if (window.MinimalFlow?.TextEditor?.holdFocusForToolbar) {
+        setTimeout(() => window.MinimalFlow.TextEditor.holdFocusForToolbar(false), 60);
+      }
     });
   }
 

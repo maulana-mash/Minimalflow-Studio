@@ -1,8 +1,10 @@
 /**
- * MinimalFlow Studio — Live Inline Text Editor Engine
- * Mengelola rendering tata letak teks SVG (auto-wrap, true word-spacing justify,
- * per-paragraph alignment, Word-style hanging-indent numbering) dan editor teks
- * contentEditable yang MENYATU RAPI KE DALAM BOX CHART.
+ * MinimalFlow Studio — Live Inline Text Editor Engine (v3 — Word-Grade Rich Paragraph & Inline Engine)
+ * Mendukung:
+ * - True word-spacing Justify (hanya spasi antar-kata melebar, baris terakhir paragraf tidak direnggangkan)
+ * - Pengeditan per paragraf & per seleksi kata (Align, Numbering, Bold, Italic, Underline, Font Family, Font Size, Color)
+ * - Penomoran hanging-indent ala Microsoft Word (1., 1), a., a), A., A)) yang menghormati penggalan baris kosong
+ * - Zero-blur toolbar interaction untuk dropdown Font Family, Font Size, Color Picker, dan Numbering
  */
 
 window.MinimalFlow = window.MinimalFlow || {};
@@ -79,45 +81,109 @@ window.MinimalFlow = window.MinimalFlow || {};
     return decodeHtmlEntities(s).trim();
   }
 
+  function normalizeColorValue(val) {
+    if (!val) return null;
+    const v = String(val).trim();
+    if (!v || v === "inherit" || v === "initial" || v === "transparent" || v === "currentColor") return null;
+    // Convert rgb(r, g, b) to #rrggbb for clean serialization
+    const rgbM = v.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (rgbM) {
+      const hex = [rgbM[1], rgbM[2], rgbM[3]].map(n => Math.max(0, Math.min(255, parseInt(n, 10))).toString(16).padStart(2, "0")).join("");
+      return `#${hex}`;
+    }
+    return v;
+  }
+
+  function normalizeFontSizeValue(val) {
+    if (val === undefined || val === null || val === "") return null;
+    const num = parseFloat(String(val));
+    if (!isFinite(num) || num < 6 || num > 144) return null;
+    return Math.round(num * 10) / 10;
+  }
+
+  function normalizeFontFamilyValue(val) {
+    if (!val) return null;
+    const cleaned = decodeHtmlEntities(String(val)).replace(/"/g, "'").trim();
+    if (!cleaned || cleaned === "inherit" || cleaned === "initial") return null;
+    return cleaned;
+  }
+
+  function extractInlineStyleProps(tagAttrs) {
+    const out = { bold: false, italic: false, underline: false, color: null, fontSize: null, fontFamily: null };
+    if (!tagAttrs) return out;
+
+    const styleM = tagAttrs.match(/style\s*=\s*"([^"]*)"/i) || tagAttrs.match(/style\s*=\s*'([^']*)'/i);
+    if (styleM) {
+      const style = styleM[1];
+      if (/font-weight\s*:\s*(?:bold|[6789]00)/i.test(style)) out.bold = true;
+      if (/font-style\s*:\s*italic/i.test(style)) out.italic = true;
+      if (/text-decoration[^;]*underline/i.test(style)) out.underline = true;
+
+      const colM = style.match(/(?:^|;)\s*color\s*:\s*([^;]+)/i);
+      if (colM) out.color = normalizeColorValue(colM[1]);
+
+      const szM = style.match(/font-size\s*:\s*([0-9.]+)\s*px/i);
+      if (szM) out.fontSize = normalizeFontSizeValue(szM[1]);
+
+      const ffM = style.match(/font-family\s*:\s*([^;]+)/i);
+      if (ffM) out.fontFamily = normalizeFontFamilyValue(ffM[1]);
+    }
+
+    const dcM = tagAttrs.match(/data-color\s*=\s*"([^"]+)"/i);
+    if (dcM) out.color = normalizeColorValue(dcM[1]);
+    const dsM = tagAttrs.match(/data-size\s*=\s*"([^"]+)"/i);
+    if (dsM) out.fontSize = normalizeFontSizeValue(dsM[1]);
+    const dfM = tagAttrs.match(/data-font\s*=\s*"([^"]+)"/i);
+    if (dfM) out.fontFamily = normalizeFontFamilyValue(dfM[1]);
+
+    return out;
+  }
+
+  function buildSpanStyleAttr(color, fontSize, fontFamily) {
+    const parts = [];
+    if (color) parts.push(`color:${color}`);
+    if (fontSize) parts.push(`font-size:${fontSize}px`);
+    if (fontFamily) parts.push(`font-family:${fontFamily}`);
+    return parts.join(";");
+  }
+
   function sanitizeHtmlFormatting(html) {
     if (!html) return "";
     let s = String(html);
 
-    // 1. Convert spans with explicit bold/italic/underline styles to <b>, <i>, <u>
-    s = s.replace(/<span\b[^>]*style="([^"]*)"[^>]*>([\s\S]*?)<\/span>/gi, (m, style, inner) => {
+    // 1. Normalize <span ...> — pertahankan hanya color, font-size, font-family; konversi bold/italic/underline ke <b>/<i>/<u>
+    s = s.replace(/<span\b([^>]*)>([\s\S]*?)<\/span>/gi, (m, attrs, inner) => {
+      const p = extractInlineStyleProps(attrs);
       let res = inner;
-      if (/text-decoration[^;]*underline/i.test(style)) res = `<u>${res}</u>`;
-      if (/font-style:\s*italic/i.test(style)) res = `<i>${res}</i>`;
-      if (/font-weight:\s*(?:bold|[6789]00)/i.test(style)) res = `<b>${res}</b>`;
+      const keepStyle = buildSpanStyleAttr(p.color, p.fontSize, p.fontFamily);
+      if (keepStyle) {
+        res = `<span style="${escapeAttr(keepStyle)}">${res}</span>`;
+      }
+      if (p.underline) res = `<u>${res}</u>`;
+      if (p.italic) res = `<i>${res}</i>`;
+      if (p.bold) res = `<b>${res}</b>`;
       return res;
     });
 
-    // 2. Unwrap any remaining spans (loop up to 5 times for nested spans)
-    for (let i = 0; i < 5; i++) {
-      const next = s.replace(/<span\b[^>]*>([\s\S]*?)<\/span>/gi, "$1");
-      if (next === s) break;
-      s = next;
-    }
-
-    // 3. Normalize strong/em/ins to <b>/<i>/<u>
+    // 2. Normalize strong/em/ins to <b>/<i>/<u>
     s = s.replace(/<strong\b[^>]*>/gi, "<b>").replace(/<\/strong>/gi, "</b>");
     s = s.replace(/<em\b[^>]*>/gi, "<i>").replace(/<\/em>/gi, "</i>");
     s = s.replace(/<ins\b[^>]*>/gi, "<u>").replace(/<\/ins>/gi, "</u>");
 
-    // 4. Unwrap other non-essential formatting tags (keep p, b, i, u, br)
+    // 3. Unwrap other non-essential formatting tags (keep p, b, i, u, span, br)
     for (let i = 0; i < 3; i++) {
       const next = s.replace(/<(?:font|mark|small|del|s|strike|a)\b[^>]*>([\s\S]*?)<\/(?:font|mark|small|del|s|strike|a)>/gi, "$1");
       if (next === s) break;
       s = next;
     }
 
-    // 5. Remove orphan non-essential tags
-    s = s.replace(/<\/?(?:span|font|mark|small|del|s|strike|a)\b[^>]*>/gi, "");
+    s = s.replace(/<\/?(?:font|mark|small|del|s|strike|a)\b[^>]*>/gi, "");
 
-    // 6. Clean empty b/i/u
+    // 4. Clean empty tags
     s = s.replace(/<b>\s*<\/b>/gi, "");
     s = s.replace(/<i>\s*<\/i>/gi, "");
     s = s.replace(/<u>\s*<\/u>/gi, "");
+    s = s.replace(/<span\b[^>]*>\s*<\/span>/gi, "");
 
     return s;
   }
@@ -126,23 +192,17 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (!str) return "";
     let s = String(str);
     s = sanitizeHtmlFormatting(s);
-    // Convert ***text*** -> <b><i>text</i></b>
     s = s.replace(/\*\*\*([^*]+)\*\*\*/g, "<b><i>$1</i></b>");
-    // Convert **text** -> <b>text</b>
     s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
-    // Convert *text* -> <i>text</i>
     s = s.replace(/\*([^*]+)\*/g, "<i>$1</i>");
     return s;
   }
 
-  // Strip leading manual list markers like "1. ", "2) ", "a. ", "A) " (preserving inner tags)
   function stripManualListPrefix(html) {
     if (!html) return "";
-    // Match optional opening tags at start, followed by marker + space
-    return String(html).replace(/^((?:<(?:b|i|u)>)*)\s*(?:\d+[.)]|[a-zA-Z][.)])\s+/, "$1");
+    return String(html).replace(/^((?:<(?:b|i|u|span\b[^>]*)>)*)\s*(?:\d+[.)]|[a-zA-Z][.)])\s+/, "$1");
   }
 
-  // Detect if raw paragraph text starts with a manual numbering prefix (returns list type or null)
   function detectManualListPrefix(plainText) {
     if (!plainText) return null;
     const m = String(plainText).match(/^\s*(\d+[.)]|[a-z][.)]|[A-Z][.)])\s+/);
@@ -157,33 +217,65 @@ window.MinimalFlow = window.MinimalFlow || {};
     return null;
   }
 
-  // Parse inline HTML tags (<b>, <i>, <u>) into flat coalesced styled runs (ZERO leaked tags)
-  function parseInlineSpans(str, defaultBold = false, defaultItalic = false, defaultUnderline = false) {
+  /**
+   * Stateful inline tokenizer: mendukung <b>, <i>, <u>, dan <span style="color;font-size;font-family">
+   * secara bertingkat dan 100% bebas tag bocor!
+   */
+  function parseInlineSpans(str, defaultBold = false, defaultItalic = false, defaultUnderline = false, defaultColor = null, defaultFontSize = null, defaultFontFamily = null) {
     if (!str) return [];
-    let s = String(str);
-    s = cleanMarkdownToHtml(s);
+    let s = cleanMarkdownToHtml(String(str));
 
-    const tagRegex = /<\/?(b|strong|i|em|u)\b[^>]*>/gi;
+    const tagRegex = /<\/?(b|strong|i|em|u|span)\b([^>]*)>/gi;
     const tokens = [];
     let boldDepth = 0;
     let italicDepth = 0;
     let underlineDepth = 0;
+    const spanStack = [];
     let lastIndex = 0;
     let match;
+
+    function getActiveSpanStyles() {
+      let color = defaultColor;
+      let fontSize = defaultFontSize;
+      let fontFamily = defaultFontFamily;
+      let sBold = false;
+      let sItalic = false;
+      let sUnderline = false;
+      for (const st of spanStack) {
+        if (st.color) color = st.color;
+        if (st.fontSize) fontSize = st.fontSize;
+        if (st.fontFamily) fontFamily = st.fontFamily;
+        if (st.bold) sBold = true;
+        if (st.italic) sItalic = true;
+        if (st.underline) sUnderline = true;
+      }
+      return { color, fontSize, fontFamily, sBold, sItalic, sUnderline };
+    }
 
     function emitText(rawChunk) {
       if (!rawChunk) return;
       const stripped = rawChunk.replace(/<\/?[a-zA-Z][^>]*>/g, "");
       const cleanText = decodeHtmlEntities(stripped);
       if (!cleanText) return;
-      const isBold = defaultBold || boldDepth > 0;
-      const isItalic = defaultItalic || italicDepth > 0;
-      const isUnderline = defaultUnderline || underlineDepth > 0;
+      const activeSpan = getActiveSpanStyles();
+      const isBold = defaultBold || boldDepth > 0 || activeSpan.sBold;
+      const isItalic = defaultItalic || italicDepth > 0 || activeSpan.sItalic;
+      const isUnderline = defaultUnderline || underlineDepth > 0 || activeSpan.sUnderline;
+      const color = activeSpan.color || null;
+      const fontSize = activeSpan.fontSize || null;
+      const fontFamily = activeSpan.fontFamily || null;
+
       const prev = tokens[tokens.length - 1];
-      if (prev && prev.bold === isBold && prev.italic === isItalic && prev.underline === isUnderline) {
+      if (prev &&
+          prev.bold === isBold &&
+          prev.italic === isItalic &&
+          prev.underline === isUnderline &&
+          prev.color === color &&
+          prev.fontSize === fontSize &&
+          prev.fontFamily === fontFamily) {
         prev.text += cleanText;
       } else {
-        tokens.push({ text: cleanText, bold: isBold, italic: isItalic, underline: isUnderline });
+        tokens.push({ text: cleanText, bold: isBold, italic: isItalic, underline: isUnderline, color, fontSize, fontFamily });
       }
     }
 
@@ -193,13 +285,21 @@ window.MinimalFlow = window.MinimalFlow || {};
       }
       const fullTag = match[0];
       const tagName = match[1].toLowerCase();
+      const attrs = match[2] || "";
       const isClosing = fullTag.charAt(1) === "/";
+
       if (tagName === "b" || tagName === "strong") {
         boldDepth = isClosing ? Math.max(0, boldDepth - 1) : boldDepth + 1;
       } else if (tagName === "i" || tagName === "em") {
         italicDepth = isClosing ? Math.max(0, italicDepth - 1) : italicDepth + 1;
       } else if (tagName === "u") {
         underlineDepth = isClosing ? Math.max(0, underlineDepth - 1) : underlineDepth + 1;
+      } else if (tagName === "span") {
+        if (isClosing) {
+          if (spanStack.length > 0) spanStack.pop();
+        } else {
+          spanStack.push(extractInlineStyleProps(attrs));
+        }
       }
       lastIndex = tagRegex.lastIndex;
     }
@@ -215,8 +315,10 @@ window.MinimalFlow = window.MinimalFlow || {};
     return runs.map(run => {
       if (!run.text) return "";
       const safe = escapeHtmlText(run.text);
-      if (!run.text.trim()) return safe;
+      const spanStyle = buildSpanStyleAttr(run.color, run.fontSize, run.fontFamily);
+      if (!run.text.trim() && !spanStyle) return safe;
       let out = safe;
+      if (spanStyle) out = `<span style="${escapeAttr(spanStyle)}">${out}</span>`;
       if (run.underline) out = `<u>${out}</u>`;
       if (run.italic) out = `<i>${out}</i>`;
       if (run.bold) out = `<b>${out}</b>`;
@@ -226,33 +328,31 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   function normalizeInlineHtml(rawInline) {
     if (!rawInline) return "";
-    const runs = parseInlineSpans(rawInline, false, false, false);
+    const runs = parseInlineSpans(rawInline, false, false, false, null, null, null);
     return runsToInlineHtml(runs);
   }
 
   /**
-   * Parse node.text.content (baik plain text lama dengan \n maupun blok <p data-align="..." data-list="...">)
-   * menjadi daftar paragraf terstruktur lengkap dengan counter penomoran.
+   * Parse node.text.content menjadi daftar paragraf terstruktur.
+   * ATURAN EMAS PENGGALAN SPASI:
+   * - Baris kosong ("" / whitespace only) TIDAK PERNAH diberi nomor dan SELALU me-reset counter penomoran!
    */
   function parseParagraphs(rawContent, defaultAlign = "center") {
     const str = String(rawContent || "");
     const rawParas = [];
 
     if (/<p\b[^>]*>/i.test(str)) {
-      // Ekstrak blok <p ...>...</p> serta teks di luar <p> (jika campuran)
       const blockRegex = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
       let lastIdx = 0;
       let m;
 
       function pushPlainSegment(seg) {
-        const cleaned = seg.replace(/^\n+|\n+$/g, "");
-        if (!cleaned && rawParas.length > 0) return;
         const lines = seg.split("\n");
         for (let i = 0; i < lines.length; i++) {
           const ln = lines[i];
           if (i === 0 && ln === "" && rawParas.length > 0) continue;
           if (i === lines.length - 1 && ln === "" && lastIdx < str.length) continue;
-          rawParas.push({ html: normalizeInlineHtml(ln), align: null, list: null });
+          rawParas.push({ html: normalizeInlineHtml(ln), align: null, list: null, fontSize: null, fontFamily: null, color: null });
         }
       }
 
@@ -267,16 +367,22 @@ window.MinimalFlow = window.MinimalFlow || {};
         const inner = m[2] || "";
         const alignM = attrs.match(/data-align\s*=\s*"([^"]+)"/i);
         const listM = attrs.match(/data-list\s*=\s*"([^"]+)"/i);
+        const pStyles = extractInlineStyleProps(attrs);
+
         const align = alignM && VALID_ALIGNS.has(alignM[1].toLowerCase()) ? alignM[1].toLowerCase() : null;
         const list = listM && VALID_LISTS.has(listM[1]) ? listM[1] : null;
 
-        // Jika di dalam <p> ada <br> atau \n, pisahkan jadi beberapa paragraf
         const subLines = inner.replace(/<br\s*\/?>/gi, "\n").split("\n");
-        subLines.forEach((sub, sIdx) => {
+        subLines.forEach(sub => {
+          const normHtml = normalizeInlineHtml(sub);
+          const isBlank = getPlainText(normHtml).length === 0;
           rawParas.push({
-            html: normalizeInlineHtml(sub),
+            html: normHtml,
             align,
-            list: sIdx === 0 ? list : list
+            list: isBlank ? null : list, // Baris kosong TIDAK pernah memiliki nomor!
+            fontSize: pStyles.fontSize,
+            fontFamily: pStyles.fontFamily,
+            color: pStyles.color
           });
         });
 
@@ -290,8 +396,6 @@ window.MinimalFlow = window.MinimalFlow || {};
         }
       }
     } else {
-      // Legacy plain / markdown / inline HTML text separated by \n
-      // Balance any tags crossing newlines via DOM serializer when browser is available
       let normalized = str;
       if (/<\/?(?:b|strong|i|em|u|span|div)\b/i.test(str) && typeof document !== "undefined") {
         normalized = serializeEditorDOM(cleanMarkdownToHtml(str));
@@ -304,21 +408,25 @@ window.MinimalFlow = window.MinimalFlow || {};
         rawParas.push({
           html: normalizeInlineHtml(ln),
           align: null,
-          list: null
+          list: null,
+          fontSize: null,
+          fontFamily: null,
+          color: null
         });
       }
     }
 
     if (rawParas.length === 0) {
-      rawParas.push({ html: "", align: null, list: null });
+      rawParas.push({ html: "", align: null, list: null, fontSize: null, fontFamily: null, color: null });
     }
 
-    // Hitung counter penomoran berurutan untuk setiap grup list yang bersambung
+    // Hitung counter penomoran: baris kosong atau tanpa list SELALU me-reset urutan!
     let listCounter = 0;
     let prevListType = null;
     for (let i = 0; i < rawParas.length; i++) {
       const p = rawParas[i];
-      if (p.list) {
+      const isBlank = getPlainText(p.html).length === 0;
+      if (p.list && !isBlank) {
         if (p.list === prevListType) {
           listCounter += 1;
         } else {
@@ -328,6 +436,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         p.listIndex = listCounter;
         p.marker = formatListMarker(p.list, listCounter);
       } else {
+        if (isBlank) p.list = null;
         listCounter = 0;
         prevListType = null;
         p.listIndex = 0;
@@ -339,12 +448,13 @@ window.MinimalFlow = window.MinimalFlow || {};
     return rawParas;
   }
 
-  /**
-   * Serialisasi daftar paragraf ke string node.text.content yang bersih & backwards-compatible.
-   */
   function serializeParagraphs(paragraphs) {
     if (!paragraphs || paragraphs.length === 0) return "";
-    const hasBlockMetadata = paragraphs.some(p => (p.align && VALID_ALIGNS.has(p.align)) || (p.list && VALID_LISTS.has(p.list)));
+    const hasBlockMetadata = paragraphs.some(p =>
+      (p.align && VALID_ALIGNS.has(p.align)) ||
+      (p.list && VALID_LISTS.has(p.list)) ||
+      p.fontSize || p.fontFamily || p.color
+    );
 
     if (!hasBlockMetadata) {
       return paragraphs.map(p => p.html || "").join("\n");
@@ -352,12 +462,12 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     return paragraphs.map(p => {
       const attrs = [];
-      if (p.align && VALID_ALIGNS.has(p.align)) {
-        attrs.push(`data-align="${p.align}"`);
-      }
-      if (p.list && VALID_LISTS.has(p.list)) {
-        attrs.push(`data-list="${escapeAttr(p.list)}"`);
-      }
+      const isBlank = getPlainText(p.html || "").length === 0;
+      if (p.align && VALID_ALIGNS.has(p.align)) attrs.push(`data-align="${p.align}"`);
+      if (p.list && VALID_LISTS.has(p.list) && !isBlank) attrs.push(`data-list="${escapeAttr(p.list)}"`);
+      if (p.fontSize) attrs.push(`data-size="${p.fontSize}"`);
+      if (p.fontFamily) attrs.push(`data-font="${escapeAttr(p.fontFamily)}"`);
+      if (p.color) attrs.push(`data-color="${escapeAttr(p.color)}"`);
       const attrStr = attrs.length > 0 ? " " + attrs.join(" ") : "";
       return `<p${attrStr}>${p.html || ""}</p>`;
     }).join("\n");
@@ -395,71 +505,99 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     const paragraphs = [];
     let currentRuns = [];
-    let currentAlign = null;
-    let currentList = null;
+    let curMeta = { align: null, list: null, fontSize: null, fontFamily: null, color: null };
     let hasOpenBlock = false;
 
-    function pushRun(str, bold, italic, underline) {
+    function pushRun(str, st) {
       if (!str) return;
       const last = currentRuns[currentRuns.length - 1];
-      if (last && last.bold === bold && last.italic === italic && last.underline === underline) {
+      if (last &&
+          last.bold === st.bold &&
+          last.italic === st.italic &&
+          last.underline === st.underline &&
+          last.color === st.color &&
+          last.fontSize === st.fontSize &&
+          last.fontFamily === st.fontFamily) {
         last.text += str;
       } else {
-        currentRuns.push({ text: str, bold, italic, underline });
+        currentRuns.push({
+          text: str,
+          bold: st.bold,
+          italic: st.italic,
+          underline: st.underline,
+          color: st.color,
+          fontSize: st.fontSize,
+          fontFamily: st.fontFamily
+        });
       }
     }
 
     function flushParagraph() {
       const lineHtml = runsToInlineHtml(currentRuns);
+      const isBlank = getPlainText(lineHtml).length === 0;
       paragraphs.push({
         html: lineHtml,
-        align: currentAlign,
-        list: currentList
+        align: curMeta.align,
+        list: isBlank ? null : curMeta.list,
+        fontSize: curMeta.fontSize,
+        fontFamily: curMeta.fontFamily,
+        color: curMeta.color
       });
       currentRuns = [];
-      currentAlign = null;
-      currentList = null;
+      curMeta = { align: null, list: null, fontSize: null, fontFamily: null, color: null };
       hasOpenBlock = false;
     }
 
-    function extractBlockMeta(blockEl, inheritedAlign, inheritedList) {
-      let align = inheritedAlign;
-      let list = inheritedList;
+    function extractBlockMeta(blockEl, inherited) {
+      const meta = {
+        align: inherited.align,
+        list: inherited.list,
+        fontSize: inherited.fontSize,
+        fontFamily: inherited.fontFamily,
+        color: inherited.color
+      };
       if (blockEl.getAttribute) {
         const da = blockEl.getAttribute("data-align");
-        if (da && VALID_ALIGNS.has(da.toLowerCase())) {
-          align = da.toLowerCase();
-        } else if (blockEl.style && blockEl.style.textAlign && VALID_ALIGNS.has(blockEl.style.textAlign.toLowerCase())) {
-          align = blockEl.style.textAlign.toLowerCase();
+        if (da && VALID_ALIGNS.has(da.toLowerCase())) meta.align = da.toLowerCase();
+        else if (blockEl.style && blockEl.style.textAlign && VALID_ALIGNS.has(blockEl.style.textAlign.toLowerCase())) {
+          meta.align = blockEl.style.textAlign.toLowerCase();
         }
         const dl = blockEl.getAttribute("data-list");
-        if (dl && VALID_LISTS.has(dl)) {
-          list = dl;
-        }
+        if (dl && VALID_LISTS.has(dl)) meta.list = dl;
+
+        const ds = blockEl.getAttribute("data-size");
+        if (ds) meta.fontSize = normalizeFontSizeValue(ds);
+        const df = blockEl.getAttribute("data-font");
+        if (df) meta.fontFamily = normalizeFontFamilyValue(df);
+        const dc = blockEl.getAttribute("data-color");
+        if (dc) meta.color = normalizeColorValue(dc);
       }
-      return { align, list };
+      return meta;
     }
 
-    function walk(node, isBold = false, isItalic = false, isUnderline = false, blockAlign = null, blockList = null) {
+    function walk(node, st, blockMeta) {
       for (let child = node.firstChild; child; child = child.nextSibling) {
         if (isBlockElement(child)) {
           if (hasOpenBlock || currentRuns.length > 0) {
             flushParagraph();
           }
-          const meta = extractBlockMeta(child, blockAlign, blockList);
-          currentAlign = meta.align;
-          currentList = meta.list;
+          const meta = extractBlockMeta(child, blockMeta);
+          curMeta = { ...meta };
           hasOpenBlock = true;
           const styleAttr = (child.getAttribute && child.getAttribute("style")) || "";
-          const bBold = isBold || /font-weight:\s*(?:bold|[6789]00)/i.test(styleAttr);
-          const bItalic = isItalic || /font-style:\s*italic/i.test(styleAttr);
-          const bUnderline = isUnderline || /text-decoration[^;]*underline/i.test(styleAttr);
-          walk(child, bBold, bItalic, bUnderline, meta.align, meta.list);
+          const nextSt = {
+            bold: st.bold || /font-weight:\s*(?:bold|[6789]00)/i.test(styleAttr),
+            italic: st.italic || /font-style:\s*italic/i.test(styleAttr),
+            underline: st.underline || /text-decoration[^;]*underline/i.test(styleAttr),
+            color: st.color,
+            fontSize: st.fontSize,
+            fontFamily: st.fontFamily
+          };
+          walk(child, nextSt, meta);
           flushParagraph();
         } else if (child.nodeType === 3) {
           if (!hasOpenBlock) {
-            currentAlign = blockAlign;
-            currentList = blockList;
+            curMeta = { ...blockMeta };
             hasOpenBlock = true;
           }
           const val = child.nodeValue.replace(/\u00A0/g, " ");
@@ -468,21 +606,19 @@ window.MinimalFlow = window.MinimalFlow || {};
             for (let p = 0; p < parts.length; p++) {
               if (p > 0) {
                 flushParagraph();
-                currentAlign = blockAlign;
-                currentList = blockList;
+                curMeta = { ...blockMeta };
               }
-              pushRun(parts[p], isBold, isItalic, isUnderline);
+              pushRun(parts[p], st);
             }
             hasOpenBlock = true;
           } else {
-            pushRun(val, isBold, isItalic, isUnderline);
+            pushRun(val, st);
           }
         } else if (child.nodeType === 1) {
           const tag = child.tagName;
           if (tag === "BR") {
             if (!hasOpenBlock) {
-              currentAlign = blockAlign;
-              currentList = blockList;
+              curMeta = { ...blockMeta };
               hasOpenBlock = true;
             }
             if (!isTrailingBogusBr(child)) {
@@ -490,21 +626,28 @@ window.MinimalFlow = window.MinimalFlow || {};
             }
           } else {
             if (!hasOpenBlock) {
-              currentAlign = blockAlign;
-              currentList = blockList;
+              curMeta = { ...blockMeta };
               hasOpenBlock = true;
             }
             const styleAttr = (child.getAttribute && child.getAttribute("style")) || "";
-            const nextBold = isBold || tag === "B" || tag === "STRONG" || /font-weight:\s*(?:bold|[6789]00)/i.test(styleAttr);
-            const nextItalic = isItalic || tag === "I" || tag === "EM" || /font-style:\s*italic/i.test(styleAttr);
-            const nextUnderline = isUnderline || tag === "U" || tag === "INS" || /text-decoration[^;]*underline/i.test(styleAttr);
-            walk(child, nextBold, nextItalic, nextUnderline, blockAlign, blockList);
+            const inlineProps = extractInlineStyleProps(`style="${styleAttr}"`);
+            const nextSt = {
+              bold: st.bold || tag === "B" || tag === "STRONG" || inlineProps.bold,
+              italic: st.italic || tag === "I" || tag === "EM" || inlineProps.italic,
+              underline: st.underline || tag === "U" || tag === "INS" || inlineProps.underline,
+              color: inlineProps.color || st.color,
+              fontSize: inlineProps.fontSize || st.fontSize,
+              fontFamily: inlineProps.fontFamily || st.fontFamily
+            };
+            walk(child, nextSt, blockMeta);
           }
         }
       }
     }
 
-    walk(el, false, false, false, null, null);
+    const emptySt = { bold: false, italic: false, underline: false, color: null, fontSize: null, fontFamily: null };
+    const emptyMeta = { align: null, list: null, fontSize: null, fontFamily: null, color: null };
+    walk(el, emptySt, emptyMeta);
     if (hasOpenBlock || currentRuns.length > 0) {
       flushParagraph();
     }
@@ -541,22 +684,21 @@ window.MinimalFlow = window.MinimalFlow || {};
     return Math.max(Math.ceil(fontSize * 1.6), Math.ceil(markerW + fontSize * 0.55));
   }
 
-  /**
-   * Menghitung indentasi seragam untuk setiap blok list bersambung (seperti tab-stop Word)
-   */
-  function computeParagraphIndents(paragraphs, defaultBold, fontSize, fontFamily) {
+  function computeParagraphIndents(paragraphs, defaultBold, baseFontSize, baseFontFamily) {
     const indents = new Array(paragraphs.length).fill(0);
     let i = 0;
     while (i < paragraphs.length) {
-      if (!paragraphs[i].list) {
+      if (!paragraphs[i].list || !paragraphs[i].marker) {
         i++;
         continue;
       }
       const listType = paragraphs[i].list;
       let j = i;
       let maxIndent = 0;
-      while (j < paragraphs.length && paragraphs[j].list === listType) {
-        const ind = computeListIndentForMarker(paragraphs[j].marker, defaultBold, fontSize, fontFamily);
+      while (j < paragraphs.length && paragraphs[j].list === listType && paragraphs[j].marker) {
+        const fs = paragraphs[j].fontSize || baseFontSize;
+        const ff = paragraphs[j].fontFamily || baseFontFamily;
+        const ind = computeListIndentForMarker(paragraphs[j].marker, defaultBold, fs, ff);
         if (ind > maxIndent) maxIndent = ind;
         j++;
       }
@@ -582,49 +724,57 @@ window.MinimalFlow = window.MinimalFlow || {};
     return 0;
   }
 
-  /**
-   * Memecah deretan inline spans menjadi daftar kata (word objects).
-   * Setiap kata bisa terdiri dari 1+ part berbeda gaya (misal `(<i>Mashimurelay</i>)`),
-   * sehingga spasi tidak pernah disisipkan di tengah kata saat justified!
-   */
-  function tokenizeSpansIntoWords(spans, maxLineWidth, fontSize, fontFamily) {
+  function tokenizeSpansIntoWords(spans, maxLineWidth, fallbackFontSize, fallbackFontFamily) {
     const rawWords = [];
     let currentWordParts = [];
 
     function flushWord() {
       if (currentWordParts.length === 0) return;
-      // Hitung total lebar kata
       let totalW = 0;
+      let maxFs = fallbackFontSize;
       for (const part of currentWordParts) {
-        totalW += measureSpanWidth(part.text, part.bold, part.italic, fontSize, fontFamily);
+        const fs = part.fontSize || fallbackFontSize;
+        const ff = part.fontFamily || fallbackFontFamily;
+        if (fs > maxFs) maxFs = fs;
+        totalW += measureSpanWidth(part.text, part.bold, part.italic, fs, ff);
       }
       if (totalW <= maxLineWidth || currentWordParts.every(p => p.text.length <= 1)) {
-        rawWords.push({ parts: currentWordParts, width: totalW });
+        rawWords.push({ parts: currentWordParts, width: totalW, maxFontSize: maxFs });
       } else {
-        // Pecah kata yang lebih lebar dari kotak per karakter
         let chunkParts = [];
         let chunkW = 0;
+        let chunkMaxFs = fallbackFontSize;
         for (const part of currentWordParts) {
+          const fs = part.fontSize || fallbackFontSize;
+          const ff = part.fontFamily || fallbackFontFamily;
           for (let ci = 0; ci < part.text.length; ci++) {
             const ch = part.text[ci];
-            const chW = measureSpanWidth(ch, part.bold, part.italic, fontSize, fontFamily);
+            const chW = measureSpanWidth(ch, part.bold, part.italic, fs, ff);
             if (chunkW + chW <= maxLineWidth || chunkParts.length === 0) {
               const lastP = chunkParts[chunkParts.length - 1];
-              if (lastP && lastP.bold === part.bold && lastP.italic === part.italic && lastP.underline === part.underline) {
+              if (lastP &&
+                  lastP.bold === part.bold &&
+                  lastP.italic === part.italic &&
+                  lastP.underline === part.underline &&
+                  lastP.color === part.color &&
+                  lastP.fontSize === part.fontSize &&
+                  lastP.fontFamily === part.fontFamily) {
                 lastP.text += ch;
               } else {
-                chunkParts.push({ text: ch, bold: part.bold, italic: part.italic, underline: part.underline });
+                chunkParts.push({ ...part, text: ch });
               }
               chunkW += chW;
+              if (fs > chunkMaxFs) chunkMaxFs = fs;
             } else {
-              rawWords.push({ parts: chunkParts, width: chunkW });
-              chunkParts = [{ text: ch, bold: part.bold, italic: part.italic, underline: part.underline }];
+              rawWords.push({ parts: chunkParts, width: chunkW, maxFontSize: chunkMaxFs });
+              chunkParts = [{ ...part, text: ch }];
               chunkW = chW;
+              chunkMaxFs = fs;
             }
           }
         }
         if (chunkParts.length > 0) {
-          rawWords.push({ parts: chunkParts, width: chunkW });
+          rawWords.push({ parts: chunkParts, width: chunkW, maxFontSize: chunkMaxFs });
         }
       }
       currentWordParts = [];
@@ -638,14 +788,23 @@ window.MinimalFlow = window.MinimalFlow || {};
           flushWord();
         } else {
           const lastP = currentWordParts[currentWordParts.length - 1];
-          if (lastP && lastP.bold === span.bold && lastP.italic === span.italic && lastP.underline === span.underline) {
+          if (lastP &&
+              lastP.bold === span.bold &&
+              lastP.italic === span.italic &&
+              lastP.underline === span.underline &&
+              lastP.color === span.color &&
+              lastP.fontSize === span.fontSize &&
+              lastP.fontFamily === span.fontFamily) {
             lastP.text += piece;
           } else {
             currentWordParts.push({
               text: piece,
               bold: span.bold,
               italic: span.italic,
-              underline: span.underline
+              underline: span.underline,
+              color: span.color,
+              fontSize: span.fontSize,
+              fontFamily: span.fontFamily
             });
           }
         }
@@ -663,8 +822,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     const { width, height, text } = node;
     const paddingX = text.paddingX !== undefined ? text.paddingX : 14;
     const paddingY = text.paddingY !== undefined ? text.paddingY : 10;
-    const fontSize = text.fontSize || 14;
-    const fontFamily = text.fontFamily || "Poppins, sans-serif";
+    const baseFontSize = text.fontSize || 14;
+    const baseFontFamily = text.fontFamily || "Poppins, sans-serif";
     const defaultBold = !!text.bold;
     const defaultItalic = !!text.italic;
     const defaultUnderline = !!text.underline;
@@ -674,22 +833,27 @@ window.MinimalFlow = window.MinimalFlow || {};
     const boxLeftX = paddingX + (shapeSafeReduction / 2);
     const boxRightX = width - paddingX - (shapeSafeReduction / 2);
     const maxWidth = Math.max(8, boxRightX - boxLeftX);
-    const lineHeight = fontSize * 1.35;
-    const normalSpaceW = measureSpanWidth(" ", defaultBold, defaultItalic, fontSize, fontFamily);
+    const baseLineHeight = baseFontSize * 1.35;
 
     const paragraphs = parseParagraphs(text.content || "", defaultAlign);
-    const indents = computeParagraphIndents(paragraphs, defaultBold, fontSize, fontFamily);
+    const indents = computeParagraphIndents(paragraphs, defaultBold, baseFontSize, baseFontFamily);
     const lines = [];
 
     for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
       const para = paragraphs[pIdx];
       const paraAlign = para.effectiveAlign || defaultAlign;
+      const paraFontSize = para.fontSize || baseFontSize;
+      const paraFontFamily = para.fontFamily || baseFontFamily;
+      const paraColor = para.color || null;
+      const paraLineH = paraFontSize * 1.35;
+      const normalSpaceW = measureSpanWidth(" ", defaultBold, defaultItalic, paraFontSize, paraFontFamily);
+
       const indentX = indents[pIdx] || 0;
       const lineStartX = boxLeftX + indentX;
       const paraMaxWidth = Math.max(12, boxRightX - lineStartX);
 
-      const spans = parseInlineSpans(para.html, defaultBold, defaultItalic, defaultUnderline);
-      const words = tokenizeSpansIntoWords(spans, paraMaxWidth, fontSize, fontFamily);
+      const spans = parseInlineSpans(para.html, defaultBold, defaultItalic, defaultUnderline, paraColor, para.fontSize || null, para.fontFamily || null);
+      const words = tokenizeSpansIntoWords(spans, paraMaxWidth, paraFontSize, paraFontFamily);
 
       if (words.length === 0) {
         lines.push({
@@ -699,12 +863,17 @@ window.MinimalFlow = window.MinimalFlow || {};
           wordCount: 0,
           align: paraAlign,
           justify: false,
-          listMarker: para.marker || null,
+          listMarker: null, // Baris kosong TIDAK PERNAH punya marker nomor!
           listMarkerX: boxLeftX,
+          listMarkerFontSize: paraFontSize,
+          listMarkerFontFamily: paraFontFamily,
+          listMarkerColor: paraColor,
           lineStartX,
           lineRightX: boxRightX,
           availWidth: paraMaxWidth,
-          normalSpaceW
+          normalSpaceW,
+          lineFontSize: paraFontSize,
+          lineHeight: paraLineH
         });
         continue;
       }
@@ -713,6 +882,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       let curWords = [];
       let curLineW = 0;
       let curWordsW = 0;
+      let curMaxFs = paraFontSize;
 
       for (let wi = 0; wi < words.length; wi++) {
         const w = words[wi];
@@ -722,23 +892,24 @@ window.MinimalFlow = window.MinimalFlow || {};
           curWords.push(w);
           curLineW += spaceW + w.width;
           curWordsW += w.width;
+          if (w.maxFontSize > curMaxFs) curMaxFs = w.maxFontSize;
         } else {
-          paraLines.push({ words: curWords, lineWidth: curLineW, wordsWidthSum: curWordsW });
+          paraLines.push({ words: curWords, lineWidth: curLineW, wordsWidthSum: curWordsW, maxFontSize: curMaxFs });
           curWords = [w];
           curLineW = w.width;
           curWordsW = w.width;
+          curMaxFs = Math.max(paraFontSize, w.maxFontSize);
         }
       }
       if (curWords.length > 0) {
-        paraLines.push({ words: curWords, lineWidth: curLineW, wordsWidthSum: curWordsW });
+        paraLines.push({ words: curWords, lineWidth: curLineW, wordsWidthSum: curWordsW, maxFontSize: curMaxFs });
       }
 
       for (let li = 0; li < paraLines.length; li++) {
         const pl = paraLines[li];
         const isLastInPara = (li === paraLines.length - 1);
-        // Word-exact justify rule: ONLY wrapped lines with >= 2 words are justified;
-        // last line of paragraph & single-line headings are NEVER stretched!
         const shouldJustify = (paraAlign === "justify" && !isLastInPara && pl.words.length > 1);
+        const lFs = pl.maxFontSize || paraFontSize;
 
         lines.push({
           words: pl.words,
@@ -749,12 +920,24 @@ window.MinimalFlow = window.MinimalFlow || {};
           justify: shouldJustify,
           listMarker: (li === 0 && para.marker) ? para.marker : null,
           listMarkerX: boxLeftX,
+          listMarkerFontSize: paraFontSize,
+          listMarkerFontFamily: paraFontFamily,
+          listMarkerColor: paraColor,
           lineStartX,
           lineRightX: boxRightX,
           availWidth: paraMaxWidth,
-          normalSpaceW
+          normalSpaceW,
+          lineFontSize: lFs,
+          lineHeight: lFs * 1.35
         });
       }
+    }
+
+    // Hitung total tinggi & baseline Y per baris secara kumulatif (mendukung campuran ukuran font!)
+    let totalTextHeight = 0;
+    for (let i = 0; i < lines.length; i++) {
+      lines[i].yBaselineOffset = totalTextHeight + (lines[i].lineFontSize || baseFontSize) * 0.85;
+      totalTextHeight += lines[i].lineHeight || baseLineHeight;
     }
 
     let anchor = "middle";
@@ -768,69 +951,67 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     const verticalAlign = (node.text && node.text.verticalAlign) || "middle";
-    const totalTextHeight = lines.length * lineHeight;
     let availableHeight = height - paddingY * 2;
-    let startY = 0;
+    let blockTopY = 0;
 
     if (node.type === "cylinder") {
       const ry = Math.min(height * 0.22, 18);
       availableHeight = height - ry * 1.5 - paddingY * 2;
-      if (verticalAlign === "top") {
-        startY = ry + paddingY + fontSize * 0.85;
-      } else if (verticalAlign === "bottom") {
-        startY = height - paddingY - totalTextHeight + fontSize * 0.85;
-      } else {
-        startY = ry + paddingY + (availableHeight - totalTextHeight) / 2 + fontSize * 0.85;
-      }
+      if (verticalAlign === "top") blockTopY = ry + paddingY;
+      else if (verticalAlign === "bottom") blockTopY = height - paddingY - totalTextHeight;
+      else blockTopY = ry + paddingY + (availableHeight - totalTextHeight) / 2;
     } else {
-      if (verticalAlign === "top") {
-        startY = paddingY + fontSize * 0.85;
-      } else if (verticalAlign === "bottom") {
-        startY = height - paddingY - totalTextHeight + fontSize * 0.85;
-      } else {
-        startY = (height - totalTextHeight) / 2 + fontSize * 0.85;
-      }
+      if (verticalAlign === "top") blockTopY = paddingY;
+      else if (verticalAlign === "bottom") blockTopY = height - paddingY - totalTextHeight;
+      else blockTopY = (height - totalTextHeight) / 2;
     }
 
-    if (verticalAlign === "top" && startY < paddingY + fontSize * 0.8) {
-      startY = paddingY + fontSize * 0.8;
+    if (verticalAlign === "top" && blockTopY < paddingY) blockTopY = paddingY;
+    if (node.isContainer) blockTopY = paddingY;
+
+    const firstFs = (lines[0] && lines[0].lineFontSize) || baseFontSize;
+    const startY = blockTopY + firstFs * 0.85;
+    for (let i = 0; i < lines.length; i++) {
+      lines[i].y = Math.round((blockTopY + lines[i].yBaselineOffset) * 10) / 10;
     }
 
-    if (node.isContainer) {
-      startY = paddingY + fontSize * 0.85;
-    }
-
-    return { lines, xPos, startY, lineHeight, anchor, totalTextHeight, maxWidth, boxLeftX, boxRightX };
+    return { lines, xPos, startY, blockTopY, lineHeight: baseLineHeight, anchor, totalTextHeight, maxWidth, boxLeftX, boxRightX };
   }
 
   // ============================================================================
-  // WORD-LIKE PER-PARAGRAPH & NUMBERING HELPERS FOR LIVE EDITOR
+  // WORD-LIKE PER-PARAGRAPH, PER-SECTION & PER-SELECTION ENGINE FOR LIVE EDITOR
   // ============================================================================
 
-  function createParagraphDiv(html, align, list) {
+  function createParagraphDiv(html, align, list, fontSize = null, fontFamily = null, color = null) {
     const div = document.createElement("div");
     div.className = "mf-p";
-    if (align && VALID_ALIGNS.has(align)) {
-      div.setAttribute("data-align", align);
-    }
-    if (list && VALID_LISTS.has(list)) {
+    if (align && VALID_ALIGNS.has(align)) div.setAttribute("data-align", align);
+    if (list && VALID_LISTS.has(list) && getPlainText(html || "").length > 0) {
       div.setAttribute("data-list", list);
+    }
+    if (fontSize) {
+      div.setAttribute("data-size", String(fontSize));
+      div.style.fontSize = `${fontSize}px`;
+      div.style.lineHeight = `${fontSize * 1.35}px`;
+    }
+    if (fontFamily) {
+      div.setAttribute("data-font", fontFamily);
+      div.style.fontFamily = fontFamily;
+    }
+    if (color) {
+      div.setAttribute("data-color", color);
+      div.style.color = color;
     }
     div.innerHTML = (html && html.length > 0) ? html : "<br>";
     return div;
   }
 
-  /**
-   * Pastikan setiap anak langsung editor adalah .mf-p (menjaga konsistensi Word-like block editing)
-   */
   function ensureEditorParagraphStructure(editor) {
     if (!editor) return;
     if (editor.childNodes.length === 0) {
       editor.appendChild(createParagraphDiv("", null, null));
       return;
     }
-
-    // Wrap stray top-level text nodes or inline elements into .mf-p
     const children = Array.from(editor.childNodes);
     for (const child of children) {
       if (child.nodeType === 1 && child.classList && child.classList.contains("mf-p")) {
@@ -851,39 +1032,37 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
   }
 
-  /**
-   * Hitung ulang nomor & padding-left (hanging indent) untuk semua .mf-p di dalam editor aktif
-   */
   function refreshEditorListMarkers(editor, node) {
     if (!editor) return;
     ensureEditorParagraphStructure(editor);
-    const fontSize = (node && node.text && node.text.fontSize) || 14;
-    const fontFamily = (node && node.text && node.text.fontFamily) || "Poppins, sans-serif";
+    const baseFontSize = (node && node.text && node.text.fontSize) || 14;
+    const baseFontFamily = (node && node.text && node.text.fontFamily) || "Poppins, sans-serif";
     const defaultBold = !!(node && node.text && node.text.bold);
 
     const pEls = Array.from(editor.querySelectorAll(":scope > .mf-p"));
-    // Assign numbers
     let listCounter = 0;
     let prevList = null;
+
     const metas = pEls.map(el => {
       const listType = el.getAttribute("data-list");
-      if (listType && VALID_LISTS.has(listType)) {
-        if (listType === prevList) {
-          listCounter += 1;
-        } else {
-          listCounter = 1;
-          prevList = listType;
-        }
+      const hasText = (el.textContent || "").replace(/\u00A0/g, " ").trim().length > 0;
+      const isActiveItem = listType && VALID_LISTS.has(listType);
+      // Saat sedang mengetik di baris baru bernomor yang masih kosong (baru tekan Enter), tetap tampilkan nomor preview;
+      // namun jika baris kosong tsb tidak memiliki data-list, reset counter agar blok bawah mulai dari 1 lagi!
+      if (isActiveItem) {
+        if (listType === prevList) listCounter += 1;
+        else { listCounter = 1; prevList = listType; }
         const marker = formatListMarker(listType, listCounter);
-        return { el, listType, marker };
+        const fs = normalizeFontSizeValue(el.getAttribute("data-size")) || baseFontSize;
+        const ff = normalizeFontFamilyValue(el.getAttribute("data-font")) || baseFontFamily;
+        return { el, listType, marker, fs, ff, hasText };
       } else {
         listCounter = 0;
         prevList = null;
-        return { el, listType: null, marker: null };
+        return { el, listType: null, marker: null, fs: baseFontSize, ff: baseFontFamily, hasText };
       }
     });
 
-    // Compute uniform indent per contiguous group
     let i = 0;
     while (i < metas.length) {
       if (!metas[i].listType) {
@@ -896,7 +1075,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       let j = i;
       let maxIndent = 0;
       while (j < metas.length && metas[j].listType === lt) {
-        const ind = computeListIndentForMarker(metas[j].marker, defaultBold, fontSize, fontFamily);
+        const ind = computeListIndentForMarker(metas[j].marker, defaultBold, metas[j].fs, metas[j].ff);
         if (ind > maxIndent) maxIndent = ind;
         j++;
       }
@@ -919,22 +1098,35 @@ window.MinimalFlow = window.MinimalFlow || {};
     return null;
   }
 
-  /**
-   * Mengembalikan semua blok paragraf (.mf-p) yang disentuh kursor atau seleksi saat ini
-   */
-  function getSelectedParagraphElements(editor) {
+  function saveEditorSelection(editor) {
+    if (!editor || !window.getSelection) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (editor.contains(range.commonAncestorContainer) || range.commonAncestorContainer === editor) {
+      editor._savedRange = range.cloneRange();
+      editor._savedParas = getSelectedParagraphElementsFromRange(editor, range);
+    }
+  }
+
+  function restoreEditorSelection(editor) {
+    if (!editor || !editor._savedRange || !window.getSelection) return false;
+    try {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(editor._savedRange.cloneRange());
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function getSelectedParagraphElementsFromRange(editor, range) {
     if (!editor) return [];
     ensureEditorParagraphStructure(editor);
     const allP = Array.from(editor.querySelectorAll(":scope > .mf-p"));
     if (allP.length === 0) return [];
-
-    const sel = window.getSelection ? window.getSelection() : null;
-    if (!sel || sel.rangeCount === 0) return [allP[0]];
-
-    const range = sel.getRangeAt(0);
-    if (!editor.contains(range.commonAncestorContainer) && range.commonAncestorContainer !== editor) {
-      return [allP[0]];
-    }
+    if (!range) return [allP[0]];
 
     const startP = findClosestParagraph(editor, range.startContainer);
     const endP = findClosestParagraph(editor, range.endContainer);
@@ -943,21 +1135,35 @@ window.MinimalFlow = window.MinimalFlow || {};
       const i1 = allP.indexOf(startP);
       const i2 = allP.indexOf(endP);
       if (i1 !== -1 && i2 !== -1) {
-        const lo = Math.min(i1, i2);
-        const hi = Math.max(i1, i2);
-        return allP.slice(lo, hi + 1);
+        return allP.slice(Math.min(i1, i2), Math.max(i1, i2) + 1);
       }
     }
 
-    // Fallback: cek interseksi range dengan setiap .mf-p
     const hit = allP.filter(p => {
-      try {
-        return range.intersectsNode(p);
-      } catch (e) {
-        return false;
-      }
+      try { return range.intersectsNode(p); } catch (e) { return false; }
     });
     return hit.length > 0 ? hit : [startP || endP || allP[0]];
+  }
+
+  function getSelectedParagraphElements(editor) {
+    if (!editor) return [];
+    const sel = window.getSelection ? window.getSelection() : null;
+    if (sel && sel.rangeCount > 0) {
+      const r = sel.getRangeAt(0);
+      if (editor.contains(r.commonAncestorContainer) || r.commonAncestorContainer === editor) {
+        return getSelectedParagraphElementsFromRange(editor, r);
+      }
+    }
+    if (editor._savedParas && editor._savedParas.length > 0) {
+      const stillInDom = editor._savedParas.filter(p => editor.contains(p));
+      if (stillInDom.length > 0) return stillInDom;
+    }
+    if (editor._savedRange) {
+      return getSelectedParagraphElementsFromRange(editor, editor._savedRange);
+    }
+    ensureEditorParagraphStructure(editor);
+    const first = editor.querySelector(":scope > .mf-p");
+    return first ? [first] : [];
   }
 
   function isCaretAtStartOfElement(el, range) {
@@ -1007,7 +1213,6 @@ window.MinimalFlow = window.MinimalFlow || {};
       pEl.setAttribute("data-align", align);
     });
 
-    // Jika hanya ada 1 paragraf atau semua paragraf dipilih, sinkronkan juga node.text.align
     const allP = Array.from(editor.querySelectorAll(":scope > .mf-p"));
     if (node && node.text && targets.length === allP.length) {
       node.text.align = align;
@@ -1024,21 +1229,25 @@ window.MinimalFlow = window.MinimalFlow || {};
     const targets = getSelectedParagraphElements(editor);
     if (targets.length === 0) return false;
 
-    const turningOff = !listType || listType === "none" || targets.every(el => el.getAttribute("data-list") === listType);
+    // Jika beberapa paragraf diseleksi bersama baris kosong di antaranya, lewati baris kosong!
+    const nonEmptyTargets = targets.length > 1
+      ? targets.filter(el => (el.textContent || "").replace(/\u00A0/g, " ").trim().length > 0)
+      : targets;
+    const effectiveTargets = nonEmptyTargets.length > 0 ? nonEmptyTargets : targets;
 
-    targets.forEach(pEl => {
+    const turningOff = !listType || listType === "none" || effectiveTargets.every(el => el.getAttribute("data-list") === listType);
+
+    effectiveTargets.forEach(pEl => {
       if (turningOff) {
         pEl.removeAttribute("data-list");
         pEl.removeAttribute("data-marker");
         pEl.style.paddingLeft = "";
       } else if (VALID_LISTS.has(listType)) {
         pEl.setAttribute("data-list", listType);
-        // Jika baris sebelumnya punya prefix manual (mis. "1. "), bersihkan agar tidak dobel
         const cleaned = stripManualListPrefix(pEl.innerHTML);
         if (cleaned !== pEl.innerHTML) {
           pEl.innerHTML = cleaned || "<br>";
         }
-        // Nomor seperti Word: default rata kiri jika sebelumnya rata tengah/kanan
         const curAlign = pEl.getAttribute("data-align") || (node && node.text && node.text.align) || "center";
         if (curAlign === "center" || curAlign === "right") {
           pEl.setAttribute("data-align", "left");
@@ -1052,15 +1261,78 @@ window.MinimalFlow = window.MinimalFlow || {};
     return true;
   }
 
+  /**
+   * Penomoran cerdas saat node dipilih secara keseluruhan (di luar mode edit teks):
+   * - Baris kosong (penggalan spasi) TIDAK PERNAH diberi nomor!
+   * - Jika ada penggalan baris kosong memisahkan judul (1 baris) di atas dari isi poin-poin di bawah,
+   *   ATAU baris pertama adalah judul (tebal / diakhiri titik dua ':') diikuti beberapa baris isi,
+   *   maka HANYA bagian isi yang diberi penomoran (1., 2., 3.) sementara judul & penggalan tetap bersih!
+   */
   function applyNumberingToNode(node, listType) {
     if (!node || !node.text) return;
     const defaultAlign = node.text.align || "center";
     const paras = parseParagraphs(node.text.content || "", defaultAlign);
-    const nonEmpty = paras.filter(p => getPlainText(p.html).length > 0);
-    const checkSet = nonEmpty.length > 0 ? nonEmpty : paras;
-    const turningOff = !listType || listType === "none" || checkSet.every(p => p.list === listType);
 
-    paras.forEach(p => {
+    // Jika mematikan penomoran ("none"), bersihkan semua paragraf
+    if (!listType || listType === "none") {
+      paras.forEach(p => { p.list = null; });
+      node.text.content = serializeParagraphs(paras);
+      return;
+    }
+
+    // Kelompokkan paragraf non-kosong ke dalam blok/penggalan (dipisahkan oleh baris kosong)
+    const sections = [];
+    let curSec = [];
+    paras.forEach((p, idx) => {
+      const isBlank = getPlainText(p.html).length === 0;
+      if (isBlank) {
+        p.list = null; // Pastikan baris kosong selalu tanpa nomor
+        if (curSec.length > 0) {
+          sections.push(curSec);
+          curSec = [];
+        }
+      } else {
+        curSec.push(idx);
+      }
+    });
+    if (curSec.length > 0) sections.push(curSec);
+
+    if (sections.length === 0) return;
+
+    let targetIndices = [];
+    if (sections.length >= 2) {
+      // Ada penggalan baris kosong! Cek apakah blok pertama adalah 1 baris judul
+      const sec0 = sections[0];
+      const firstP = paras[sec0[0]];
+      const firstPlain = getPlainText(firstP.html);
+      const isHeadingSec = sec0.length === 1 && (
+        firstPlain.endsWith(":") ||
+        /^\s*<b>[\s\S]*<\/b>\s*$/i.test(firstP.html) ||
+        firstPlain.length <= 70
+      );
+      if (isHeadingSec) {
+        for (let s = 1; s < sections.length; s++) {
+          targetIndices.push(...sections[s]);
+        }
+      } else {
+        sections.forEach(sec => targetIndices.push(...sec));
+      }
+    } else {
+      // 1 blok tanpa baris kosong: cek apakah baris 0 adalah judul (bold penuh / berakhiran ':') diikuti >= 2 baris isi
+      const sec = sections[0];
+      const firstP = paras[sec[0]];
+      const firstPlain = getPlainText(firstP.html);
+      const isHeadingLine = sec.length >= 3 && (
+        firstPlain.endsWith(":") ||
+        /^\s*<b>[\s\S]*<\/b>\s*$/i.test(firstP.html)
+      );
+      targetIndices = isHeadingLine ? sec.slice(1) : sec.slice();
+    }
+
+    const turningOff = targetIndices.length > 0 && targetIndices.every(i => paras[i].list === listType);
+
+    targetIndices.forEach(idx => {
+      const p = paras[idx];
       if (turningOff) {
         p.list = null;
       } else if (VALID_LISTS.has(listType)) {
@@ -1076,17 +1348,112 @@ window.MinimalFlow = window.MinimalFlow || {};
     node.text.content = serializeParagraphs(paras);
   }
 
+  /**
+   * Menerapkan Font Size, Font Family, atau Text Color secara granular:
+   * - Jika ada teks/kata yang diblok (range tidak collapsed) -> ubah HANYA kata/teks terpilih!
+   * - Jika kursor hanya diletakkan pada 1 paragraf (collapsed) -> ubah HANYA paragraf aktif tsb!
+   */
+  function applyInlineOrParagraphStyle(editor, node, prop, value) {
+    if (!editor || !node) return false;
+    editor.focus();
+    restoreEditorSelection(editor);
+
+    const sel = window.getSelection ? window.getSelection() : null;
+    const hasRange = sel && sel.rangeCount > 0 && (editor.contains(sel.getRangeAt(0).commonAncestorContainer) || sel.getRangeAt(0).commonAncestorContainer === editor);
+    const range = hasRange ? sel.getRangeAt(0) : null;
+
+    const cssPropMap = { fontSize: "fontSize", fontFamily: "fontFamily", color: "color" };
+    const attrMap = { fontSize: "data-size", fontFamily: "data-font", color: "data-color" };
+    const cssProp = cssPropMap[prop];
+    const dataAttr = attrMap[prop];
+    if (!cssProp) return false;
+
+    const cssVal = prop === "fontSize" ? `${value}px` : value;
+
+    // KASUS A: Seleksi teks aktif (beberapa huruf/kata/penggalan diblok) -> bungkus span hanya pada teks terpilih!
+    if (range && !range.collapsed) {
+      const startP = findClosestParagraph(editor, range.startContainer);
+      const endP = findClosestParagraph(editor, range.endContainer);
+
+      if (startP && endP && startP === endP) {
+        const frag = range.extractContents();
+        // Bersihkan properti lama yang bentrok di dalam fragmen agar gaya baru langsung menang
+        frag.querySelectorAll("span").forEach(sp => {
+          sp.style[cssProp] = "";
+        });
+        const span = document.createElement("span");
+        span.style[cssProp] = cssVal;
+        span.appendChild(frag);
+        range.insertNode(span);
+
+        // Pertahankan seleksi pada span baru agar user bisa langsung atur gaya lain (misal ukuran + warna)
+        const newRange = document.createRange();
+        newRange.selectNodeContents(span);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        saveEditorSelection(editor);
+      } else {
+        // Seleksi melintasi beberapa paragraf: terapkan ke setiap paragraf terpilih secara terisolasi
+        const targets = getSelectedParagraphElementsFromRange(editor, range);
+        targets.forEach(pEl => {
+          pEl.setAttribute(dataAttr, String(value));
+          pEl.style[cssProp] = cssVal;
+          if (prop === "fontSize") pEl.style.lineHeight = `${value * 1.35}px`;
+          pEl.querySelectorAll("span").forEach(sp => { sp.style[cssProp] = ""; });
+        });
+        saveEditorSelection(editor);
+      }
+
+      refreshEditorListMarkers(editor, node);
+      editor.dispatchEvent(new Event("input"));
+      editor.dispatchEvent(new CustomEvent("mf-selection-change", { bubbles: true }));
+      return true;
+    }
+
+    // KASUS B: Kursor diletakkan di dalam 1 paragraf (collapsed) -> ubah HANYA paragraf aktif tsb!
+    const targets = getSelectedParagraphElements(editor);
+    if (targets.length === 0) return false;
+    targets.forEach(pEl => {
+      if (value === null || value === "" || value === "auto") {
+        pEl.removeAttribute(dataAttr);
+        pEl.style[cssProp] = "";
+        if (prop === "fontSize") pEl.style.lineHeight = "";
+      } else {
+        pEl.setAttribute(dataAttr, String(value));
+        pEl.style[cssProp] = cssVal;
+        if (prop === "fontSize") pEl.style.lineHeight = `${value * 1.35}px`;
+      }
+      pEl.querySelectorAll("span").forEach(sp => { sp.style[cssProp] = ""; });
+    });
+
+    refreshEditorListMarkers(editor, node);
+    saveEditorSelection(editor);
+    editor.dispatchEvent(new Event("input"));
+    editor.dispatchEvent(new CustomEvent("mf-selection-change", { bubbles: true }));
+    return true;
+  }
+
   function getActiveEditorState(editor, node) {
     const defaultAlign = (node && node.text && node.text.align) || "center";
+    const defaultSize = (node && node.text && node.text.fontSize) || 14;
+    const defaultFont = (node && node.text && node.text.fontFamily) || "Poppins, sans-serif";
+    const defaultColor = (node && node.text && node.text.color) || null;
+
     if (!editor) {
       const paras = node && node.text ? parseParagraphs(node.text.content || "", defaultAlign) : [];
-      const firstList = paras.length > 0 && paras.every(p => p.list && p.list === paras[0].list) ? paras[0].list : null;
+      const nonBlank = paras.filter(p => getPlainText(p.html).length > 0);
+      const firstList = nonBlank.length > 0 && nonBlank.some(p => p.list)
+        ? (nonBlank.find(p => p.list)?.list || null)
+        : null;
       return {
         align: defaultAlign,
         list: firstList,
         bold: !!(node && node.text && node.text.bold),
         italic: !!(node && node.text && node.text.italic),
-        underline: !!(node && node.text && node.text.underline)
+        underline: !!(node && node.text && node.text.underline),
+        fontSize: defaultSize,
+        fontFamily: defaultFont,
+        color: defaultColor
       };
     }
 
@@ -1094,6 +1461,26 @@ window.MinimalFlow = window.MinimalFlow || {};
     const firstP = targets[0];
     const align = (firstP && firstP.getAttribute("data-align")) || defaultAlign;
     const list = (firstP && firstP.getAttribute("data-list")) || null;
+
+    let fontSize = (firstP && normalizeFontSizeValue(firstP.getAttribute("data-size"))) || defaultSize;
+    let fontFamily = (firstP && normalizeFontFamilyValue(firstP.getAttribute("data-font"))) || defaultFont;
+    let color = (firstP && normalizeColorValue(firstP.getAttribute("data-color"))) || defaultColor;
+
+    // Periksa inline span di posisi kursor jika ada gaya khusus per-kata
+    const sel = window.getSelection ? window.getSelection() : null;
+    if (sel && sel.rangeCount > 0) {
+      let curNode = sel.getRangeAt(0).startContainer;
+      if (curNode && curNode.nodeType === 3) curNode = curNode.parentNode;
+      while (curNode && curNode !== editor && editor.contains(curNode)) {
+        if (curNode.nodeType === 1 && curNode.tagName === "SPAN") {
+          const sp = extractInlineStyleProps(`style="${curNode.getAttribute("style") || ""}"`);
+          if (sp.fontSize) fontSize = sp.fontSize;
+          if (sp.fontFamily) fontFamily = sp.fontFamily;
+          if (sp.color) color = sp.color;
+        }
+        curNode = curNode.parentNode;
+      }
+    }
 
     let bold = !!(node && node.text && node.text.bold);
     let italic = !!(node && node.text && node.text.italic);
@@ -1106,14 +1493,24 @@ window.MinimalFlow = window.MinimalFlow || {};
       }
     } catch (e) {}
 
-    return { align, list, bold, italic, underline };
+    return { align, list, bold, italic, underline, fontSize, fontFamily, color };
   }
 
   let activeEditingNodeId = null;
   let activeEditingFinishFn = null;
   let activeEditingNodeRef = null;
+  let suppressEditorBlur = false;
+
+  function holdFocusForToolbar(hold) {
+    suppressEditorBlur = !!hold;
+    if (hold) {
+      const ed = document.querySelector(".node-seamless-editor");
+      if (ed) saveEditorSelection(ed);
+    }
+  }
 
   function closeInlineEditor() {
+    suppressEditorBlur = false;
     if (activeEditingFinishFn) {
       activeEditingFinishFn();
     }
@@ -1137,6 +1534,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     if (activeEditingNodeId && activeEditingFinishFn) {
+      suppressEditorBlur = false;
       activeEditingFinishFn();
     }
 
@@ -1145,6 +1543,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     activeEditingNodeId = nodeId;
     activeEditingNodeRef = node;
+    suppressEditorBlur = false;
     uiState.mode = "EDITING_TEXT";
     const openTime = Date.now();
 
@@ -1195,7 +1594,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     } else {
       const paras = parseParagraphs(node.text.content || "", node.text.align || "center");
       paras.forEach(p => {
-        editor.appendChild(createParagraphDiv(p.html, p.align, p.list));
+        editor.appendChild(createParagraphDiv(p.html, p.align, p.list, p.fontSize, p.fontFamily, p.color));
       });
     }
     editor.setAttribute("data-placeholder", "Ketik teks di sini...");
@@ -1207,20 +1606,13 @@ window.MinimalFlow = window.MinimalFlow || {};
       const vAlign = (node.text && node.text.verticalAlign) || "middle";
       const padY = node.text.paddingY !== undefined ? node.text.paddingY : 10;
       let padTop = Math.max(0, (node.height - totalH) / 2);
-      if (vAlign === "top") {
-        padTop = padY;
-      } else if (vAlign === "bottom") {
-        padTop = Math.max(0, node.height - totalH - padY);
-      }
+      if (vAlign === "top") padTop = padY;
+      else if (vAlign === "bottom") padTop = Math.max(0, node.height - totalH - padY);
       if (node.type === "cylinder") {
         const ry = Math.min(node.height * 0.22, 18);
-        if (vAlign === "top") {
-          padTop = ry + padY;
-        } else if (vAlign === "bottom") {
-          padTop = Math.max(ry, node.height - totalH - padY);
-        } else {
-          padTop = Math.max(ry, ry + (node.height - ry * 1.5 - totalH) / 2);
-        }
+        if (vAlign === "top") padTop = ry + padY;
+        else if (vAlign === "bottom") padTop = Math.max(ry, node.height - totalH - padY);
+        else padTop = Math.max(ry, ry + (node.height - ry * 1.5 - totalH) / 2);
       }
       const basePadX = node.text.paddingX !== undefined ? node.text.paddingX : 14;
       const safePadX = basePadX + (getShapeSafeReduction(node) / 2);
@@ -1243,19 +1635,29 @@ window.MinimalFlow = window.MinimalFlow || {};
     editor.addEventListener("mousemove", stopPropagation);
     editor.addEventListener("mouseup", (e) => {
       e.stopPropagation();
+      saveEditorSelection(editor);
       editor.dispatchEvent(new CustomEvent("mf-selection-change", { bubbles: true }));
     });
     editor.addEventListener("keyup", () => {
+      saveEditorSelection(editor);
       editor.dispatchEvent(new CustomEvent("mf-selection-change", { bubbles: true }));
     });
     editor.addEventListener("click", stopPropagation);
     editor.addEventListener("dblclick", stopPropagation);
     editor.addEventListener("wheel", stopPropagation);
 
+    const onDocSelectionChange = () => {
+      if (document.activeElement === editor) {
+        saveEditorSelection(editor);
+      }
+    };
+    document.addEventListener("selectionchange", onDocSelectionChange);
+
     const initialTextSnapshot = node.text?.content ?? "";
 
     function onLiveInput() {
       refreshEditorListMarkers(editor, node);
+      saveEditorSelection(editor);
       const val = serializeEditorDOM(editor);
       node.text.content = val;
       node.text.isPlaceholder = !getPlainText(val);
@@ -1280,7 +1682,6 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     editor.addEventListener("input", onLiveInput);
 
-    // Handle paste: bersihkan gaya luar, pecah per baris menjadi .mf-p, dan deteksi list bila ada
     editor.addEventListener("paste", (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -1298,17 +1699,16 @@ window.MinimalFlow = window.MinimalFlow || {};
             ensureEditorParagraphStructure(editor);
             curP = editor.querySelector(":scope > .mf-p");
           }
-          // Sisipkan baris pertama pada kursor
           const firstText = document.createTextNode(pasteLines[0]);
           range.insertNode(firstText);
           range.setStartAfter(firstText);
           range.collapse(true);
 
-          // Sisipkan baris selanjutnya sebagai .mf-p baru
           let refNode = curP;
           for (let i = 1; i < pasteLines.length; i++) {
             const lineTxt = pasteLines[i];
-            const detectedList = detectManualListPrefix(lineTxt);
+            const isBlank = !lineTxt.trim();
+            const detectedList = isBlank ? null : detectManualListPrefix(lineTxt);
             const cleanLine = detectedList ? stripManualListPrefix(escapeHtmlText(lineTxt)) : escapeHtmlText(lineTxt);
             const newP = createParagraphDiv(
               cleanLine,
@@ -1318,7 +1718,6 @@ window.MinimalFlow = window.MinimalFlow || {};
             refNode.parentNode.insertBefore(newP, refNode.nextSibling);
             refNode = newP;
           }
-          // Taruh kursor di akhir paragraf terakhir hasil paste
           const endRange = document.createRange();
           endRange.selectNodeContents(refNode);
           endRange.collapse(false);
@@ -1332,8 +1731,11 @@ window.MinimalFlow = window.MinimalFlow || {};
     let isFinished = false;
     function finishEditing() {
       if (isFinished) return;
+      if (suppressEditorBlur) return; // Jangan tutup editor saat user memilih dropdown Font / Size / Color di toolbar!
       if (Date.now() - openTime < 200) return;
       isFinished = true;
+
+      document.removeEventListener("selectionchange", onDocSelectionChange);
 
       uiState.mode = "IDLE";
       activeEditingNodeId = null;
@@ -1369,14 +1771,20 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
 
     activeEditingFinishFn = finishEditing;
-    editor.addEventListener("blur", finishEditing);
+    editor.addEventListener("blur", () => {
+      // Beri jeda 1 tick agar handler mousedown pada toolbar sempat mengaktifkan suppressEditorBlur
+      setTimeout(() => {
+        if (!suppressEditorBlur && document.activeElement !== editor) {
+          finishEditing();
+        }
+      }, 20);
+    });
 
     editor.addEventListener("keydown", (e) => {
       e.stopPropagation();
 
       const mod = e.ctrlKey || e.metaKey;
 
-      // Ctrl + B: Bold
       if (mod && !e.shiftKey && !e.altKey && (e.key === "b" || e.key === "B" || e.code === "KeyB")) {
         e.preventDefault();
         document.execCommand("bold", false, null);
@@ -1384,7 +1792,6 @@ window.MinimalFlow = window.MinimalFlow || {};
         return;
       }
 
-      // Ctrl + I: Italic
       if (mod && !e.shiftKey && !e.altKey && (e.key === "i" || e.key === "I" || e.code === "KeyI")) {
         e.preventDefault();
         document.execCommand("italic", false, null);
@@ -1392,7 +1799,6 @@ window.MinimalFlow = window.MinimalFlow || {};
         return;
       }
 
-      // Ctrl + U: Underline
       if (mod && !e.shiftKey && !e.altKey && (e.key === "u" || e.key === "U" || e.code === "KeyU")) {
         e.preventDefault();
         document.execCommand("underline", false, null);
@@ -1400,7 +1806,6 @@ window.MinimalFlow = window.MinimalFlow || {};
         return;
       }
 
-      // Ctrl + L / E / R / J: Per-paragraph Alignment ala Microsoft Word
       if (mod && !e.shiftKey && !e.altKey) {
         const keyLower = (e.key || "").toLowerCase();
         if (keyLower === "l" || e.code === "KeyL") {
@@ -1426,21 +1831,21 @@ window.MinimalFlow = window.MinimalFlow || {};
         }
       }
 
-      // Ctrl + Enter: Simpan & keluar
       if (mod && e.key === "Enter") {
         e.preventDefault();
+        suppressEditorBlur = false;
         finishEditing();
         return;
       }
 
-      // Escape: Selesai
       if (e.key === "Escape") {
         e.preventDefault();
+        suppressEditorBlur = false;
         finishEditing();
         return;
       }
 
-      // Space: Auto-numbering ala Word jika mengetik "1.", "1)", "a.", "a)", "A.", "A)" di awal baris
+      // Auto-numbering ala Word saat mengetik "1.", "1)", "a.", "a)", "A.", "A)" + Spasi di awal baris
       if (e.key === " " && !mod && !e.altKey) {
         const sel = window.getSelection();
         if (sel && sel.rangeCount > 0 && sel.getRangeAt(0).collapsed) {
@@ -1448,18 +1853,10 @@ window.MinimalFlow = window.MinimalFlow || {};
           const curP = findClosestParagraph(editor, range.startContainer);
           if (curP && !curP.getAttribute("data-list")) {
             const before = getTextBeforeCaretInElement(curP, range);
-            const autoMap = {
-              "1.": "1.",
-              "1)": "1)",
-              "a.": "a.",
-              "a)": "a)",
-              "A.": "A.",
-              "A)": "A)"
-            };
+            const autoMap = { "1.": "1.", "1)": "1)", "a.": "a.", "a)": "a)", "A.": "A.", "A)": "A)" };
             const matchedList = autoMap[before];
             if (matchedList) {
               e.preventDefault();
-              // Hapus token pemicu sebelum kursor
               const delRange = document.createRange();
               delRange.selectNodeContents(curP);
               delRange.setEnd(range.startContainer, range.startOffset);
@@ -1513,9 +1910,11 @@ window.MinimalFlow = window.MinimalFlow || {};
           }
           const curList = curP.getAttribute("data-list");
           const curAlign = curP.getAttribute("data-align");
+          const curSize = curP.getAttribute("data-size");
+          const curFont = curP.getAttribute("data-font");
+          const curColor = curP.getAttribute("data-color");
           const curPlain = (curP.textContent || "").replace(/\u00A0/g, " ").trim();
 
-          // Jika Enter ditekan pada baris bernomor yang kosong -> akhiri penomoran (Word behavior!)
           if (curList && curPlain.length === 0) {
             curP.removeAttribute("data-list");
             curP.removeAttribute("data-marker");
@@ -1526,7 +1925,6 @@ window.MinimalFlow = window.MinimalFlow || {};
             return;
           }
 
-          // Pisahkan konten setelah kursor ke paragraf .mf-p baru
           const afterRange = document.createRange();
           afterRange.selectNodeContents(curP);
           afterRange.setStart(range.endContainer, range.endOffset);
@@ -1538,11 +1936,20 @@ window.MinimalFlow = window.MinimalFlow || {};
 
           const newP = document.createElement("div");
           newP.className = "mf-p";
-          if (curAlign && VALID_ALIGNS.has(curAlign)) {
-            newP.setAttribute("data-align", curAlign);
+          if (curAlign && VALID_ALIGNS.has(curAlign)) newP.setAttribute("data-align", curAlign);
+          if (curList && VALID_LISTS.has(curList)) newP.setAttribute("data-list", curList);
+          if (curSize) {
+            newP.setAttribute("data-size", curSize);
+            newP.style.fontSize = `${curSize}px`;
+            newP.style.lineHeight = `${parseFloat(curSize) * 1.35}px`;
           }
-          if (curList && VALID_LISTS.has(curList)) {
-            newP.setAttribute("data-list", curList);
+          if (curFont) {
+            newP.setAttribute("data-font", curFont);
+            newP.style.fontFamily = curFont;
+          }
+          if (curColor) {
+            newP.setAttribute("data-color", curColor);
+            newP.style.color = curColor;
           }
           newP.appendChild(trailingFrag);
           if (!newP.textContent && !newP.querySelector("br")) {
@@ -1558,7 +1965,6 @@ window.MinimalFlow = window.MinimalFlow || {};
       }
     });
 
-    // Delayed focus & caret positioning
     setTimeout(() => {
       if (uiState.mode === "EDITING_TEXT" && activeEditingNodeId === nodeId) {
         editor.focus();
@@ -1567,12 +1973,11 @@ window.MinimalFlow = window.MinimalFlow || {};
           const lastP = allP[allP.length - 1] || editor;
           const range = document.createRange();
           range.selectNodeContents(lastP);
-          if (!isPh) {
-            range.collapse(false);
-          }
+          if (!isPh) range.collapse(false);
           const sel = window.getSelection();
           sel.removeAllRanges();
           sel.addRange(range);
+          saveEditorSelection(editor);
           editor.dispatchEvent(new CustomEvent("mf-selection-change", { bubbles: true }));
         }
       }
@@ -1585,6 +1990,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     else if (marker === "u" || marker === "underline") cmd = "underline";
     document.execCommand(cmd, false, null);
     if (editor && typeof editor.dispatchEvent === "function") {
+      saveEditorSelection(editor);
       editor.dispatchEvent(new Event("input"));
       editor.dispatchEvent(new CustomEvent("mf-selection-change", { bubbles: true }));
     }
@@ -1609,6 +2015,10 @@ window.MinimalFlow = window.MinimalFlow || {};
     applyAlignmentToEditor,
     applyNumberingToEditor,
     applyNumberingToNode,
+    applyInlineOrParagraphStyle,
+    holdFocusForToolbar,
+    saveEditorSelection,
+    restoreEditorSelection,
     getActiveEditorState,
     refreshEditorListMarkers,
     getActiveEditingNode: () => activeEditingNodeRef

@@ -635,6 +635,15 @@ window.MinimalFlow = window.MinimalFlow || {};
             if (part.underline || node.text.underline) {
               el.setAttribute("text-decoration", "underline");
             }
+            if (part.color) {
+              el.setAttribute("fill", part.color);
+            }
+            if (part.fontSize) {
+              el.setAttribute("font-size", part.fontSize);
+            }
+            if (part.fontFamily) {
+              el.setAttribute("font-family", part.fontFamily);
+            }
           }
 
           function appendWordParts(parentSpan, parts) {
@@ -653,7 +662,9 @@ window.MinimalFlow = window.MinimalFlow || {};
           }
 
           layout.lines.forEach((lineObj, index) => {
-            const lineY = Math.round((layout.startY + index * layout.lineHeight) * 10) / 10;
+            const lineY = (lineObj && typeof lineObj.y === "number")
+              ? lineObj.y
+              : Math.round((layout.startY + index * layout.lineHeight) * 10) / 10;
 
             // Render nomor list pada margin kiri dengan hanging indent
             if (lineObj && lineObj.listMarker) {
@@ -663,6 +674,9 @@ window.MinimalFlow = window.MinimalFlow || {};
               markerSpan.setAttribute("text-anchor", "start");
               markerSpan.setAttribute("font-weight", node.text.bold ? "700" : "500");
               markerSpan.setAttribute("font-style", "normal");
+              if (lineObj.listMarkerFontSize) markerSpan.setAttribute("font-size", lineObj.listMarkerFontSize);
+              if (lineObj.listMarkerFontFamily) markerSpan.setAttribute("font-family", lineObj.listMarkerFontFamily);
+              if (lineObj.listMarkerColor) markerSpan.setAttribute("fill", lineObj.listMarkerColor);
               markerSpan.textContent = lineObj.listMarker;
               textEl.appendChild(markerSpan);
             }
@@ -736,14 +750,23 @@ window.MinimalFlow = window.MinimalFlow || {};
               }
               for (const part of words[wi].parts) {
                 const lastRun = mergedRuns[mergedRuns.length - 1];
-                if (lastRun && lastRun.bold === part.bold && lastRun.italic === part.italic && lastRun.underline === part.underline) {
+                if (lastRun &&
+                    lastRun.bold === part.bold &&
+                    lastRun.italic === part.italic &&
+                    lastRun.underline === part.underline &&
+                    lastRun.color === part.color &&
+                    lastRun.fontSize === part.fontSize &&
+                    lastRun.fontFamily === part.fontFamily) {
                   lastRun.text += part.text;
                 } else {
                   mergedRuns.push({
                     text: part.text,
                     bold: part.bold,
                     italic: part.italic,
-                    underline: part.underline
+                    underline: part.underline,
+                    color: part.color,
+                    fontSize: part.fontSize,
+                    fontFamily: part.fontFamily
                   });
                 }
               }
