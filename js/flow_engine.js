@@ -594,11 +594,13 @@ window.MinimalFlow = window.MinimalFlow || {};
       g.appendChild(path);
 
       if (node.text && textEditorModule) {
-        const rawContent = (node.text.content || "").trim();
-        const isPh = !rawContent || rawContent.toLowerCase() === "insert text" || !!node.text.isPlaceholder;
+        const plainCheck = typeof textEditorModule.getPlainText === "function"
+          ? textEditorModule.getPlainText(node.text.content || "")
+          : (node.text.content || "").trim();
+        const isPh = !plainCheck || plainCheck.toLowerCase() === "insert text" || !!node.text.isPlaceholder;
 
         // Hanya render teks jika ada isi nyata, hindari mencetak watermark/placeholder "Insert text"
-        if (!isPh && rawContent.length > 0) {
+        if (!isPh && plainCheck.length > 0) {
           // Clip-Path agar teks tidak menembus kotak pembatas atas dan bawah chart
           const clipId = `clip-node-text-${id}`;
           const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
@@ -621,49 +623,140 @@ window.MinimalFlow = window.MinimalFlow || {};
           textEl.setAttribute("font-size", node.text.fontSize);
           textEl.setAttribute("font-weight", node.text.bold ? "700" : "500");
           textEl.setAttribute("font-style", node.text.italic ? "italic" : "normal");
-          textEl.setAttribute("text-decoration", node.text.underline ? "underline" : "none");
           const activeTextColor = node.text.color || (isDarkColor(node.style.fill) ? "#ffffff" : (isDark ? "#fafafa" : "#18181b"));
           textEl.setAttribute("fill", activeTextColor);
           textEl.style.pointerEvents = "none";
           textEl.style.userSelect = "none";
           textEl.style.webkitUserSelect = "none";
 
-          layout.lines.forEach((lineSpans, index) => {
-            const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-            tspan.setAttribute("x", layout.xPos);
-            if (index > 0) tspan.setAttribute("dy", layout.lineHeight);
+          function applyPartStyle(el, part) {
+            el.setAttribute("font-weight", (part.bold || node.text.bold) ? "700" : "500");
+            el.setAttribute("font-style", (part.italic || node.text.italic) ? "italic" : "normal");
+            if (part.underline || node.text.underline) {
+              el.setAttribute("text-decoration", "underline");
+            }
+          }
 
-            if (Array.isArray(lineSpans)) {
-              if (lineSpans.justify && layout.maxWidth > 0) {
-                tspan.setAttribute("textLength", layout.maxWidth);
-                tspan.setAttribute("lengthAdjust", "spacing");
-              }
-              if (lineSpans.length === 0 || (lineSpans.length === 1 && !lineSpans[0].text)) {
-                tspan.textContent = " ";
-              } else {
-                lineSpans.forEach(span => {
-                  const subSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                  if (span.bold) {
-                    subSpan.setAttribute("font-weight", "700");
-                  } else {
-                    subSpan.setAttribute("font-weight", node.text.bold ? "700" : "500");
-                  }
+          function appendWordParts(parentSpan, parts) {
+            if (!parts || parts.length === 0) return;
+            if (parts.length === 1) {
+              applyPartStyle(parentSpan, parts[0]);
+              parentSpan.textContent = parts[0].text;
+              return;
+            }
+            for (const part of parts) {
+              const subSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+              applyPartStyle(subSpan, part);
+              subSpan.textContent = part.text;
+              parentSpan.appendChild(subSpan);
+            }
+          }
 
-                  if (span.italic) {
-                    subSpan.setAttribute("font-style", "italic");
-                  } else {
-                    subSpan.setAttribute("font-style", node.text.italic ? "italic" : "normal");
-                  }
+          layout.lines.forEach((lineObj, index) => {
+            const lineY = Math.round((layout.startY + index * layout.lineHeight) * 10) / 10;
 
-                  subSpan.textContent = span.text;
-                  tspan.appendChild(subSpan);
-                });
-              }
-            } else {
-              tspan.textContent = lineSpans || " ";
+            // Render nomor list pada margin kiri dengan hanging indent
+            if (lineObj && lineObj.listMarker) {
+              const markerSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+              markerSpan.setAttribute("x", Math.round(lineObj.listMarkerX * 10) / 10);
+              markerSpan.setAttribute("y", lineY);
+              markerSpan.setAttribute("text-anchor", "start");
+              markerSpan.setAttribute("font-weight", node.text.bold ? "700" : "500");
+              markerSpan.setAttribute("font-style", "normal");
+              markerSpan.textContent = lineObj.listMarker;
+              textEl.appendChild(markerSpan);
             }
 
-            textEl.appendChild(tspan);
+            const words = (lineObj && Array.isArray(lineObj.words)) ? lineObj.words : [];
+            if (words.length === 0) {
+              if (!lineObj || !lineObj.listMarker) {
+                const emptySpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                emptySpan.setAttribute("x", Math.round(((lineObj && lineObj.lineStartX) || layout.xPos) * 10) / 10);
+                emptySpan.setAttribute("y", lineY);
+                emptySpan.textContent = " ";
+                textEl.appendChild(emptySpan);
+              }
+              return;
+            }
+
+            // TRUE WORD-SPACING JUSTIFY: hanya spasi antar kata yang direnggangkan, BUKAN huruf!
+            if (lineObj.justify && words.length > 1 && lineObj.availWidth > 0) {
+              const gapCount = words.length - 1;
+              const extraAvail = lineObj.availWidth - lineObj.wordsWidthSum;
+              const minGap = (lineObj.normalSpaceW || 3.5) * 0.65;
+              const gap = Math.max(minGap, extraAvail / gapCount);
+              let cursorX = lineObj.lineStartX;
+
+              for (let wi = 0; wi < words.length; wi++) {
+                const w = words[wi];
+                const isLastWord = (wi === words.length - 1);
+                const wordSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                wordSpan.setAttribute("y", lineY);
+
+                if (isLastWord && cursorX + w.width <= lineObj.lineRightX + 6) {
+                  wordSpan.setAttribute("x", Math.round(lineObj.lineRightX * 10) / 10);
+                  wordSpan.setAttribute("text-anchor", "end");
+                } else {
+                  wordSpan.setAttribute("x", Math.round(cursorX * 10) / 10);
+                  wordSpan.setAttribute("text-anchor", "start");
+                }
+
+                appendWordParts(wordSpan, w.parts);
+                textEl.appendChild(wordSpan);
+                cursorX += w.width + gap;
+              }
+              return;
+            }
+
+            // Non-justified line (left, center, right, atau baris terakhir paragraf justify)
+            const lineAlign = lineObj.align || node.text.align || "center";
+            let lineX = lineObj.lineStartX;
+            let lineAnchor = "start";
+            if (lineAlign === "center") {
+              lineX = lineObj.lineStartX + lineObj.availWidth / 2;
+              lineAnchor = "middle";
+            } else if (lineAlign === "right") {
+              lineX = lineObj.lineRightX;
+              lineAnchor = "end";
+            }
+
+            const lineTspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+            lineTspan.setAttribute("x", Math.round(lineX * 10) / 10);
+            lineTspan.setAttribute("y", lineY);
+            lineTspan.setAttribute("text-anchor", lineAnchor);
+
+            // Gabungkan runs berurutan dengan gaya sama (dengan spasi tunggal antar kata)
+            const mergedRuns = [];
+            for (let wi = 0; wi < words.length; wi++) {
+              if (wi > 0) {
+                const lastRun = mergedRuns[mergedRuns.length - 1];
+                if (lastRun) {
+                  lastRun.text += " ";
+                }
+              }
+              for (const part of words[wi].parts) {
+                const lastRun = mergedRuns[mergedRuns.length - 1];
+                if (lastRun && lastRun.bold === part.bold && lastRun.italic === part.italic && lastRun.underline === part.underline) {
+                  lastRun.text += part.text;
+                } else {
+                  mergedRuns.push({
+                    text: part.text,
+                    bold: part.bold,
+                    italic: part.italic,
+                    underline: part.underline
+                  });
+                }
+              }
+            }
+
+            mergedRuns.forEach(run => {
+              const subSpan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+              applyPartStyle(subSpan, run);
+              subSpan.textContent = run.text;
+              lineTspan.appendChild(subSpan);
+            });
+
+            textEl.appendChild(lineTspan);
           });
           g.appendChild(textEl);
         }

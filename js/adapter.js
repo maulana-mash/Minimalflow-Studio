@@ -12,15 +12,26 @@ window.MinimalFlow = window.MinimalFlow || {};
 (function (exports) {
   'use strict';
 
-  // Bersihkan kutip dan tag HTML seperti <br/>
+  // Bersihkan kutip, entitas HTML/Mermaid, dan tag <br/>
   function cleanLabelText(t) {
     if (!t) return '';
     let res = String(t).trim();
     if ((res.startsWith('"') && res.endsWith('"')) || (res.startsWith("'") && res.endsWith("'"))) {
       res = res.slice(1, -1);
     }
-    // Ganti tag line break dengan baris baru \n
-    res = res.replace(/<br\s*\/?>/gi, '\n');
+    res = res
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/&quot;|#34;/gi, '"')
+      .replace(/&apos;|&#39;|#39;/gi, "'")
+      .replace(/&amp;|#38;/gi, '&')
+      .replace(/&lt;|#60;/gi, '<')
+      .replace(/&gt;|#62;/gi, '>')
+      .replace(/#40;/gi, '(')
+      .replace(/#41;/gi, ')')
+      .replace(/#58;/gi, ':')
+      .replace(/#59;/gi, ';')
+      .replace(/#91;/gi, '[')
+      .replace(/#93;/gi, ']');
     return res.trim();
   }
 
@@ -49,6 +60,11 @@ window.MinimalFlow = window.MinimalFlow || {};
       const parsed = JSON.parse(trimmed);
       if (typeof parsed !== "object" || parsed === null) {
         return { type: "unknown", error: "Format data bukan objek JSON valid" };
+      }
+
+      // Format 0: MinimalFlow AI Vision Direct Spatial Reconstruction JSON
+      if (parsed.format === "minimalflow_vision" || (Array.isArray(parsed.nodes) && parsed.nodes.some(n => Array.isArray(n && n.box_2d)))) {
+        return { type: "minimalflow_vision", data: parsed };
       }
 
       // Format 1: Mashimurelay Circuit Trainer JSON
@@ -97,7 +113,27 @@ window.MinimalFlow = window.MinimalFlow || {};
   // 2. PARSER MERMAID SCRIPT (.mmd)
   // ==========================================================================
   function parseMermaidScript(content) {
-    const lines = content.split('\n');
+    // Gabungkan label berkutip ganda yang melintasi beberapa baris sebelum split per baris
+    const logicalLines = [];
+    let buffer = "";
+    let inDoubleQuote = false;
+    for (let i = 0; i < content.length; i++) {
+      const ch = content[i];
+      if (ch === '"' && content[i - 1] !== '\\') {
+        inDoubleQuote = !inDoubleQuote;
+        buffer += ch;
+      } else if (ch === '\n' && inDoubleQuote) {
+        buffer += '<br/>';
+      } else if (ch === '\n' && !inDoubleQuote) {
+        logicalLines.push(buffer);
+        buffer = "";
+      } else if (ch !== '\r') {
+        buffer += ch;
+      }
+    }
+    if (buffer) logicalLines.push(buffer);
+
+    const lines = logicalLines;
     const nodes = {};
     const edges = {};
     const subgraphs = {};
@@ -136,55 +172,109 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     function ensureNode(rawToken) {
       if (!rawToken) return null;
-      rawToken = rawToken.trim();
+      // Bersihkan trailing semicolon dan :::className
+      rawToken = rawToken.trim().replace(/;+$/, '').replace(/:::[a-zA-Z0-9_-]+$/, '').trim();
       if (!rawToken) return null;
 
       // Bentuk 1: Stadium / Rounded: ID(["Text"])
-      let match = rawToken.match(/^([a-zA-Z0-9_]+)\s*\(\[\s*([\s\S]*?)\s*\]\)$/);
+      let match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\(\[\s*([\s\S]*?)\s*\]\)$/);
       if (match) return registerNode(match[1], match[2], 'rounded');
 
       // Bentuk 2: Cylinder: ID[("Text")]
-      match = rawToken.match(/^([a-zA-Z0-9_]+)\s*\[\(\s*([\s\S]*?)\s*\)\]$/);
+      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\[\(\s*([\s\S]*?)\s*\)\]$/);
       if (match) return registerNode(match[1], match[2], 'cylinder');
 
       // Bentuk 3: Circle: ID(("Text"))
-      match = rawToken.match(/^([a-zA-Z0-9_]+)\s*\(\(\s*([\s\S]*?)\s*\)\)$/);
+      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\(\(\s*([\s\S]*?)\s*\)\)$/);
       if (match) return registerNode(match[1], match[2], 'circle');
 
-      // Bentuk 4: Diamond / Decision: ID{"Text"}
-      match = rawToken.match(/^([a-zA-Z0-9_]+)\s*\{\s*([\s\S]*?)\s*\}$/);
+      // Bentuk 4: Subroutine: ID[["Text"]]
+      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\[\[\s*([\s\S]*?)\s*\]\]$/);
+      if (match) return registerNode(match[1], match[2], 'predefined_process');
+
+      // Bentuk 5: Hexagon: ID{{"Text"}}
+      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\{\{\s*([\s\S]*?)\s*\}\}$/);
+      if (match) return registerNode(match[1], match[2], 'preparation');
+
+      // Bentuk 6: Diamond / Decision: ID{"Text"}
+      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\{\s*([\s\S]*?)\s*\}$/);
       if (match) return registerNode(match[1], match[2], 'diamond');
 
-      // Bentuk 5: Parallelogram: ID[/"Text"/] or ID[\"Text"\]
-      match = rawToken.match(/^([a-zA-Z0-9_]+)\s*\[\/\s*([\s\S]*?)\s*\/\]$/);
+      // Bentuk 7: Parallelogram: ID[/"Text"/] or ID[\"Text"\]
+      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\[\/\s*([\s\S]*?)\s*\/\]$/);
       if (match) return registerNode(match[1], match[2], 'parallelogram');
 
-      // Bentuk 6: Rectangle: ID["Text"]
-      match = rawToken.match(/^([a-zA-Z0-9_]+)\s*\[\s*([\s\S]*?)\s*\]$/);
+      // Bentuk 8: Rectangle: ID["Text"]
+      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\[\s*([\s\S]*?)\s*\]$/);
       if (match) return registerNode(match[1], match[2], 'rectangle');
 
-      // Bentuk 7: Rounded biasa: ID("Text")
-      match = rawToken.match(/^([a-zA-Z0-9_]+)\s*\(\s*([\s\S]*?)\s*\)$/);
+      // Bentuk 9: Rounded biasa: ID("Text")
+      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\(\s*([\s\S]*?)\s*\)$/);
       if (match) return registerNode(match[1], match[2], 'rounded');
 
-      // Bentuk 8: Bare ID
-      match = rawToken.match(/^([a-zA-Z0-9_]+)$/);
+      // Bentuk 10: Bare ID
+      match = rawToken.match(/^([a-zA-Z0-9_-]+)$/);
       if (match) return registerNode(match[1], null, null);
 
       return null;
     }
 
-    // Prioritaskan pola yang memiliki label pipa |...| atau kutip -- "..." --> sebelum panah polos
-    const connRegex = /(-->\s*\|[^|]+\||-\.->\s*\|[^|]+\||--\s*(?:"[^"]*"|'[^']*'|[^-\s>]+)\s*-->|-->|---|-\.->|-.-|==>)/g;
+    // Split token dengan '&' di luar tanda kutip (mendukung fan-in/fan-out: A & B & C --> D)
+    function splitAmpersandOutsideQuotes(token) {
+      const parts = [];
+      let cur = "";
+      let inQ = false;
+      for (let i = 0; i < token.length; i++) {
+        const ch = token[i];
+        if (ch === '"' && token[i - 1] !== '\\') {
+          inQ = !inQ;
+          cur += ch;
+        } else if (ch === '&' && !inQ) {
+          parts.push(cur.trim());
+          cur = "";
+        } else {
+          cur += ch;
+        }
+      }
+      if (cur.trim()) parts.push(cur.trim());
+      return parts;
+    }
+
+    // Temukan semua konektor panah hanya DI LUAR tanda kutip ganda
+    const connRegex = /(-->\s*\|[^|]+\||-\.->\s*\|[^|]+\||--\s*(?:"[^"]*"|'[^']*'|[^-\s>]+)\s*-->|<-->|-->|---|-\.->|-.-|==>)/g;
+
+    function findConnectorsOutsideQuotes(lineStr) {
+      const quoteRanges = [];
+      let qStart = -1;
+      for (let i = 0; i < lineStr.length; i++) {
+        if (lineStr[i] === '"' && lineStr[i - 1] !== '\\') {
+          if (qStart === -1) qStart = i;
+          else {
+            quoteRanges.push([qStart, i]);
+            qStart = -1;
+          }
+        }
+      }
+      function isInsideQuote(pos) {
+        for (const [a, b] of quoteRanges) {
+          if (pos > a && pos < b) return true;
+        }
+        return false;
+      }
+      return [...lineStr.matchAll(connRegex)].filter(m => !isInsideQuote(m.index));
+    }
 
     for (let rawLine of lines) {
-      let line = rawLine.trim();
-      if (!line || line.startsWith('%%') || line.startsWith('classDef') || line.startsWith('class ')) {
+      let line = rawLine.trim().replace(/;+$/, '').trim();
+      if (!line ||
+          line.startsWith('%%') ||
+          /^(?:flowchart|graph)\s+/i.test(line) ||
+          /^(?:classDef|class|style|linkStyle|click|direction)\s+/i.test(line)) {
         continue;
       }
 
       // Deteksi awal subgraph
-      const subMatch = line.match(/^subgraph\s+([a-zA-Z0-9_]+)(?:\s*\[\s*(?:"([^"]*)"|'([^']*)'|([^\]]*))\s*\])?/i);
+      const subMatch = line.match(/^subgraph\s+([a-zA-Z0-9_-]+)(?:\s*\[\s*(?:"([^"]*)"|'([^']*)'|([^\]]*))\s*\])?/i);
       if (subMatch) {
         const sId = subMatch[1];
         const sTitle = cleanLabelText(subMatch[2] || subMatch[3] || subMatch[4] || sId);
@@ -199,7 +289,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         continue;
       }
 
-      const matches = [...line.matchAll(connRegex)];
+      const matches = findConnectorsOutsideQuotes(line);
       if (matches.length > 0) {
         let lastIndex = 0;
         const tokens = [];
@@ -214,45 +304,47 @@ window.MinimalFlow = window.MinimalFlow || {};
         tokens.push(line.substring(lastIndex).trim());
 
         for (let i = 0; i < conns.length; i++) {
-          const srcToken = tokens[i];
-          const tgtToken = tokens[i + 1];
+          const srcGroup = splitAmpersandOutsideQuotes(tokens[i]);
+          const tgtGroup = splitAmpersandOutsideQuotes(tokens[i + 1]);
           const connStr = conns[i];
 
-          const srcId = ensureNode(srcToken);
-          const tgtId = ensureNode(tgtToken);
+          const srcIds = srcGroup.map(ensureNode).filter(Boolean);
+          const tgtIds = tgtGroup.map(ensureNode).filter(Boolean);
 
-          if (srcId && tgtId) {
-            let dashed = 'solid';
-            let label = '';
-            if (connStr.includes('-.->') || connStr.includes('-.-')) {
-              dashed = 'dashed';
+          let dashed = 'solid';
+          let label = '';
+          if (connStr.includes('-.->') || connStr.includes('-.-')) {
+            dashed = 'dashed';
+          }
+
+          const pipeMatch = connStr.match(/\|([^|]+)\|/);
+          if (pipeMatch) {
+            label = cleanLabelText(pipeMatch[1]);
+          } else {
+            const quoteMatch = connStr.match(/--\s*("[^"]*"|'[^']*'|[^-\s>]+)\s*-->/);
+            if (quoteMatch) {
+              label = cleanLabelText(quoteMatch[1]);
             }
+          }
 
-            const pipeMatch = connStr.match(/\|([^|]+)\|/);
-            if (pipeMatch) {
-              label = cleanLabelText(pipeMatch[1]);
-            } else {
-              const quoteMatch = connStr.match(/--\s*("[^"]*"|'[^']*'|[^-\s>]+)\s*-->/);
-              if (quoteMatch) {
-                label = cleanLabelText(quoteMatch[1]);
-              }
+          for (const srcId of srcIds) {
+            for (const tgtId of tgtIds) {
+              const edgeId = `edge_${edgeCounter++}`;
+              edges[edgeId] = {
+                id: edgeId,
+                sourceId: srcId,
+                targetId: tgtId,
+                dashed,
+                label
+              };
+
+              if (nodes[srcId]) nodes[srcId].outDegree++;
+              if (nodes[tgtId]) nodes[tgtId].inDegree++;
             }
-
-            const edgeId = `edge_${edgeCounter++}`;
-            edges[edgeId] = {
-              id: edgeId,
-              sourceId: srcId,
-              targetId: tgtId,
-              dashed,
-              label
-            };
-
-            if (nodes[srcId]) nodes[srcId].outDegree++;
-            if (nodes[tgtId]) nodes[tgtId].inDegree++;
           }
         }
       } else {
-        ensureNode(line);
+        splitAmpersandOutsideQuotes(line).forEach(ensureNode);
       }
     }
 
@@ -504,48 +596,95 @@ window.MinimalFlow = window.MinimalFlow || {};
       const maxLvl = Math.max(...Object.keys(levelGroups).map(Number));
       const startX = 80;
       const startY = 80;
+      const TE = exports.TextEditor;
+      const baseFontFamily = fontOptions.fontFamily || "Poppins, sans-serif";
+      const baseFontSize = fontOptions.fontSize || 13;
+
+      let cursorY = startY;
+      let cursorX = startX;
+      let maxExtentX = 1600;
+      let maxExtentY = 900;
 
       for (let lvl = 0; lvl <= maxLvl; lvl++) {
         const group = levelGroups[lvl] || [];
         const count = group.length;
+        if (count === 0) continue;
 
-        group.forEach((id, idx) => {
+        // Pass 1: Hitung dimensi aktual (lebar & tinggi anti-clipping) setiap node di level ini
+        const measured = group.map(id => {
           const n = nodes[id];
           const text = n.rawText || id;
           const lines = text.split('\n');
+          const totalChars = text.length;
           const maxLineLen = Math.max(...lines.map(l => l.length));
 
-          let width = Math.max(160, Math.min(280, maxLineLen * 7.5 + 36));
+          // Jika hanya 1 node di level ini dengan teks panjang, izinkan lebih lebar agar proporsional
+          const maxAllowedW = (count === 1 && totalChars > 140) ? 760 : (count <= 2 ? 360 : 250);
+          let width = Math.max(160, Math.min(maxAllowedW, maxLineLen * 7.5 + 36));
           let height = Math.max(70, lines.length * 18 + 36);
 
-          if (n.type === 'circle') {
-            const dim = Math.max(110, Math.max(width, height) * 0.85);
-            width = dim; height = dim;
-          } else if (n.type === 'diamond') {
-            width = Math.max(160, width + 30);
-            height = Math.max(110, height + 30);
-          }
-
-          let x, y;
-          if (isTD) {
-            y = startY + lvl * 160;
-            const totalW = count * (width + 36);
-            const offsetLeft = Math.max(startX, 800 - totalW / 2);
-            x = offsetLeft + idx * (width + 36);
-          } else {
-            x = startX + lvl * 270;
-            const totalH = count * (height + 36);
-            const offsetTop = Math.max(startY, 450 - totalH / 2);
-            y = offsetTop + idx * (height + 36);
-          }
-
-          finalNodes[id] = {
-            id,
+          const tempNode = {
             type: n.type || 'rectangle',
-            x: Math.round(x),
-            y: Math.round(y),
             width: Math.round(width),
             height: Math.round(height),
+            text: {
+              content: text,
+              fontFamily: baseFontFamily,
+              fontSize: baseFontSize,
+              bold: false,
+              italic: false,
+              underline: false,
+              align: "center",
+              paddingX: 14,
+              paddingY: 10
+            }
+          };
+
+          if (TE && TE.layoutNodeText && TE.computeRequiredNodeHeight) {
+            const layout = TE.layoutNodeText(tempNode);
+            height = Math.max(height, TE.computeRequiredNodeHeight(tempNode, layout.totalTextHeight) + 6);
+          }
+
+          if (n.type === 'circle') {
+            const dim = Math.max(110, Math.max(width, height) * 0.9);
+            width = dim; height = dim;
+          } else if (n.type === 'diamond') {
+            width = Math.max(160, width + 36);
+            height = Math.max(110, height + 36);
+          }
+
+          return { id, n, text, width: Math.round(width), height: Math.round(height) };
+        });
+
+        const gapX = 32;
+        const gapY = 64;
+        const rowMaxH = Math.max(...measured.map(m => m.height));
+        const colMaxW = Math.max(...measured.map(m => m.width));
+        const totalRowW = measured.reduce((sum, m) => sum + m.width, 0) + Math.max(0, count - 1) * gapX;
+        const totalColH = measured.reduce((sum, m) => sum + m.height, 0) + Math.max(0, count - 1) * 36;
+
+        let runX = Math.max(startX, Math.round(800 - totalRowW / 2));
+        let runY = Math.max(startY, Math.round(450 - totalColH / 2));
+
+        measured.forEach(item => {
+          let x, y;
+          if (isTD) {
+            x = runX;
+            y = cursorY;
+            runX += item.width + gapX;
+          } else {
+            x = cursorX;
+            y = runY;
+            runY += item.height + 36;
+          }
+
+          finalNodes[item.id] = {
+            id: item.id,
+            type: item.n.type || 'rectangle',
+            x: Math.round(x),
+            y: Math.round(y),
+            width: item.width,
+            height: item.height,
             rotation: 0,
             locked: false,
             groupId: null,
@@ -555,9 +694,9 @@ window.MinimalFlow = window.MinimalFlow || {};
               strokeWidth: 1.5
             },
             text: {
-              content: text,
-              fontFamily: fontOptions.fontFamily || "Poppins, sans-serif",
-              fontSize: fontOptions.fontSize || 13,
+              content: item.text,
+              fontFamily: baseFontFamily,
+              fontSize: baseFontSize,
               bold: false,
               italic: false,
               underline: false,
@@ -567,11 +706,20 @@ window.MinimalFlow = window.MinimalFlow || {};
               paddingY: 10
             }
           };
+
+          maxExtentX = Math.max(maxExtentX, x + item.width + 100);
+          maxExtentY = Math.max(maxExtentY, y + item.height + 100);
         });
+
+        if (isTD) {
+          cursorY += rowMaxH + gapY;
+        } else {
+          cursorX += colMaxW + 80;
+        }
       }
 
-      totalWidth = Math.max(1600, (isTD ? 1600 : (maxLvl + 1) * 270 + 200));
-      totalHeight = Math.max(900, (isTD ? (maxLvl + 1) * 160 + 200 : 900));
+      totalWidth = Math.max(1600, Math.round(maxExtentX));
+      totalHeight = Math.max(900, Math.round(maxExtentY));
     }
 
     // Hubungkan kabel & pin magnetik
@@ -1109,6 +1257,379 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   // ==========================================================================
+  // 6b. AI VISION DIRECT SPATIAL RECONSTRUCTION ENGINE (box_2d + Verbatim Rich Text)
+  // ==========================================================================
+  function normalizeVisionShapeType(rawType) {
+    const t = String(rawType || "rectangle").toLowerCase().trim();
+    const validShapes = new Set([
+      "rectangle", "rounded", "diamond", "circle", "parallelogram",
+      "document", "predefined_process", "preparation", "manual_input",
+      "manual_operation", "display", "offpage", "cylinder",
+      "disk_storage", "magnetic_tape", "punch_card"
+    ]);
+    if (validShapes.has(t)) return t;
+    if (t === "stadium" || t === "terminator" || t === "pill" || t === "oval") return "rounded";
+    if (t === "process" || t === "box" || t === "rect" || t === "square") return "rectangle";
+    if (t === "decision" || t === "rhombus" || t === "condition") return "diamond";
+    if (t === "database" || t === "db" || t === "storage") return "cylinder";
+    if (t === "io" || t === "input" || t === "output" || t === "data") return "parallelogram";
+    if (t === "subroutine" || t === "sub_process" || t === "predefined") return "predefined_process";
+    if (t === "hexagon" || t === "prep") return "preparation";
+    if (t === "trapezoid") return "manual_operation";
+    if (t === "pentagon" || t === "off_page" || t === "offpage_connector") return "offpage";
+    if (t === "connector" || t === "ellipse") return "circle";
+    return "rectangle";
+  }
+
+  function parseMinimalFlowVisionJson(data, isDark = false) {
+    const rawNodes = Array.isArray(data.nodes) ? data.nodes : [];
+    const rawEdges = Array.isArray(data.edges) ? data.edges : [];
+    const TE = exports.TextEditor;
+
+    if (rawNodes.length === 0) {
+      return {
+        version: "1.5.0",
+        theme: isDark ? "dark" : "light",
+        canvas: { pan: { x: 40, y: 40 }, zoom: 1, gridSize: 24, workspace: { preset: "16:9_landscape", orientation: "landscape", x: 40, y: 40, width: 1600, height: 900 } },
+        nodes: {},
+        edges: {}
+      };
+    }
+
+    const imgW = Number(data.imageWidth) > 100 ? Number(data.imageWidth) : 1600;
+    const imgH = Number(data.imageHeight) > 100 ? Number(data.imageHeight) : 900;
+    const aspect = imgW / imgH;
+
+    // Tentukan ukuran kanvas target yang mempertahankan rasio aspek asli gambar
+    let canvasW = 1440;
+    let canvasH = Math.round(canvasW / aspect);
+    if (canvasH > 1400) {
+      canvasH = 1400;
+      canvasW = Math.round(canvasH * aspect);
+    }
+    if (canvasW < 960) {
+      canvasW = 960;
+      canvasH = Math.round(canvasW / aspect);
+    }
+
+    const marginX = 72;
+    const marginY = 72;
+    const drawW = canvasW - marginX * 2;
+    const drawH = canvasH - marginY * 2;
+
+    // Cari rentang koordinat box_2d agar diagram memenuhi area kerja secara proporsional
+    const validBoxes = rawNodes.filter(n => Array.isArray(n.box_2d) && n.box_2d.length === 4);
+    let minNormX = 0, maxNormX = 1000, minNormY = 0, maxNormY = 1000;
+    if (validBoxes.length > 0) {
+      const xs1 = validBoxes.map(n => Number(n.box_2d[1]) || 0);
+      const xs2 = validBoxes.map(n => Number(n.box_2d[3]) || 1000);
+      const ys1 = validBoxes.map(n => Number(n.box_2d[0]) || 0);
+      const ys2 = validBoxes.map(n => Number(n.box_2d[2]) || 1000);
+      const spanX = Math.max(100, Math.max(...xs2) - Math.min(...xs1));
+      const spanY = Math.max(100, Math.max(...ys2) - Math.min(...ys1));
+      minNormX = Math.max(0, Math.min(...xs1) - spanX * 0.03);
+      maxNormX = Math.min(1000, Math.max(...xs2) + spanX * 0.03);
+      minNormY = Math.max(0, Math.min(...ys1) - spanY * 0.03);
+      maxNormY = Math.min(1000, Math.max(...ys2) + spanY * 0.03);
+    }
+
+    const normSpanX = Math.max(100, maxNormX - minNormX);
+    const normSpanY = Math.max(100, maxNormY - minNormY);
+    // Gunakan skala seragam berdasarkan dimensi fisik asli agar kotak tidak gepeng
+    const physSpanW = (normSpanX / 1000) * imgW;
+    const physSpanH = (normSpanY / 1000) * imgH;
+    const uniformScale = Math.min(drawW / physSpanW, drawH / physSpanH);
+    const scaleX = (uniformScale * imgW) / 1000;
+    const scaleY = (uniformScale * imgH) / 1000;
+
+    const VALID_ALIGNS = new Set(["left", "center", "right", "justify"]);
+    const VALID_LISTS = new Set(["1.", "1)", "a.", "a)", "A.", "A)"]);
+
+    const builtNodes = [];
+    const nodeMap = {};
+
+    rawNodes.forEach((rn, idx) => {
+      const id = String(rn.id || `vnode_${idx + 1}`).trim();
+      const shapeType = normalizeVisionShapeType(rn.type);
+      const isContainer = !!rn.isContainer;
+
+      let x = marginX + (idx % 4) * 260;
+      let y = marginY + Math.floor(idx / 4) * 180;
+      let width = 200;
+      let height = 100;
+
+      if (Array.isArray(rn.box_2d) && rn.box_2d.length === 4) {
+        const [y1, x1, y2, x2] = rn.box_2d.map(Number);
+        x = marginX + (x1 - minNormX) * scaleX;
+        y = marginY + (y1 - minNormY) * scaleY;
+        width = Math.max(84, (x2 - x1) * scaleX);
+        height = Math.max(48, (y2 - y1) * scaleY);
+      }
+
+      // Bangun konten paragraf kaya (mendukung per-paragraph align, bold/italic/underline, & numbering)
+      let contentStr = "";
+      let dominantAlign = "center";
+      let totalPlainLen = 0;
+
+      if (Array.isArray(rn.paragraphs) && rn.paragraphs.length > 0) {
+        const paras = rn.paragraphs.map(p => {
+          const rawTxt = String((p && p.text) || "").trim();
+          const align = (p && p.align && VALID_ALIGNS.has(String(p.align).toLowerCase()))
+            ? String(p.align).toLowerCase()
+            : null;
+          const list = (p && p.list && VALID_LISTS.has(String(p.list)))
+            ? String(p.list)
+            : null;
+          let html = rawTxt;
+          if (TE && TE.cleanMarkdownToHtml) {
+            html = TE.cleanMarkdownToHtml(html);
+          }
+          if (list && TE && TE.stripManualListPrefix) {
+            html = TE.stripManualListPrefix(html);
+          }
+          return { html, align, list };
+        });
+
+        // Tentukan alignment dominan
+        const alignCounts = {};
+        paras.forEach(p => {
+          const a = p.align || (p.list ? "left" : "center");
+          alignCounts[a] = (alignCounts[a] || 0) + 1;
+        });
+        const sortedAligns = Object.entries(alignCounts).sort((a, b) => b[1] - a[1]);
+        dominantAlign = sortedAligns.length > 0 ? sortedAligns[0][0] : "center";
+
+        if (TE && TE.serializeParagraphs) {
+          contentStr = TE.serializeParagraphs(paras);
+        } else {
+          contentStr = paras.map(p => p.html).join("\n");
+        }
+        totalPlainLen = TE && TE.getPlainText ? TE.getPlainText(contentStr).length : contentStr.length;
+      } else {
+        contentStr = cleanLabelText(rn.text || rn.label || "");
+        if (TE && TE.cleanMarkdownToHtml) {
+          contentStr = TE.cleanMarkdownToHtml(contentStr);
+        }
+        dominantAlign = (rn.align && VALID_ALIGNS.has(String(rn.align).toLowerCase()))
+          ? String(rn.align).toLowerCase()
+          : "center";
+        totalPlainLen = TE && TE.getPlainText ? TE.getPlainText(contentStr).length : contentStr.length;
+      }
+
+      // Pilih fontSize adaptif agar teks padat di kolom sempit tetap terbaca bersih tanpa kepenuhan
+      let fontSize = 13;
+      if (!isContainer) {
+        if (totalPlainLen > 240 && width < 260) fontSize = 11.5;
+        else if (totalPlainLen > 120 && width < 260) fontSize = 12;
+        else if (totalPlainLen > 320) fontSize = 12.5;
+      } else {
+        fontSize = 12;
+      }
+
+      const isFillDark = rn.fill === "dark";
+      const fillCol = isContainer
+        ? (isDark ? "rgba(24, 24, 27, 0.45)" : "rgba(250, 250, 250, 0.65)")
+        : (isFillDark ? (isDark ? "#f4f4f5" : "#18181b") : (isDark ? "#18181b" : "#ffffff"));
+      const textCol = isContainer
+        ? (isDark ? "#a1a1aa" : "#71717a")
+        : (isFillDark ? (isDark ? "#09090b" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b"));
+
+      const nodeObj = {
+        id,
+        type: shapeType,
+        x: Math.round(x),
+        y: Math.round(y),
+        width: Math.round(width),
+        height: Math.round(height),
+        rotation: 0,
+        locked: isContainer,
+        isContainer,
+        groupId: null,
+        zIndex: isContainer ? 1 : (10 + idx * 10),
+        style: {
+          fill: fillCol,
+          stroke: isContainer ? (isDark ? "#3f3f46" : "#d4d4d8") : (isDark ? "#f4f4f5" : "#18181b"),
+          strokeWidth: 1.5,
+          dashed: isContainer ? "dashed" : "solid"
+        },
+        text: {
+          content: contentStr,
+          fontFamily: "Poppins, sans-serif",
+          fontSize,
+          bold: isContainer,
+          italic: false,
+          underline: false,
+          color: textCol,
+          align: isContainer ? "left" : dominantAlign,
+          verticalAlign: isContainer ? "top" : "middle",
+          paddingX: isContainer ? 16 : 14,
+          paddingY: isContainer ? 12 : 10,
+          isPlaceholder: false
+        }
+      };
+
+      builtNodes.push(nodeObj);
+      nodeMap[id] = nodeObj;
+    });
+
+    // Pass 1: Kelompokkan node non-container ke dalam baris horizontal & rapikan kesejajaran
+    const nonContainers = builtNodes.filter(n => !n.isContainer);
+    nonContainers.sort((a, b) => a.y - b.y || a.x - b.x);
+
+    const rows = [];
+    for (const n of nonContainers) {
+      let placed = false;
+      for (const row of rows) {
+        const refY = row[0].y;
+        const refH = row[0].height;
+        // Node berada pada baris sama jika bagian atasnya sejajar (<= 28px) atau bertumpuk vertikal > 55%
+        const overlapY = Math.min(refY + refH, n.y + n.height) - Math.max(refY, n.y);
+        if (Math.abs(n.y - refY) <= 28 || overlapY > Math.min(refH, n.height) * 0.55) {
+          row.push(n);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) rows.push([n]);
+    }
+
+    // Rapikan y & spacing horizontal dalam setiap baris, lalu auto-fit tinggi agar 0% teks terpotong
+    let cumulativeShiftY = 0;
+    for (const row of rows) {
+      row.sort((a, b) => a.x - b.x);
+
+      // Snap Y sejajar untuk semua kotak di baris yang sama
+      const avgY = Math.round(row.reduce((s, n) => s + n.y, 0) / row.length) + cumulativeShiftY;
+      row.forEach(n => { n.y = avgY; });
+
+      // Pastikan celah horizontal minimal 16px antar kotak yang berdampingan di baris yang sama
+      for (let i = 1; i < row.length; i++) {
+        const prev = row[i - 1];
+        const curr = row[i];
+        const minX = prev.x + prev.width + 16;
+        if (curr.x < minX) {
+          curr.x = minX;
+        }
+      }
+
+      // Cek apakah kotak-kotak di baris ini semula memiliki tinggi hampir sama
+      const origHeights = row.map(n => n.height);
+      const wasUniformHeight = row.length > 1 && (Math.max(...origHeights) - Math.min(...origHeights)) <= 36;
+      const origRowMaxH = Math.max(...origHeights);
+
+      // Auto-measure tinggi teks aktual dengan TextEditor agar ZERO clipping
+      if (TE && TE.layoutNodeText && TE.computeRequiredNodeHeight) {
+        row.forEach(n => {
+          const layout = TE.layoutNodeText(n);
+          const reqH = TE.computeRequiredNodeHeight(n, layout.totalTextHeight) + 8;
+          if (reqH > n.height) {
+            n.height = Math.round(reqH);
+          }
+        });
+      }
+
+      const newRowMaxH = Math.max(...row.map(n => n.height));
+      if (wasUniformHeight) {
+        row.forEach(n => { n.height = newRowMaxH; });
+      }
+
+      const rowExpansion = Math.max(0, newRowMaxH - origRowMaxH);
+      if (rowExpansion > 0) {
+        cumulativeShiftY += rowExpansion + 16;
+      }
+    }
+
+    // Hitung ulang batas kanvas agar semua node muat lega
+    let maxRight = 1400;
+    let maxBottom = 860;
+    const finalNodes = {};
+    builtNodes.forEach(n => {
+      n.baseWidth = n.width;
+      n.baseHeight = n.height;
+      finalNodes[n.id] = n;
+      maxRight = Math.max(maxRight, n.x + n.width + 80);
+      maxBottom = Math.max(maxBottom, n.y + n.height + 80);
+    });
+
+    // Bangun koneksi panah (edges) dengan pin yang akurat
+    const VALID_PINS = new Set(["N", "E", "S", "W"]);
+    const finalEdges = {};
+    let edgeCounter = 1;
+
+    rawEdges.forEach(re => {
+      if (!re) return;
+      const srcId = String(re.source || "").trim();
+      const tgtId = String(re.target || "").trim();
+      const src = finalNodes[srcId];
+      const tgt = finalNodes[tgtId];
+      if (!src || !tgt || srcId === tgtId) return;
+
+      let srcPin = VALID_PINS.has(re.sourcePin) ? re.sourcePin : null;
+      let tgtPin = VALID_PINS.has(re.targetPin) ? re.targetPin : null;
+
+      if (!srcPin || !tgtPin) {
+        const sCx = src.x + src.width / 2;
+        const sCy = src.y + src.height / 2;
+        const tCx = tgt.x + tgt.width / 2;
+        const tCy = tgt.y + tgt.height / 2;
+        const dx = tCx - sCx;
+        const dy = tCy - sCy;
+        if (Math.abs(dy) >= Math.abs(dx) * 0.6) {
+          srcPin = srcPin || (dy >= 0 ? "S" : "N");
+          tgtPin = tgtPin || (dy >= 0 ? "N" : "S");
+        } else {
+          srcPin = srcPin || (dx >= 0 ? "E" : "W");
+          tgtPin = tgtPin || (dx >= 0 ? "W" : "E");
+        }
+      }
+
+      const eId = `vedge_${edgeCounter++}`;
+      finalEdges[eId] = {
+        id: eId,
+        type: "step",
+        radius: 8,
+        source: { nodeId: srcId, pin: srcPin },
+        target: { nodeId: tgtId, pin: tgtPin },
+        handleOffset: { dx: 0, dy: 0 },
+        label: re.label ? String(re.label).trim() : "",
+        zIndex: 5,
+        style: {
+          stroke: isDark ? "#f4f4f5" : "#18181b",
+          strokeWidth: 1.5,
+          dashed: (re.dashed === "dashed" || re.dashed === "dotted") ? re.dashed : "solid",
+          markerStart: re.markerStart === "arrow" ? "arrow" : "none",
+          markerEnd: re.markerEnd === "none" ? "none" : "arrow",
+          radius: 8
+        }
+      };
+    });
+
+    const totalW = Math.max(1400, Math.round(maxRight));
+    const totalH = Math.max(900, Math.round(maxBottom));
+    const isPortrait = totalH > totalW;
+
+    return {
+      version: "1.5.0",
+      theme: isDark ? "dark" : "light",
+      canvas: {
+        pan: { x: 40, y: 40 },
+        zoom: 0.85,
+        gridSize: 24,
+        workspace: {
+          preset: isPortrait ? "a4_portrait" : "16:9_landscape",
+          orientation: isPortrait ? "portrait" : "landscape",
+          x: 40,
+          y: 40,
+          width: totalW,
+          height: totalH
+        }
+      },
+      nodes: finalNodes,
+      edges: finalEdges
+    };
+  }
+
+  // ==========================================================================
   // 7. ENTRYPOINT UTAMA (UNIVERSAL TRANSLATOR)
   // ==========================================================================
   function parseUniversal(rawInput, isDark = false) {
@@ -1117,6 +1638,20 @@ window.MinimalFlow = window.MinimalFlow || {};
     switch (detection.type) {
       case "empty":
         return { success: false, error: "Teks atau berkas kosong", detectedType: "empty" };
+
+      case "minimalflow_vision": {
+        const doc = parseMinimalFlowVisionJson(detection.data, isDark);
+        const nodeCount = Object.keys(doc.nodes).filter(k => !doc.nodes[k].isContainer).length;
+        const edgeCount = Object.keys(doc.edges).length;
+        return {
+          success: true,
+          detectedType: "minimalflow_vision",
+          formatTitle: `Rekonstruksi Visual AI (${nodeCount} Bagan Presisi)`,
+          document: doc,
+          nodeCount,
+          edgeCount
+        };
+      }
 
       case "minimalflow": {
         const doc = detection.data;
@@ -1218,6 +1753,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     detectFormat,
     parseUniversal,
     parseMermaidScript,
+    parseMinimalFlowVisionJson,
     parseMashimurelayJson,
     parseGenericJson,
     layoutGraph

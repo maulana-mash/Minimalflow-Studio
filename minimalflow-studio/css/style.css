@@ -1204,6 +1204,41 @@ body.dark-mode .layer-item.layer-item-edge.selected {
   word-break: break-word;
 }
 
+.node-seamless-editor .mf-p {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  min-height: 1.35em;
+}
+
+.node-seamless-editor .mf-p[data-align="left"] {
+  text-align: left;
+}
+
+.node-seamless-editor .mf-p[data-align="center"] {
+  text-align: center;
+}
+
+.node-seamless-editor .mf-p[data-align="right"] {
+  text-align: right;
+}
+
+.node-seamless-editor .mf-p[data-align="justify"] {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.node-seamless-editor .mf-p[data-list]::before {
+  content: attr(data-marker);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-style: normal;
+  text-align: left;
+  user-select: none;
+  pointer-events: none;
+}
+
 .node-seamless-editor:empty::before {
   content: attr(data-placeholder);
   opacity: 0.4;
@@ -2270,6 +2305,67 @@ body.dark-mode .status-error {
 
 .position-grid-btn:active {
   transform: translateY(0);
+}
+
+/* Word-Style Numbering Library Dropdown */
+.numbering-dropdown {
+  min-width: 158px;
+  padding: 8px 10px 10px;
+  gap: 6px;
+}
+
+.numbering-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.numbering-option-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 4px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
+}
+
+.numbering-option-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.numbering-option-btn.active {
+  background: var(--text-main);
+  color: var(--bg-surface);
+  border-color: var(--text-main);
+}
+
+.numbering-none-btn {
+  width: 100%;
+  margin-top: 2px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.numbering-none-btn:hover {
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  border-color: var(--text-main);
 }
 
 /* --------------------------------------------------------------------------

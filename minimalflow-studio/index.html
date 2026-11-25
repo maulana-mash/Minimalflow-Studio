@@ -332,6 +332,87 @@
               </button>
             </div>
 
+            <!-- Word-Style Numbering Dropdown (1., 1), a., a), A., A)) -->
+            <div class="dropdown-wrapper" id="dropdown-numbering-wrapper">
+              <button id="btn-text-numbering" class="btn-icon dropdown-trigger" style="height:26px; padding:0 5px; display:inline-flex; align-items:center; gap:3px;" title="Penomoran Paragraf ala Word (Numbering: 1., 1), a., a), A., A))">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="10" y1="6" x2="21" y2="6"/>
+                  <line x1="10" y1="12" x2="21" y2="12"/>
+                  <line x1="10" y1="18" x2="21" y2="18"/>
+                  <path d="M4 6h1v4" stroke-width="1.8"/>
+                  <path d="M4 10h2" stroke-width="1.8"/>
+                  <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" stroke-width="1.8"/>
+                </svg>
+                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="menu-numbering-dropdown" class="context-dropdown-menu numbering-dropdown">
+                <div class="position-grid-header">PENOMORAN PARAGRAF</div>
+                <div class="numbering-grid">
+                  <button type="button" class="numbering-option-btn" data-list="1." title="Angka Arab Titik (1. 2. 3.)">
+                    <svg width="52" height="36" viewBox="0 0 56 38" fill="none">
+                      <text x="3" y="11" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">1.</text>
+                      <line x1="17" y1="8.5" x2="52" y2="8.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="22" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">2.</text>
+                      <line x1="17" y1="19.5" x2="52" y2="19.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="33" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">3.</text>
+                      <line x1="17" y1="30.5" x2="44" y2="30.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="numbering-option-btn" data-list="1)" title="Angka Arab Kurung (1) 2) 3))">
+                    <svg width="52" height="36" viewBox="0 0 56 38" fill="none">
+                      <text x="3" y="11" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">1)</text>
+                      <line x1="17" y1="8.5" x2="52" y2="8.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="22" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">2)</text>
+                      <line x1="17" y1="19.5" x2="52" y2="19.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="33" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">3)</text>
+                      <line x1="17" y1="30.5" x2="44" y2="30.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="numbering-option-btn" data-list="a." title="Huruf Kecil Titik (a. b. c.)">
+                    <svg width="52" height="36" viewBox="0 0 56 38" fill="none">
+                      <text x="3" y="11" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">a.</text>
+                      <line x1="17" y1="8.5" x2="52" y2="8.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="22" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">b.</text>
+                      <line x1="17" y1="19.5" x2="52" y2="19.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="33" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">c.</text>
+                      <line x1="17" y1="30.5" x2="44" y2="30.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="numbering-option-btn" data-list="a)" title="Huruf Kecil Kurung (a) b) c))">
+                    <svg width="52" height="36" viewBox="0 0 56 38" fill="none">
+                      <text x="3" y="11" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">a)</text>
+                      <line x1="17" y1="8.5" x2="52" y2="8.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="22" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">b)</text>
+                      <line x1="17" y1="19.5" x2="52" y2="19.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="33" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">c)</text>
+                      <line x1="17" y1="30.5" x2="44" y2="30.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="numbering-option-btn" data-list="A." title="Huruf Kapital Titik (A. B. C.)">
+                    <svg width="52" height="36" viewBox="0 0 56 38" fill="none">
+                      <text x="3" y="11" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">A.</text>
+                      <line x1="17" y1="8.5" x2="52" y2="8.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="22" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">B.</text>
+                      <line x1="17" y1="19.5" x2="52" y2="19.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="33" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">C.</text>
+                      <line x1="17" y1="30.5" x2="44" y2="30.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="numbering-option-btn" data-list="A)" title="Huruf Kapital Kurung (A) B) C))">
+                    <svg width="52" height="36" viewBox="0 0 56 38" fill="none">
+                      <text x="3" y="11" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">A)</text>
+                      <line x1="17" y1="8.5" x2="52" y2="8.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="22" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">B)</text>
+                      <line x1="17" y1="19.5" x2="52" y2="19.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                      <text x="3" y="33" font-family="Inter, sans-serif" font-size="8.5" font-weight="600" fill="currentColor">C)</text>
+                      <line x1="17" y1="30.5" x2="44" y2="30.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+                    </svg>
+                  </button>
+                </div>
+                <button type="button" class="numbering-none-btn" data-list="none">Tanpa Penomoran</button>
+              </div>
+            </div>
+
             <!-- Word-Style Vertical Text Alignment Buttons -->
             <div class="btn-group-segmented" title="Perataan Teks Vertikal ala Word (Align Text Top, Middle, Bottom)">
               <button id="btn-text-valign-top" class="btn-icon" style="width:26px; height:26px;" title="Rata Atas (Align Text Top)">

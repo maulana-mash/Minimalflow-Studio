@@ -54,6 +54,8 @@ window.MinimalFlow = window.MinimalFlow || {};
     btnTextAlignCenter: document.getElementById("btn-text-align-center"),
     btnTextAlignRight: document.getElementById("btn-text-align-right"),
     btnTextAlignJustify: document.getElementById("btn-text-align-justify"),
+    btnTextNumbering: document.getElementById("btn-text-numbering"),
+    menuNumberingDropdown: document.getElementById("menu-numbering-dropdown"),
     btnTextValignTop: document.getElementById("btn-text-valign-top"),
     btnTextValignMiddle: document.getElementById("btn-text-valign-middle"),
     btnTextValignBottom: document.getElementById("btn-text-valign-bottom"),
@@ -631,6 +633,9 @@ window.MinimalFlow = window.MinimalFlow || {};
           if (dom.btnTextAlignCenter) dom.btnTextAlignCenter.classList.toggle("active", align === "center");
           if (dom.btnTextAlignRight) dom.btnTextAlignRight.classList.toggle("active", align === "right");
           if (dom.btnTextAlignJustify) dom.btnTextAlignJustify.classList.toggle("active", align === "justify");
+          if (typeof syncTextFormatToolbar === "function") {
+            syncTextFormatToolbar(document.querySelector(".node-seamless-editor"), node);
+          }
 
           const valign = node.text.verticalAlign || "middle";
           if (dom.btnTextValignTop) dom.btnTextValignTop.classList.toggle("active", valign === "top");
@@ -3321,23 +3326,135 @@ window.MinimalFlow = window.MinimalFlow || {};
     });
   }
 
+  function syncTextFormatToolbar(editor, node) {
+    if (!window.MinimalFlow || !window.MinimalFlow.TextEditor) return;
+    const activeNode = node || (editor && editor.dataset.nodeId ? AppState.document.nodes[editor.dataset.nodeId] : null) || AppState.document.nodes[AppState.ui.selectedId];
+    if (!activeNode || !activeNode.text) return;
+    const st = window.MinimalFlow.TextEditor.getActiveEditorState(editor, activeNode);
+
+    if (dom.btnTextAlignLeft) dom.btnTextAlignLeft.classList.toggle("active", st.align === "left");
+    if (dom.btnTextAlignCenter) dom.btnTextAlignCenter.classList.toggle("active", st.align === "center");
+    if (dom.btnTextAlignRight) dom.btnTextAlignRight.classList.toggle("active", st.align === "right");
+    if (dom.btnTextAlignJustify) dom.btnTextAlignJustify.classList.toggle("active", st.align === "justify");
+
+    if (dom.btnTextBold) dom.btnTextBold.classList.toggle("active", !!st.bold);
+    if (dom.btnTextItalic) dom.btnTextItalic.classList.toggle("active", !!st.italic);
+    if (dom.btnTextUnderline) dom.btnTextUnderline.classList.toggle("active", !!st.underline);
+
+    if (dom.btnTextNumbering) {
+      dom.btnTextNumbering.classList.toggle("active", !!st.list);
+    }
+    if (dom.menuNumberingDropdown) {
+      dom.menuNumberingDropdown.querySelectorAll(".numbering-option-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.list === st.list);
+      });
+    }
+  }
+
+  document.addEventListener("mf-selection-change", (e) => {
+    const activeEditor = document.querySelector(".node-seamless-editor");
+    if (activeEditor) {
+      const nodeId = activeEditor.dataset.nodeId;
+      syncTextFormatToolbar(activeEditor, nodeId ? AppState.document.nodes[nodeId] : null);
+    }
+  });
+
   function setTextAlign(align) {
+    const activeEditor = document.querySelector(".node-seamless-editor");
+    if (activeEditor && window.MinimalFlow && window.MinimalFlow.TextEditor) {
+      const nodeId = activeEditor.dataset.nodeId;
+      const activeNode = nodeId ? AppState.document.nodes[nodeId] : AppState.document.nodes[AppState.ui.selectedId];
+      if (activeNode) {
+        window.MinimalFlow.TextEditor.applyAlignmentToEditor(activeEditor, activeNode, align);
+        syncTextFormatToolbar(activeEditor, activeNode);
+        return;
+      }
+    }
+
     const nodes = getSelectedNodesList().filter(n => n.text);
     if (nodes.length > 0) {
       saveSnapshot();
-      nodes.forEach(n => { n.text.align = align; });
+      const TE = window.MinimalFlow && window.MinimalFlow.TextEditor;
+      nodes.forEach(n => {
+        n.text.align = align;
+        // Jika kotak dipilih secara keseluruhan (di luar mode edit teks), samakan perataan semua paragraf
+        // sambil mempertahankan penomoran list masing-masing paragraf
+        if (TE && TE.parseParagraphs && TE.serializeParagraphs && /<p\b[^>]*>/i.test(n.text.content || "")) {
+          const paras = TE.parseParagraphs(n.text.content || "", align);
+          paras.forEach(p => { p.align = null; });
+          n.text.content = TE.serializeParagraphs(paras);
+        }
+      });
       if (dom.btnTextAlignLeft) dom.btnTextAlignLeft.classList.toggle("active", align === "left");
       if (dom.btnTextAlignCenter) dom.btnTextAlignCenter.classList.toggle("active", align === "center");
       if (dom.btnTextAlignRight) dom.btnTextAlignRight.classList.toggle("active", align === "right");
       if (dom.btnTextAlignJustify) dom.btnTextAlignJustify.classList.toggle("active", align === "justify");
-      const activeEditor = document.querySelector(".node-seamless-editor");
-      if (activeEditor) {
-        activeEditor.style.textAlign = align;
-        activeEditor.dispatchEvent(new Event("input"));
-      } else {
-        renderAll();
-      }
+      renderAll();
     }
+  }
+
+  function applyTextNumbering(listType) {
+    const TE = window.MinimalFlow && window.MinimalFlow.TextEditor;
+    if (!TE) return;
+
+    const activeEditor = document.querySelector(".node-seamless-editor");
+    if (activeEditor) {
+      const nodeId = activeEditor.dataset.nodeId;
+      const activeNode = nodeId ? AppState.document.nodes[nodeId] : AppState.document.nodes[AppState.ui.selectedId];
+      if (activeNode) {
+        TE.applyNumberingToEditor(activeEditor, activeNode, listType);
+        syncTextFormatToolbar(activeEditor, activeNode);
+      }
+      return;
+    }
+
+    const nodes = getSelectedNodesList().filter(n => n.text);
+    if (nodes.length > 0) {
+      saveSnapshot();
+      nodes.forEach(n => {
+        TE.applyNumberingToNode(n, listType);
+        const layout = TE.layoutNodeText(n);
+        const reqH = TE.computeRequiredNodeHeight(n, layout.totalTextHeight);
+        if (reqH > n.height) {
+          n.height = reqH;
+        }
+      });
+      syncTextFormatToolbar(null, nodes[0]);
+      renderAll();
+    }
+  }
+
+  if (dom.btnTextNumbering && dom.menuNumberingDropdown) {
+    dom.btnTextNumbering.addEventListener("mousedown", (e) => {
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) e.preventDefault();
+    });
+    dom.btnTextNumbering.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const willOpen = !dom.menuNumberingDropdown.classList.contains("show");
+      if (dom.menuAlignDropdown) dom.menuAlignDropdown.classList.remove("show");
+      if (dom.menuPositionDropdown) dom.menuPositionDropdown.classList.remove("show");
+      dom.menuNumberingDropdown.classList.toggle("show", willOpen);
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (willOpen) {
+        const nodeId = activeEditor ? activeEditor.dataset.nodeId : AppState.ui.selectedId;
+        syncTextFormatToolbar(activeEditor, nodeId ? AppState.document.nodes[nodeId] : null);
+      }
+    });
+
+    dom.menuNumberingDropdown.addEventListener("mousedown", (e) => {
+      const activeEditor = document.querySelector(".node-seamless-editor");
+      if (activeEditor) e.preventDefault();
+    });
+
+    dom.menuNumberingDropdown.querySelectorAll("[data-list]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const listType = btn.dataset.list;
+        applyTextNumbering(listType);
+        dom.menuNumberingDropdown.classList.remove("show");
+      });
+    });
   }
 
   [
@@ -4013,6 +4130,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     if (dom.menuPositionDropdown && !dom.menuPositionDropdown.contains(e.target) && !e.target.closest("#btn-position-menu")) {
       dom.menuPositionDropdown.classList.remove("show");
     }
+    if (dom.menuNumberingDropdown && !dom.menuNumberingDropdown.contains(e.target) && !e.target.closest("#btn-text-numbering")) {
+      dom.menuNumberingDropdown.classList.remove("show");
+    }
   });
 
   // Format Painter (Salin Gaya ala Canva & Word: 1x Klik = 1x Pakai, Klik Ganda = Berkelanjutan)
@@ -4184,6 +4304,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     dom.btnAlignMenu.addEventListener("click", (e) => {
       e.stopPropagation();
       if (dom.menuPositionDropdown) dom.menuPositionDropdown.classList.remove("show");
+      if (dom.menuNumberingDropdown) dom.menuNumberingDropdown.classList.remove("show");
       dom.menuAlignDropdown.classList.toggle("show");
     });
     dom.menuAlignDropdown.querySelectorAll(".dropdown-item").forEach(btn => {
@@ -4200,6 +4321,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     dom.btnPositionMenu.addEventListener("click", (e) => {
       e.stopPropagation();
       if (dom.menuAlignDropdown) dom.menuAlignDropdown.classList.remove("show");
+      if (dom.menuNumberingDropdown) dom.menuNumberingDropdown.classList.remove("show");
       dom.menuPositionDropdown.classList.toggle("show");
     });
     dom.menuPositionDropdown.querySelectorAll(".position-grid-btn").forEach(btn => {
