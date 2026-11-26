@@ -1,10 +1,13 @@
 /**
- * MinimalFlow Studio — Universal Diagram & Circuit Schema Adapter
- * Mesin penerjemah otomatis multi-format:
+ * MinimalFlow Studio — Universal Diagram & Circuit Schema Adapter (v2.0 Sugiyama DAG + Spatial Vision Engine)
+ * Mesin penerjemah & tata letak otomatis multi-format bebas tabrakan (Zero-Collision Layout):
+ * 0. MinimalFlow AI Vision Direct Spatial Reconstruction JSON (format: "minimalflow_vision", box_2d + Rich Text)
  * 1. Modul Trainer Kelistrikan Mashimurelay (.json — bill_of_materials & wiring_connections)
- * 2. Script Diagram Alir Mermaid (.mmd — flowchart TD/LR, subgraphs, decision diamond, stadium)
- * 3. Generic Diagram JSON (format array nodes & edges dari React Flow / diagram tools lain)
- * 4. MinimalFlow Native Document Schema
+ * 2. Mashimurelay Architecture & Runtime Workflow (.json — engineering_workflow & runtime_flowchart)
+ * 3. Script Diagram Alir Mermaid (.mmd — flowchart TD/TB/LR/RL, subgraphs, decision diamond, stadium, cylinder)
+ * 4. Generic Diagram JSON (format array/objek nodes, edges, links, phases, steps dari React Flow / Cytoscape / AI)
+ * 5. Teks Prompt Alur & Daftar Langkah Bertingkat (Natural Language Step List dengan deteksi Fase & Percabangan)
+ * 6. MinimalFlow Native Document Schema (.flow.json)
  */
 
 window.MinimalFlow = window.MinimalFlow || {};
@@ -21,6 +24,7 @@ window.MinimalFlow = window.MinimalFlow || {};
     }
     res = res
       .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/\\n/g, '\n')
       .replace(/&quot;|#34;/gi, '"')
       .replace(/&apos;|&#39;|#39;/gi, "'")
       .replace(/&amp;|#38;/gi, '&')
@@ -36,6 +40,136 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   // ==========================================================================
+  // 0. WORD-WRAP-AWARE NODE AUTO-SIZER (BEBAS TEXT OVERFLOW)
+  // ==========================================================================
+  function computeNodeDimensions(rawText, shapeType, fontOptions = {}) {
+    const text = String(rawText || '').trim() || 'Node';
+    const fontSize = fontOptions.fontSize || 12;
+    const fontFamily = fontOptions.fontFamily || "Poppins, sans-serif";
+    const padX = fontOptions.paddingX !== undefined ? fontOptions.paddingX : 12;
+    const padY = fontOptions.paddingY !== undefined ? fontOptions.paddingY : 10;
+    const type = shapeType || 'rectangle';
+    const TE = exports.TextEditor;
+
+    const rawLines = text.split('\n').map(l => l.trim());
+    const maxRawChars = Math.max(1, ...rawLines.map(l => l.length));
+    const charW = fontSize * 0.58;
+
+    let minW = 165, maxW = 285, minH = 56;
+    if (type === 'diamond') {
+      minW = 195; maxW = 280; minH = 104;
+    } else if (type === 'parallelogram' || type === 'manual_operation' || type === 'preparation') {
+      minW = 185; maxW = 290; minH = 62;
+    } else if (type === 'cylinder') {
+      minW = 175; maxW = 285; minH = 72;
+    } else if (type === 'circle') {
+      minW = 110; maxW = 175; minH = 110;
+    } else if (type === 'rounded') {
+      minW = 160; maxW = 280; minH = 54;
+    }
+
+    const shapeRedW = (w) => {
+      if (type === 'diamond') return Math.min(w * 0.38, 64);
+      if (type === 'parallelogram' || type === 'preparation' || type === 'manual_operation') return 42;
+      if (type === 'circle') return Math.min(w * 0.22, 28);
+      return 4;
+    };
+
+    const shapeRedH = (h) => {
+      if (type === 'diamond') return Math.min(h * 0.35, 42);
+      if (type === 'cylinder') return 24;
+      if (type === 'circle') return 18;
+      return 4;
+    };
+
+    const idealSingleLineW = maxRawChars * charW + padX * 2 + shapeRedW(240) + 16;
+    let width = Math.max(minW, Math.min(maxW, Math.ceil(idealSingleLineW / 4) * 4));
+
+    function countWrappedLines(w) {
+      const availW = Math.max(36, w - padX * 2 - shapeRedW(w));
+      const maxCharsPerLine = Math.max(4, Math.floor(availW / charW));
+      let totalLines = 0;
+      for (const rl of rawLines) {
+        if (!rl) {
+          totalLines += 1;
+          continue;
+        }
+        const words = rl.split(/\s+/);
+        let curLen = 0;
+        let pLines = 1;
+        for (const word of words) {
+          if (word.length > maxCharsPerLine) {
+            if (curLen > 0) {
+              pLines++;
+              curLen = 0;
+            }
+            const chunks = Math.ceil(word.length / maxCharsPerLine);
+            pLines += (chunks - 1);
+            curLen = word.length % maxCharsPerLine || maxCharsPerLine;
+          } else if (curLen === 0) {
+            curLen = word.length;
+          } else if (curLen + 1 + word.length <= maxCharsPerLine) {
+            curLen += 1 + word.length;
+          } else {
+            pLines++;
+            curLen = word.length;
+          }
+        }
+        totalLines += pLines;
+      }
+      return totalLines;
+    }
+
+    let wrappedLines = countWrappedLines(width);
+    if (wrappedLines > 3 && width < maxW) {
+      width = maxW;
+      wrappedLines = countWrappedLines(width);
+    }
+
+    const lineHeight = fontSize * 1.38;
+    const reqTextH = wrappedLines * lineHeight;
+    let height = Math.max(minH, Math.ceil((reqTextH + padY * 2 + shapeRedH(minH) + 10) / 4) * 4);
+
+    if (type === 'diamond') {
+      const effAvailH = height - padY * 2 - Math.min(height * 0.35, 42);
+      if (effAvailH < reqTextH + 6) {
+        height = Math.ceil((reqTextH + padY * 2 + 48) / 4) * 4;
+      }
+    } else if (type === 'circle') {
+      const dim = Math.max(minW, Math.min(180, Math.max(width, height)));
+      width = dim;
+      height = dim;
+    }
+
+    // Jika dijalankan di browser dengan TextEditor aktif, verifikasi dengan Canvas 2D font metrics
+    if (TE && TE.layoutNodeText && TE.computeRequiredNodeHeight) {
+      const tempNode = {
+        type,
+        width: Math.round(width),
+        height: Math.round(height),
+        text: {
+          content: text,
+          fontFamily,
+          fontSize,
+          bold: false,
+          italic: false,
+          underline: false,
+          align: "center",
+          paddingX: padX,
+          paddingY: padY
+        }
+      };
+      const measuredLayout = TE.layoutNodeText(tempNode);
+      const exactReqH = TE.computeRequiredNodeHeight(tempNode, measuredLayout.totalTextHeight) + 8;
+      if (exactReqH > height) {
+        height = Math.ceil(exactReqH / 4) * 4;
+      }
+    }
+
+    return { width: Math.round(width), height: Math.round(height), wrappedLines };
+  }
+
+  // ==========================================================================
   // 1. ENGINE DETEKSI FORMAT UNIVERSAL
   // ==========================================================================
   function detectFormat(rawInput) {
@@ -43,19 +177,21 @@ window.MinimalFlow = window.MinimalFlow || {};
       return { type: "empty" };
     }
 
-    const trimmed = rawInput.trim();
+    let trimmed = rawInput.trim();
     if (!trimmed) return { type: "empty" };
 
-    // Coba periksa apakah format Mermaid Script (.mmd)
+    if (trimmed.startsWith("```")) {
+      trimmed = trimmed.replace(/^```[a-zA-Z0-9_-]*\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+    }
+
     const isMermaidKeyword = /^(?:flowchart|graph)\s+(?:TD|TB|LR|RL|BT)/i.test(trimmed);
-    const hasMermaidConnections = /-->|---|-.->|-.-|==>/.test(trimmed);
+    const hasMermaidConnections = /-->|---|-\.->|-.-|==>/.test(trimmed);
     const hasMermaidSubgraph = /\bsubgraph\b/i.test(trimmed);
 
     if (isMermaidKeyword || ((hasMermaidConnections || hasMermaidSubgraph) && !trimmed.startsWith('{') && !trimmed.startsWith('['))) {
       return { type: "mermaid", raw: trimmed };
     }
 
-    // Coba parsing sebagai JSON
     try {
       const parsed = JSON.parse(trimmed);
       if (typeof parsed !== "object" || parsed === null) {
@@ -82,26 +218,29 @@ window.MinimalFlow = window.MinimalFlow || {};
         return { type: "minimalflow", data: parsed };
       }
 
-      // Format 3: Generic JSON (Array of Nodes)
-      if (Array.isArray(parsed) || (parsed.nodes && Array.isArray(parsed.nodes))) {
-        return { type: "generic_json", data: parsed };
-      }
-
-      // Format 4: Cytoscape / D3 graph
-      if (parsed.elements && (Array.isArray(parsed.elements.nodes) || Array.isArray(parsed.elements))) {
+      // Format 3: Generic JSON (Array of Nodes, or Object with nodes/steps/phases/elements/workflow)
+      if (
+        Array.isArray(parsed) ||
+        Array.isArray(parsed.nodes) ||
+        Array.isArray(parsed.steps) ||
+        Array.isArray(parsed.phases) ||
+        Array.isArray(parsed.stages) ||
+        (parsed.workflow && (Array.isArray(parsed.workflow.nodes) || Array.isArray(parsed.workflow.steps) || Array.isArray(parsed.workflow.phases))) ||
+        (parsed.flowchart && Array.isArray(parsed.flowchart.nodes)) ||
+        (parsed.diagram && Array.isArray(parsed.diagram.nodes)) ||
+        (parsed.elements && (Array.isArray(parsed.elements.nodes) || Array.isArray(parsed.elements)))
+      ) {
         return { type: "generic_json", data: parsed };
       }
 
       return { type: "unknown", error: "Struktur JSON tidak dikenali sebagai alur diagram" };
     } catch (e) {
-      // Jika JSON error tapi ada tanda konektor panah, coba fallback ke Mermaid
-      if (hasMermaidConnections) {
+      if (hasMermaidConnections || hasMermaidSubgraph) {
         return { type: "mermaid", raw: trimmed };
       }
-      // Deteksi jika berupa daftar langkah bernomor, bullet points, atau prompt alur teks bebas
       const lines = trimmed.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      const isNumbered = lines.some(l => /^(?:\d+[\.\)\:-]|[-*•]|\b(?:langkah|step)\s+\d+)/i.test(l));
-      const hasArrowChain = /->|-->|=>|➔|→/.test(trimmed);
+      const isNumbered = lines.some(l => /^(?:\d+[\.\)\:-]|[-*•]|\b(?:langkah|step|fase|tahap)\s+\d+)/i.test(l));
+      const hasArrowChain = /->|-->|=>|\u2794|→/.test(trimmed);
       if (isNumbered || hasArrowChain || lines.length >= 2) {
         return { type: "step_list", raw: trimmed };
       }
@@ -137,8 +276,9 @@ window.MinimalFlow = window.MinimalFlow || {};
     const nodes = {};
     const edges = {};
     const subgraphs = {};
-    let currentSubgraph = null;
+    const subgraphStack = [];
     let edgeCounter = 1;
+    let autoSubCounter = 1;
 
     let orientation = 'TD';
     const headerMatch = content.match(/(?:flowchart|graph)\s+(TD|TB|LR|RL|BT)/i);
@@ -146,90 +286,108 @@ window.MinimalFlow = window.MinimalFlow || {};
       orientation = headerMatch[1].toUpperCase();
     }
 
+    function currentSubgraph() {
+      return subgraphStack.length > 0 ? subgraphStack[subgraphStack.length - 1] : null;
+    }
+
     function registerNode(id, label, shapeType) {
-      if (!nodes[id]) {
-        nodes[id] = {
-          id,
+      const cleanId = String(id).trim();
+      if (!cleanId) return null;
+      const curSub = currentSubgraph();
+      if (!nodes[cleanId]) {
+        nodes[cleanId] = {
+          id: cleanId,
           type: shapeType || 'rectangle',
-          rawText: cleanLabelText(label) || id,
-          subgraph: currentSubgraph ? currentSubgraph.id : null,
+          rawText: cleanLabelText(label) || cleanId,
+          subgraph: curSub ? curSub.id : null,
           inDegree: 0,
           outDegree: 0
         };
-        if (currentSubgraph) {
-          subgraphs[currentSubgraph.id].nodeIds.push(id);
+        if (curSub && !subgraphs[curSub.id].nodeIds.includes(cleanId)) {
+          subgraphs[curSub.id].nodeIds.push(cleanId);
         }
       } else {
-        if (label) nodes[id].rawText = cleanLabelText(label);
-        if (shapeType) nodes[id].type = shapeType;
-        if (currentSubgraph && !nodes[id].subgraph) {
-          nodes[id].subgraph = currentSubgraph.id;
-          subgraphs[currentSubgraph.id].nodeIds.push(id);
+        if (label) nodes[cleanId].rawText = cleanLabelText(label);
+        if (shapeType) nodes[cleanId].type = shapeType;
+        if (curSub && !nodes[cleanId].subgraph) {
+          nodes[cleanId].subgraph = curSub.id;
+          if (!subgraphs[curSub.id].nodeIds.includes(cleanId)) {
+            subgraphs[curSub.id].nodeIds.push(cleanId);
+          }
         }
       }
-      return id;
+      return cleanId;
     }
 
     function ensureNode(rawToken) {
       if (!rawToken) return null;
-      // Bersihkan trailing semicolon dan :::className
-      rawToken = rawToken.trim().replace(/;+$/, '').replace(/:::[a-zA-Z0-9_-]+$/, '').trim();
-      if (!rawToken) return null;
+      let token = rawToken.trim().replace(/;+$/, '').replace(/:::[a-zA-Z0-9_-]+/g, '').trim();
+      if (!token) return null;
 
       // Bentuk 1: Stadium / Rounded: ID(["Text"])
-      let match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\(\[\s*([\s\S]*?)\s*\]\)$/);
+      let match = token.match(/^([a-zA-Z0-9_.-]+)\s*\(\[\s*([\s\S]*?)\s*\]\)$/);
       if (match) return registerNode(match[1], match[2], 'rounded');
 
-      // Bentuk 2: Cylinder: ID[("Text")]
-      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\[\(\s*([\s\S]*?)\s*\)\]$/);
+      // Bentuk 2: Cylinder / Database: ID[("Text")]
+      match = token.match(/^([a-zA-Z0-9_.-]+)\s*\[\(\s*([\s\S]*?)\s*\)\]$/);
       if (match) return registerNode(match[1], match[2], 'cylinder');
 
-      // Bentuk 3: Circle: ID(("Text"))
-      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\(\(\s*([\s\S]*?)\s*\)\)$/);
+      // Bentuk 3: Double/Single Circle: ID((("Text"))) or ID(("Text"))
+      match = token.match(/^([a-zA-Z0-9_.-]+)\s*\(\(\(?([\s\S]*?)\)?\)\)$/);
       if (match) return registerNode(match[1], match[2], 'circle');
 
-      // Bentuk 4: Subroutine: ID[["Text"]]
-      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\[\[\s*([\s\S]*?)\s*\]\]$/);
+      // Bentuk 4: Subroutine / Predefined Process: ID[["Text"]]
+      match = token.match(/^([a-zA-Z0-9_.-]+)\s*\[\[\s*([\s\S]*?)\s*\]\]$/);
       if (match) return registerNode(match[1], match[2], 'predefined_process');
 
-      // Bentuk 5: Hexagon: ID{{"Text"}}
-      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\{\{\s*([\s\S]*?)\s*\}\}$/);
+      // Bentuk 5: Hexagon / Preparation: ID{{"Text"}}
+      match = token.match(/^([a-zA-Z0-9_.-]+)\s*\{\{\s*([\s\S]*?)\s*\}\}$/);
       if (match) return registerNode(match[1], match[2], 'preparation');
 
       // Bentuk 6: Diamond / Decision: ID{"Text"}
-      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\{\s*([\s\S]*?)\s*\}$/);
+      match = token.match(/^([a-zA-Z0-9_.-]+)\s*\{\s*([\s\S]*?)\s*\}$/);
       if (match) return registerNode(match[1], match[2], 'diamond');
 
-      // Bentuk 7: Parallelogram: ID[/"Text"/] or ID[\"Text"\]
-      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\[\/\s*([\s\S]*?)\s*\/\]$/);
+      // Bentuk 7: Parallelogram / Trapezoid: ID[/"Text"/] or ID[\"Text"\] or ID[/"Text"\]
+      match = token.match(/^([a-zA-Z0-9_.-]+)\s*\[[\/\\]\s*([\s\S]*?)\s*[\/\\]\]$/);
       if (match) return registerNode(match[1], match[2], 'parallelogram');
 
-      // Bentuk 8: Rectangle: ID["Text"]
-      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\[\s*([\s\S]*?)\s*\]$/);
+      // Bentuk 8: Asymmetric / Display: ID>"Text"]
+      match = token.match(/^([a-zA-Z0-9_.-]+)\s*>\s*([\s\S]*?)\s*\]$/);
+      if (match) return registerNode(match[1], match[2], 'display');
+
+      // Bentuk 9: Rectangle: ID["Text"]
+      match = token.match(/^([a-zA-Z0-9_.-]+)\s*\[\s*([\s\S]*?)\s*\]$/);
       if (match) return registerNode(match[1], match[2], 'rectangle');
 
-      // Bentuk 9: Rounded biasa: ID("Text")
-      match = rawToken.match(/^([a-zA-Z0-9_-]+)\s*\(\s*([\s\S]*?)\s*\)$/);
+      // Bentuk 10: Rounded biasa: ID("Text")
+      match = token.match(/^([a-zA-Z0-9_.-]+)\s*\(\s*([\s\S]*?)\s*\)$/);
       if (match) return registerNode(match[1], match[2], 'rounded');
 
-      // Bentuk 10: Bare ID
-      match = rawToken.match(/^([a-zA-Z0-9_-]+)$/);
+      // Bentuk 11: Bare ID
+      match = token.match(/^([a-zA-Z0-9_.-]+)$/);
       if (match) return registerNode(match[1], null, null);
 
       return null;
     }
 
-    // Split token dengan '&' di luar tanda kutip (mendukung fan-in/fan-out: A & B & C --> D)
     function splitAmpersandOutsideQuotes(token) {
       const parts = [];
       let cur = "";
       let inQ = false;
+      let bracketDepth = 0;
       for (let i = 0; i < token.length; i++) {
         const ch = token[i];
         if (ch === '"' && token[i - 1] !== '\\') {
           inQ = !inQ;
           cur += ch;
-        } else if (ch === '&' && !inQ) {
+        } else if (!inQ && (ch === '[' || ch === '(' || ch === '{')) {
+          bracketDepth++;
+          cur += ch;
+        } else if (!inQ && (ch === ']' || ch === ')' || ch === '}')) {
+          bracketDepth = Math.max(0, bracketDepth - 1);
+          cur += ch;
+        } else if (ch === '&' && !inQ && bracketDepth === 0) {
           parts.push(cur.trim());
           cur = "";
         } else {
@@ -240,8 +398,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       return parts;
     }
 
-    // Temukan semua konektor panah hanya DI LUAR tanda kutip ganda
-    const connRegex = /(-->\s*\|[^|]+\||-\.->\s*\|[^|]+\||--\s*(?:"[^"]*"|'[^']*'|[^-\s>]+)\s*-->|<-->|-->|---|-\.->|-.-|==>)/g;
+    const connRegex = /(<-->|-->\s*\|[^|]*\||-\.->\s*\|[^|]*\||==>\s*\|[^|]*\||---\s*\|[^|]*\||--\s*(?:"[^"]*"|'[^']*'|[^-\n>]+?)\s*-->|-\.\s*(?:"[^"]*"|'[^']*'|[^.\n>]+?)\s*\.->|==\s*(?:"[^"]*"|'[^']*'|[^=\n>]+?)\s*==>|<-\.->|-->|---|-\.->|-.-|==>)/g;
 
     function findConnectorsOutsideQuotes(lineStr) {
       const quoteRanges = [];
@@ -266,26 +423,43 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     for (let rawLine of lines) {
       let line = rawLine.trim().replace(/;+$/, '').trim();
-      if (!line ||
-          line.startsWith('%%') ||
-          /^(?:flowchart|graph)\s+/i.test(line) ||
-          /^(?:classDef|class|style|linkStyle|click|direction)\s+/i.test(line)) {
+      if (
+        !line ||
+        line.startsWith('%%') ||
+        /^(?:flowchart|graph)\s+(?:TD|TB|LR|RL|BT)\b/i.test(line) ||
+        /^(?:classDef|class|style|linkStyle|click|direction|accTitle|accDescr)\b/i.test(line)
+      ) {
         continue;
       }
 
       // Deteksi awal subgraph
-      const subMatch = line.match(/^subgraph\s+([a-zA-Z0-9_-]+)(?:\s*\[\s*(?:"([^"]*)"|'([^']*)'|([^\]]*))\s*\])?/i);
-      if (subMatch) {
-        const sId = subMatch[1];
-        const sTitle = cleanLabelText(subMatch[2] || subMatch[3] || subMatch[4] || sId);
-        subgraphs[sId] = { id: sId, title: sTitle, nodeIds: [] };
-        currentSubgraph = subgraphs[sId];
+      if (/^subgraph\b/i.test(line)) {
+        const rest = line.replace(/^subgraph\s+/i, '').trim();
+        let sId = '', sTitle = '';
+        const bracketMatch = rest.match(/^([a-zA-Z0-9_.-]+)\s*\[\s*(?:"([^"]*)"|'([^']*)'|([^\]]*))\s*\]$/);
+        if (bracketMatch) {
+          sId = bracketMatch[1];
+          sTitle = cleanLabelText(bracketMatch[2] || bracketMatch[3] || bracketMatch[4] || sId);
+        } else {
+          const cleanedRest = cleanLabelText(rest);
+          if (/^[a-zA-Z0-9_.-]+$/.test(cleanedRest)) {
+            sId = cleanedRest;
+            sTitle = cleanedRest;
+          } else {
+            sId = `SUB_${autoSubCounter++}`;
+            sTitle = cleanedRest || sId;
+          }
+        }
+        if (!subgraphs[sId]) {
+          subgraphs[sId] = { id: sId, title: sTitle, nodeIds: [] };
+        }
+        subgraphStack.push(subgraphs[sId]);
         continue;
       }
 
       // Deteksi akhir subgraph
-      if (line.toLowerCase() === 'end') {
-        currentSubgraph = null;
+      if (/^end\b/i.test(line)) {
+        if (subgraphStack.length > 0) subgraphStack.pop();
         continue;
       }
 
@@ -313,17 +487,17 @@ window.MinimalFlow = window.MinimalFlow || {};
 
           let dashed = 'solid';
           let label = '';
-          if (connStr.includes('-.->') || connStr.includes('-.-')) {
+          if (connStr.includes('-.') || connStr.includes('-.-')) {
             dashed = 'dashed';
           }
 
-          const pipeMatch = connStr.match(/\|([^|]+)\|/);
+          const pipeMatch = connStr.match(/\|([^|]*)\|/);
           if (pipeMatch) {
             label = cleanLabelText(pipeMatch[1]);
           } else {
-            const quoteMatch = connStr.match(/--\s*("[^"]*"|'[^']*'|[^-\s>]+)\s*-->/);
-            if (quoteMatch) {
-              label = cleanLabelText(quoteMatch[1]);
+            const inlineMatch = connStr.match(/^(?:--|-\.|==)\s*([\s\S]+?)\s*(?:-->|\.->|==>)$/);
+            if (inlineMatch) {
+              label = cleanLabelText(inlineMatch[1]);
             }
           }
 
@@ -337,7 +511,6 @@ window.MinimalFlow = window.MinimalFlow || {};
                 dashed,
                 label
               };
-
               if (nodes[srcId]) nodes[srcId].outDegree++;
               if (nodes[tgtId]) nodes[tgtId].inDegree++;
             }
@@ -352,400 +525,649 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   // ==========================================================================
-  // 3. SUBGRAPH & SWIMLANE-AWARE HIERARCHICAL LAYOUT ENGINE
+  // 3. SUGIYAMA HIERARCHICAL DAG & SUBGRAPH-AWARE SWIMLANE LAYOUT ENGINE
   // ==========================================================================
+  function layoutConnectedSubComponent(compNodeIds, allNodes, internalEdges, isTD, fontOptions, nodeSizes) {
+    const adj = {};
+    const revAdj = {};
+    const inDeg = {};
+    compNodeIds.forEach(id => {
+      adj[id] = [];
+      revAdj[id] = [];
+      inDeg[id] = 0;
+    });
+
+    internalEdges.forEach(e => {
+      if (adj[e.sourceId] && adj[e.targetId] !== undefined && e.sourceId !== e.targetId) {
+        adj[e.sourceId].push(e.targetId);
+        revAdj[e.targetId].push(e.sourceId);
+        inDeg[e.targetId]++;
+      }
+    });
+
+    const backEdgePairs = new Set();
+    const visited = new Set();
+    const onStack = new Set();
+    const orderedIds = [...compNodeIds].sort((a, b) => inDeg[a] - inDeg[b]);
+
+    function dfsCycle(u) {
+      visited.add(u);
+      onStack.add(u);
+      for (const v of adj[u]) {
+        if (onStack.has(v)) {
+          backEdgePairs.add(`${u}->${v}`);
+        } else if (!visited.has(v)) {
+          dfsCycle(v);
+        }
+      }
+      onStack.delete(u);
+    }
+
+    for (const id of orderedIds) {
+      if (!visited.has(id)) dfsCycle(id);
+    }
+
+    const forwardAdj = {};
+    const forwardRev = {};
+    compNodeIds.forEach(id => {
+      forwardAdj[id] = [];
+      forwardRev[id] = [];
+    });
+
+    internalEdges.forEach(e => {
+      if (e.sourceId === e.targetId) return;
+      if (!backEdgePairs.has(`${e.sourceId}->${e.targetId}`)) {
+        forwardAdj[e.sourceId].push(e.targetId);
+        forwardRev[e.targetId].push(e.sourceId);
+      }
+    });
+
+    const levels = {};
+    compNodeIds.forEach(id => { levels[id] = 0; });
+
+    const maxIter = compNodeIds.length + 2;
+    for (let iter = 0; iter < maxIter; iter++) {
+      let changed = false;
+      for (const u of compNodeIds) {
+        for (const v of forwardAdj[u]) {
+          if (levels[u] + 1 > levels[v]) {
+            levels[v] = levels[u] + 1;
+            changed = true;
+          }
+        }
+      }
+      if (!changed) break;
+    }
+
+    const levelGroups = {};
+    let maxLvl = 0;
+    compNodeIds.forEach(id => {
+      const l = levels[id] || 0;
+      if (!levelGroups[l]) levelGroups[l] = [];
+      levelGroups[l].push(id);
+      if (l > maxLvl) maxLvl = l;
+    });
+
+    const colGap = 52;
+    const baseRowGap = 58;
+    const localCoords = {};
+    let curPrimary = 0;
+
+    for (let l = 0; l <= maxLvl; l++) {
+      const group = levelGroups[l] || [];
+      if (group.length === 0) continue;
+
+      if (l > 0) {
+        group.sort((a, b) => {
+          const pA = forwardRev[a].filter(p => localCoords[p]);
+          const pB = forwardRev[b].filter(p => localCoords[p]);
+          const baryA = pA.length > 0 ? pA.reduce((s, p) => s + (isTD ? localCoords[p].cx : localCoords[p].cy), 0) / pA.length : 0;
+          const baryB = pB.length > 0 ? pB.reduce((s, p) => s + (isTD ? localCoords[p].cx : localCoords[p].cy), 0) / pB.length : 0;
+          if (Math.abs(baryA - baryB) > 1) return baryA - baryB;
+          return compNodeIds.indexOf(a) - compNodeIds.indexOf(b);
+        });
+      }
+
+      let maxPrimaryDim = 0;
+      let totalSecDim = 0;
+      group.forEach((id, idx) => {
+        const sz = nodeSizes[id];
+        const pDim = isTD ? sz.height : sz.width;
+        const sDim = isTD ? sz.width : sz.height;
+        if (pDim > maxPrimaryDim) maxPrimaryDim = pDim;
+        totalSecDim += sDim + (idx > 0 ? colGap : 0);
+      });
+
+      if (group.length === 1 && l > 0) {
+        const id = group[0];
+        const sz = nodeSizes[id];
+        const parents = forwardRev[id].filter(p => localCoords[p]);
+        let targetCenter = 0;
+        if (parents.length === 1) {
+          targetCenter = isTD ? localCoords[parents[0]].cx : localCoords[parents[0]].cy;
+        } else if (parents.length > 1) {
+          targetCenter = parents.reduce((s, p) => s + (isTD ? localCoords[p].cx : localCoords[p].cy), 0) / parents.length;
+        }
+        const sDim = isTD ? sz.width : sz.height;
+        const sPos = targetCenter - sDim / 2;
+        localCoords[id] = isTD
+          ? { x: sPos, y: curPrimary, width: sz.width, height: sz.height, cx: targetCenter, cy: curPrimary + sz.height / 2 }
+          : { x: curPrimary, y: sPos, width: sz.width, height: sz.height, cx: curPrimary + sz.width / 2, cy: targetCenter };
+      } else {
+        let cursor = -totalSecDim / 2;
+        const tempCenters = [];
+        group.forEach(id => {
+          const sz = nodeSizes[id];
+          const sDim = isTD ? sz.width : sz.height;
+          const parents = forwardRev[id].filter(p => localCoords[p]);
+          const desiredC = parents.length === 1
+            ? (isTD ? localCoords[parents[0]].cx : localCoords[parents[0]].cy)
+            : cursor + sDim / 2;
+          const c = Math.max(cursor + sDim / 2, desiredC);
+          tempCenters.push({ id, c, sDim, sz });
+          cursor = c + sDim / 2 + colGap;
+        });
+
+        const rowMin = tempCenters[0].c - tempCenters[0].sDim / 2;
+        const rowMax = tempCenters[tempCenters.length - 1].c + tempCenters[tempCenters.length - 1].sDim / 2;
+        const rowMid = (rowMin + rowMax) / 2;
+
+        tempCenters.forEach(item => {
+          const finalC = item.c - rowMid;
+          const sPos = finalC - item.sDim / 2;
+          localCoords[item.id] = isTD
+            ? { x: sPos, y: curPrimary, width: item.sz.width, height: item.sz.height, cx: finalC, cy: curPrimary + item.sz.height / 2 }
+            : { x: curPrimary, y: sPos, width: item.sz.width, height: item.sz.height, cx: curPrimary + item.sz.width / 2, cy: finalC };
+        });
+      }
+
+      const outEdgesFromLevel = internalEdges.filter(e => group.includes(e.sourceId) && e.label && String(e.label).trim().length > 0);
+      const hasLabeledOut = outEdgesFromLevel.length > 0;
+      const hasBranchOut = group.some(id => forwardAdj[id].length >= 2);
+      let extraGap = (hasLabeledOut ? 22 : 0) + (hasBranchOut ? 14 : 0);
+      if (!isTD && hasLabeledOut) {
+        const maxLblLen = Math.max(...outEdgesFromLevel.map(e => String(e.label).trim().length));
+        const reqHorizGap = Math.max(85, maxLblLen * 7.2 + 48);
+        extraGap = Math.max(extraGap, reqHorizGap - baseRowGap);
+      }
+      curPrimary += maxPrimaryDim + baseRowGap + extraGap;
+    }
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    Object.values(localCoords).forEach(c => {
+      minX = Math.min(minX, c.x);
+      minY = Math.min(minY, c.y);
+      maxX = Math.max(maxX, c.x + c.width);
+      maxY = Math.max(maxY, c.y + c.height);
+    });
+
+    Object.values(localCoords).forEach(c => {
+      c.x -= minX;
+      c.y -= minY;
+      c.cx -= minX;
+      c.cy -= minY;
+    });
+
+    return {
+      coords: localCoords,
+      width: Math.max(180, maxX - minX),
+      height: Math.max(60, maxY - minY),
+      backEdgePairs
+    };
+  }
+
+  function layoutSubgraphGroup(subNodeIds, allNodes, allEdges, isTD, fontOptions, nodeSizes) {
+    const nodeSet = new Set(subNodeIds);
+    const internalEdges = Object.values(allEdges).filter(e => nodeSet.has(e.sourceId) && nodeSet.has(e.targetId));
+
+    const undirectedAdj = {};
+    subNodeIds.forEach(id => { undirectedAdj[id] = []; });
+    internalEdges.forEach(e => {
+      undirectedAdj[e.sourceId].push(e.targetId);
+      undirectedAdj[e.targetId].push(e.sourceId);
+    });
+
+    const visited = new Set();
+    const components = [];
+    for (const id of subNodeIds) {
+      if (!visited.has(id)) {
+        const comp = [];
+        const q = [id];
+        visited.add(id);
+        while (q.length > 0) {
+          const curr = q.shift();
+          comp.push(curr);
+          for (const nxt of undirectedAdj[curr]) {
+            if (!visited.has(nxt)) {
+              visited.add(nxt);
+              q.push(nxt);
+            }
+          }
+        }
+        comp.sort((a, b) => subNodeIds.indexOf(a) - subNodeIds.indexOf(b));
+        components.push(comp);
+      }
+    }
+
+    const compLayouts = components.map(comp => {
+      const cEdges = internalEdges.filter(e => comp.includes(e.sourceId) && comp.includes(e.targetId));
+      return layoutConnectedSubComponent(comp, allNodes, cEdges, isTD, fontOptions, nodeSizes);
+    });
+
+    const combinedCoords = {};
+    const allBackEdges = new Set();
+    const compGap = 68;
+    let cursorX = 0;
+    let maxH = 0;
+
+    compLayouts.forEach(cl => {
+      cl.backEdgePairs.forEach(p => allBackEdges.add(p));
+      Object.entries(cl.coords).forEach(([id, c]) => {
+        combinedCoords[id] = {
+          x: c.x + cursorX,
+          y: c.y,
+          width: c.width,
+          height: c.height,
+          cx: c.cx + cursorX,
+          cy: c.cy
+        };
+      });
+      cursorX += cl.width + compGap;
+      if (cl.height > maxH) maxH = cl.height;
+    });
+
+    const totalW = Math.max(200, cursorX - compGap);
+    return {
+      coords: combinedCoords,
+      width: totalW,
+      height: maxH,
+      backEdgePairs: allBackEdges
+    };
+  }
+
   function layoutGraph(nodes, edges, orientation = 'TD', isDark = false, subgraphs = {}, fontOptions = {}) {
     const nodeIds = Object.keys(nodes);
     if (nodeIds.length === 0) return { nodes: {}, edges: {}, totalWidth: 1600, totalHeight: 900 };
 
     const isTD = orientation === 'TD' || orientation === 'TB';
-    const subList = Object.values(subgraphs || {});
-    const hasSubgraphs = subList.length > 0;
+    const effFontFamily = fontOptions.fontFamily || "Poppins, sans-serif";
+    const effFontSize = fontOptions.fontSize || 12.5;
+    const contFontFamily = fontOptions.fontFamily || "Inter, sans-serif";
+    const contFontSize = fontOptions.fontSize || 11.5;
 
+    const nodeSizes = {};
+    nodeIds.forEach(id => {
+      const n = nodes[id];
+      nodeSizes[id] = computeNodeDimensions(n.rawText || id, n.type, {
+        fontFamily: effFontFamily,
+        fontSize: effFontSize,
+        paddingX: 12,
+        paddingY: 10
+      });
+    });
+
+    const subList = Object.values(subgraphs || {}).filter(s => s.nodeIds && s.nodeIds.length > 0);
+    const hasSubgraphs = subList.length > 0;
     const finalNodes = {};
     const finalEdges = {};
+    const globalBackEdges = new Set();
 
     let totalWidth = 1600;
     let totalHeight = 900;
 
-    // JIKA ADA SUBGRAPH (seperti WORKFLOW_PENGGUNAAN_MASHIMURELAY: GURU & SISWA)
-    if (hasSubgraphs && isTD) {
-      let currentY = 80;
-      const canvasCenterX = 800;
-      let globalMinX = Infinity, globalMaxX = -Infinity;
+    if (hasSubgraphs) {
+      const assignedNodes = new Set();
+      subList.forEach(s => s.nodeIds.forEach(nid => assignedNodes.add(nid)));
+      const orphanIds = nodeIds.filter(id => !assignedNodes.has(id));
+      const allSubList = [...subList];
+      if (orphanIds.length > 0) {
+        allSubList.push({ id: "__ORPHANS__", title: "", nodeIds: orphanIds, isOrphan: true });
+      }
 
-      for (const sub of subList) {
-        const subNodeIds = sub.nodeIds;
-        if (subNodeIds.length === 0) continue;
+      const boxPadX = 42;
+      const boxPadTop = 54;
+      const boxPadBottom = 38;
+      const subLayouts = {};
+      const nodeToSub = {};
 
-        // Bangun relasi internal khusus dalam subgraph ini
-        const internalAdj = {};
-        const internalInDeg = {};
-        subNodeIds.forEach(id => {
-          internalAdj[id] = [];
-          internalInDeg[id] = 0;
-        });
+      allSubList.forEach(sub => {
+        sub.nodeIds.forEach(nid => { nodeToSub[nid] = sub.id; });
+        const internal = layoutSubgraphGroup(sub.nodeIds, nodes, edges, isTD, { fontFamily: effFontFamily, fontSize: effFontSize }, nodeSizes);
+        internal.backEdgePairs.forEach(p => globalBackEdges.add(p));
+        const titleMinW = (sub.title ? sub.title.length * (contFontSize * 0.65) + 60 : 200);
+        const contentW = Math.max(internal.width, titleMinW);
+        subLayouts[sub.id] = {
+          sub,
+          internal,
+          boxW: contentW + boxPadX * 2,
+          boxH: internal.height + boxPadTop + boxPadBottom
+        };
+      });
 
-        Object.values(edges).forEach(e => {
-          if (internalAdj[e.sourceId] && internalAdj[e.targetId] !== undefined) {
-            internalAdj[e.sourceId].push(e.targetId);
-            internalInDeg[e.targetId]++;
-          }
-        });
+      const subIds = allSubList.map(s => s.id);
+      const subAdj = {};
+      const subUndirected = {};
+      subIds.forEach(sid => {
+        subAdj[sid] = new Set();
+        subUndirected[sid] = new Set();
+      });
 
-        // Cari titik awal (akar) internal dalam subgraph
-        let internalRoots = subNodeIds.filter(id => internalInDeg[id] === 0);
-        if (internalRoots.length === 0) internalRoots = [subNodeIds[0]];
+      Object.values(edges).forEach(e => {
+        const sA = nodeToSub[e.sourceId];
+        const sB = nodeToSub[e.targetId];
+        if (sA && sB && sA !== sB) {
+          subAdj[sA].add(sB);
+          subUndirected[sA].add(sB);
+          subUndirected[sB].add(sA);
+        }
+      });
 
-        // Jika ada beberapa akar independen (misal G1 alur persiapan, G8 alur penilaian), bagi menjadi kolom terpisah
-        const trackCount = internalRoots.length;
-        const trackWidth = trackCount > 1 ? 380 : 420;
-        const subTotalW = Math.max(760, trackCount * trackWidth);
-        const subStartX = canvasCenterX - subTotalW / 2;
-
-        const subLevels = {};
-        const subTrack = {};
-        const visited = new Set();
-
-        internalRoots.forEach((rootId, trackIdx) => {
-          const q = [rootId];
-          subLevels[rootId] = 0;
-          subTrack[rootId] = trackIdx;
-          visited.add(rootId);
-
+      const subVisited = new Set();
+      const macroComponents = [];
+      for (const sid of subIds) {
+        if (!subVisited.has(sid)) {
+          const comp = [];
+          const q = [sid];
+          subVisited.add(sid);
           while (q.length > 0) {
             const curr = q.shift();
-            const currLvl = subLevels[curr];
-            for (const nxt of internalAdj[curr]) {
-              subLevels[nxt] = Math.max(subLevels[nxt] || 0, currLvl + 1);
-              subTrack[nxt] = trackIdx;
-              if (!visited.has(nxt)) {
-                visited.add(nxt);
+            comp.push(curr);
+            for (const nxt of subUndirected[curr]) {
+              if (!subVisited.has(nxt)) {
+                subVisited.add(nxt);
                 q.push(nxt);
               }
             }
           }
-        });
+          comp.sort((a, b) => subIds.indexOf(a) - subIds.indexOf(b));
+          macroComponents.push(comp);
+        }
+      }
 
-        subNodeIds.forEach(id => {
-          if (!visited.has(id)) {
-            subLevels[id] = 0;
-            subTrack[id] = 0;
-          }
-        });
+      let macroCursorX = 80;
+      let globalMaxY = 0;
 
-        let subMinX = Infinity, subMinY = Infinity, subMaxX = -Infinity, subMaxY = -Infinity;
+      macroComponents.forEach(mComp => {
+        const isTwoActorSwimlane = (
+          mComp.length === 2 &&
+          subAdj[mComp[0]].has(mComp[1]) &&
+          subAdj[mComp[1]].has(mComp[0])
+        );
 
-        subNodeIds.forEach(id => {
-          const n = nodes[id];
-          const text = n.rawText || id;
-          const lines = text.split('\n');
-          const maxLineLen = Math.max(...lines.map(l => l.length));
+        let macroLevels = {};
+        if (isTwoActorSwimlane) {
+          macroLevels[0] = [mComp[0], mComp[1]];
+        } else {
+          const mVis = new Set();
+          const mStack = new Set();
+          const mBack = new Set();
 
-          let width = Math.max(170, Math.min(270, maxLineLen * 7.5 + 32));
-          let height = Math.max(68, lines.length * 18 + 34);
-
-          if (n.type === 'circle') {
-            const dim = Math.max(110, Math.max(width, height) * 0.85);
-            width = dim; height = dim;
-          } else if (n.type === 'diamond') {
-            width = Math.max(160, width + 30);
-            height = Math.max(110, height + 30);
-          }
-
-          const tIdx = subTrack[id] || 0;
-          const lvl = subLevels[id] || 0;
-
-          const trackCenterX = subStartX + tIdx * trackWidth + trackWidth / 2;
-          const x = Math.round(trackCenterX - width / 2);
-          const y = Math.round(currentY + 55 + lvl * 125);
-
-          finalNodes[id] = {
-            id,
-            type: n.type || 'rectangle',
-            x,
-            y,
-            width: Math.round(width),
-            height: Math.round(height),
-            rotation: 0,
-            locked: false,
-            groupId: sub.id,
-            style: {
-              fill: isDark ? "#18181b" : "#ffffff",
-              stroke: isDark ? "#f4f4f5" : "#18181b",
-              strokeWidth: 1.5
-            },
-            text: {
-              content: text,
-              fontFamily: fontOptions.fontFamily || "Poppins, sans-serif",
-              fontSize: fontOptions.fontSize || 12.5,
-              bold: false,
-              italic: false,
-              underline: false,
-              color: isDark ? "#f4f4f5" : "#18181b",
-              align: "center",
-              paddingX: 12,
-              paddingY: 10
+          function dfsSub(u) {
+            mVis.add(u);
+            mStack.add(u);
+            for (const v of subAdj[u]) {
+              if (!mComp.includes(v)) continue;
+              if (mStack.has(v)) {
+                mBack.add(`${u}->${v}`);
+              } else if (!mVis.has(v)) {
+                dfsSub(v);
+              }
             }
-          };
+            mStack.delete(u);
+          }
 
-          subMinX = Math.min(subMinX, x);
-          subMinY = Math.min(subMinY, y);
-          subMaxX = Math.max(subMaxX, x + width);
-          subMaxY = Math.max(subMaxY, y + height);
+          mComp.forEach(sid => { if (!mVis.has(sid)) dfsSub(sid); });
+
+          const sLvl = {};
+          mComp.forEach(sid => { sLvl[sid] = 0; });
+          for (let it = 0; it < mComp.length + 2; it++) {
+            for (const u of mComp) {
+              for (const v of subAdj[u]) {
+                if (!mComp.includes(v) || mBack.has(`${u}->${v}`)) continue;
+                if (sLvl[u] + 1 > sLvl[v]) {
+                  sLvl[v] = sLvl[u] + 1;
+                }
+              }
+            }
+          }
+
+          mComp.forEach(sid => {
+            const l = sLvl[sid] || 0;
+            if (!macroLevels[l]) macroLevels[l] = [];
+            macroLevels[l].push(sid);
+          });
+        }
+
+        const subColGap = isTwoActorSwimlane ? 150 : 96;
+        const subRowGap = 104;
+        const mLvlKeys = Object.keys(macroLevels).map(Number).sort((a, b) => a - b);
+
+        let compMaxW = 0;
+        mLvlKeys.forEach(l => {
+          const rowSubs = macroLevels[l];
+          const rowW = rowSubs.reduce((acc, sid, idx) => acc + subLayouts[sid].boxW + (idx > 0 ? subColGap : 0), 0);
+          if (rowW > compMaxW) compMaxW = rowW;
         });
 
-        // Buat kotak pembatas (subgraph container boundary frame)
-        const containerId = `subgraph_${sub.id}`;
-        const boxPadX = 35;
-        const boxPadY = 45;
-        const cX = subMinX - boxPadX;
-        const cY = subMinY - boxPadY;
-        const cW = (subMaxX - subMinX) + boxPadX * 2;
-        const cH = (subMaxY - subMinY) + boxPadY * 2;
+        const compCenterX = macroCursorX + compMaxW / 2;
+        let curMacroY = 80;
 
-        finalNodes[containerId] = {
-          id: containerId,
-          type: "rectangle",
-          x: cX,
-          y: cY,
-          width: cW,
-          height: cH,
+        mLvlKeys.forEach(l => {
+          const rowSubs = macroLevels[l];
+          const rowW = rowSubs.reduce((acc, sid, idx) => acc + subLayouts[sid].boxW + (idx > 0 ? subColGap : 0), 0);
+          let curSubX = compCenterX - rowW / 2;
+          let rowMaxH = 0;
+
+          rowSubs.forEach(sid => {
+            const sl = subLayouts[sid];
+            const cX = Math.round(curSubX);
+            const cY = Math.round(curMacroY);
+            const cW = Math.round(sl.boxW);
+            const cH = Math.round(sl.boxH);
+
+            const innerOffsetX = cX + Math.round((cW - sl.internal.width) / 2);
+            const innerOffsetY = cY + boxPadTop;
+
+            Object.entries(sl.internal.coords).forEach(([nid, lc]) => {
+              const n = nodes[nid];
+              finalNodes[nid] = {
+                id: nid,
+                type: n.type || 'rectangle',
+                x: Math.round(innerOffsetX + lc.x),
+                y: Math.round(innerOffsetY + lc.y),
+                width: Math.round(lc.width),
+                height: Math.round(lc.height),
+                rotation: 0,
+                locked: false,
+                groupId: sl.sub.isOrphan ? null : sid,
+                style: {
+                  fill: isDark ? "#18181b" : "#ffffff",
+                  stroke: isDark ? "#f4f4f5" : "#18181b",
+                  strokeWidth: 1.5
+                },
+                text: {
+                  content: n.rawText || nid,
+                  fontFamily: effFontFamily,
+                  fontSize: effFontSize,
+                  bold: false,
+                  italic: false,
+                  underline: false,
+                  color: isDark ? "#f4f4f5" : "#18181b",
+                  align: "center",
+                  paddingX: 12,
+                  paddingY: 10
+                }
+              };
+            });
+
+            if (!sl.sub.isOrphan) {
+              const containerId = `subgraph_${sid}`;
+              finalNodes[containerId] = {
+                id: containerId,
+                type: "rectangle",
+                x: cX,
+                y: cY,
+                width: cW,
+                height: cH,
+                rotation: 0,
+                locked: true,
+                isContainer: true,
+                style: {
+                  fill: isDark ? "rgba(24, 24, 27, 0.45)" : "rgba(250, 250, 250, 0.65)",
+                  stroke: isDark ? "#3f3f46" : "#d4d4d8",
+                  strokeWidth: 1.5,
+                  dashed: "dashed"
+                },
+                text: {
+                  content: `[ ${sl.sub.title.toUpperCase()} ]`,
+                  fontFamily: contFontFamily,
+                  fontSize: contFontSize,
+                  bold: true,
+                  italic: false,
+                  underline: false,
+                  color: isDark ? "#a1a1aa" : "#71717a",
+                  align: "left",
+                  paddingX: 18,
+                  paddingY: 14
+                }
+              };
+            }
+
+            curSubX += cW + subColGap;
+            if (cH > rowMaxH) rowMaxH = cH;
+          });
+
+          curMacroY += rowMaxH + subRowGap;
+        });
+
+        if (curMacroY > globalMaxY) globalMaxY = curMacroY;
+        macroCursorX += compMaxW + 140;
+      });
+
+      totalWidth = Math.max(1200, macroCursorX - 60);
+      totalHeight = Math.max(900, globalMaxY + 40);
+    } else {
+      const internal = layoutSubgraphGroup(nodeIds, nodes, edges, isTD, { fontFamily: effFontFamily, fontSize: effFontSize }, nodeSizes);
+      internal.backEdgePairs.forEach(p => globalBackEdges.add(p));
+
+      const startX = 100;
+      const startY = 80;
+      Object.entries(internal.coords).forEach(([nid, lc]) => {
+        const n = nodes[nid];
+        finalNodes[nid] = {
+          id: nid,
+          type: n.type || 'rectangle',
+          x: Math.round(startX + lc.x),
+          y: Math.round(startY + lc.y),
+          width: Math.round(lc.width),
+          height: Math.round(lc.height),
           rotation: 0,
-          locked: true,
-          isContainer: true,
+          locked: false,
+          groupId: null,
           style: {
-            fill: isDark ? "rgba(24, 24, 27, 0.45)" : "rgba(250, 250, 250, 0.65)",
-            stroke: isDark ? "#3f3f46" : "#d4d4d8",
-            strokeWidth: 1.5,
-            dashed: "dashed"
+            fill: isDark ? "#18181b" : "#ffffff",
+            stroke: isDark ? "#f4f4f5" : "#18181b",
+            strokeWidth: 1.5
           },
           text: {
-            content: `[ ${sub.title.toUpperCase()} ]`,
-            fontFamily: fontOptions.fontFamily || "Inter, sans-serif",
-            fontSize: fontOptions.fontSize || 12,
-            bold: true,
+            content: n.rawText || nid,
+            fontFamily: effFontFamily,
+            fontSize: effFontSize,
+            bold: false,
             italic: false,
             underline: false,
-            color: isDark ? "#a1a1aa" : "#71717a",
-            align: "left",
-            paddingX: 18,
-            paddingY: 14
+            color: isDark ? "#f4f4f5" : "#18181b",
+            align: "center",
+            paddingX: 12,
+            paddingY: 10
           }
         };
-
-        globalMinX = Math.min(globalMinX, cX);
-        globalMaxX = Math.max(globalMaxX, cX + cW);
-        currentY = subMaxY + boxPadY + 120;
-      }
-
-      totalWidth = Math.max(1600, (globalMaxX - globalMinX) + 160);
-      totalHeight = Math.max(900, currentY + 100);
-
-    } else {
-      // DEFAULT BFS LAYOUT (UNTUK GRAF UMUM TANPA SUBGRAPH)
-      const levels = {};
-      const inDegree = {};
-      const adj = {};
-
-      nodeIds.forEach(id => {
-        levels[id] = 0;
-        inDegree[id] = 0;
-        adj[id] = [];
       });
 
-      Object.values(edges).forEach(e => {
-        if (adj[e.sourceId]) adj[e.sourceId].push(e.targetId);
-        if (inDegree[e.targetId] !== undefined) inDegree[e.targetId]++;
-      });
-
-      let queue = nodeIds.filter(id => inDegree[id] === 0);
-      if (queue.length === 0) queue = [nodeIds[0]];
-
-      const visited = new Set();
-      queue.forEach(id => {
-        levels[id] = 0;
-        visited.add(id);
-      });
-
-      let head = 0;
-      while (head < queue.length) {
-        const curr = queue[head++];
-        const currLevel = levels[curr];
-
-        for (const neighbor of (adj[curr] || [])) {
-          levels[neighbor] = Math.max(levels[neighbor] || 0, currLevel + 1);
-          if (!visited.has(neighbor)) {
-            visited.add(neighbor);
-            queue.push(neighbor);
-          }
-        }
-      }
-
-      nodeIds.forEach(id => {
-        if (!visited.has(id)) levels[id] = 0;
-      });
-
-      const levelGroups = {};
-      nodeIds.forEach(id => {
-        const lvl = levels[id];
-        if (!levelGroups[lvl]) levelGroups[lvl] = [];
-        levelGroups[lvl].push(id);
-      });
-
-      const maxLvl = Math.max(...Object.keys(levelGroups).map(Number));
-      const startX = 80;
-      const startY = 80;
-      const TE = exports.TextEditor;
-      const baseFontFamily = fontOptions.fontFamily || "Poppins, sans-serif";
-      const baseFontSize = fontOptions.fontSize || 13;
-
-      let cursorY = startY;
-      let cursorX = startX;
-      let maxExtentX = 1600;
-      let maxExtentY = 900;
-
-      for (let lvl = 0; lvl <= maxLvl; lvl++) {
-        const group = levelGroups[lvl] || [];
-        const count = group.length;
-        if (count === 0) continue;
-
-        // Pass 1: Hitung dimensi aktual (lebar & tinggi anti-clipping) setiap node di level ini
-        const measured = group.map(id => {
-          const n = nodes[id];
-          const text = n.rawText || id;
-          const lines = text.split('\n');
-          const totalChars = text.length;
-          const maxLineLen = Math.max(...lines.map(l => l.length));
-
-          // Jika hanya 1 node di level ini dengan teks panjang, izinkan lebih lebar agar proporsional
-          const maxAllowedW = (count === 1 && totalChars > 140) ? 760 : (count <= 2 ? 360 : 250);
-          let width = Math.max(160, Math.min(maxAllowedW, maxLineLen * 7.5 + 36));
-          let height = Math.max(70, lines.length * 18 + 36);
-
-          const tempNode = {
-            type: n.type || 'rectangle',
-            width: Math.round(width),
-            height: Math.round(height),
-            text: {
-              content: text,
-              fontFamily: baseFontFamily,
-              fontSize: baseFontSize,
-              bold: false,
-              italic: false,
-              underline: false,
-              align: "center",
-              paddingX: 14,
-              paddingY: 10
-            }
-          };
-
-          if (TE && TE.layoutNodeText && TE.computeRequiredNodeHeight) {
-            const layout = TE.layoutNodeText(tempNode);
-            height = Math.max(height, TE.computeRequiredNodeHeight(tempNode, layout.totalTextHeight) + 6);
-          }
-
-          if (n.type === 'circle') {
-            const dim = Math.max(110, Math.max(width, height) * 0.9);
-            width = dim; height = dim;
-          } else if (n.type === 'diamond') {
-            width = Math.max(160, width + 36);
-            height = Math.max(110, height + 36);
-          }
-
-          return { id, n, text, width: Math.round(width), height: Math.round(height) };
-        });
-
-        const gapX = 32;
-        const gapY = 64;
-        const rowMaxH = Math.max(...measured.map(m => m.height));
-        const colMaxW = Math.max(...measured.map(m => m.width));
-        const totalRowW = measured.reduce((sum, m) => sum + m.width, 0) + Math.max(0, count - 1) * gapX;
-        const totalColH = measured.reduce((sum, m) => sum + m.height, 0) + Math.max(0, count - 1) * 36;
-
-        let runX = Math.max(startX, Math.round(800 - totalRowW / 2));
-        let runY = Math.max(startY, Math.round(450 - totalColH / 2));
-
-        measured.forEach(item => {
-          let x, y;
-          if (isTD) {
-            x = runX;
-            y = cursorY;
-            runX += item.width + gapX;
-          } else {
-            x = cursorX;
-            y = runY;
-            runY += item.height + 36;
-          }
-
-          finalNodes[item.id] = {
-            id: item.id,
-            type: item.n.type || 'rectangle',
-            x: Math.round(x),
-            y: Math.round(y),
-            width: item.width,
-            height: item.height,
-            rotation: 0,
-            locked: false,
-            groupId: null,
-            style: {
-              fill: isDark ? "#18181b" : "#ffffff",
-              stroke: isDark ? "#f4f4f5" : "#18181b",
-              strokeWidth: 1.5
-            },
-            text: {
-              content: item.text,
-              fontFamily: baseFontFamily,
-              fontSize: baseFontSize,
-              bold: false,
-              italic: false,
-              underline: false,
-              color: isDark ? "#f4f4f5" : "#18181b",
-              align: "center",
-              paddingX: 14,
-              paddingY: 10
-            }
-          };
-
-          maxExtentX = Math.max(maxExtentX, x + item.width + 100);
-          maxExtentY = Math.max(maxExtentY, y + item.height + 100);
-        });
-
-        if (isTD) {
-          cursorY += rowMaxH + gapY;
-        } else {
-          cursorX += colMaxW + 80;
-        }
-      }
-
-      totalWidth = Math.max(1600, Math.round(maxExtentX));
-      totalHeight = Math.max(900, Math.round(maxExtentY));
+      totalWidth = Math.max(1200, internal.width + 240);
+      totalHeight = Math.max(850, internal.height + 200);
     }
 
-    // Hubungkan kabel & pin magnetik
+    // 4. SMART PIN SELECTION & ROUTING
+    const outEdgesByNode = {};
+    Object.values(edges).forEach(e => {
+      if (!outEdgesByNode[e.sourceId]) outEdgesByNode[e.sourceId] = [];
+      outEdgesByNode[e.sourceId].push(e);
+    });
+
     Object.values(edges).forEach(e => {
       const src = finalNodes[e.sourceId];
       const tgt = finalNodes[e.targetId];
       if (!src || !tgt) return;
 
+      const srcCx = src.x + src.width / 2;
+      const srcCy = src.y + src.height / 2;
+      const tgtCx = tgt.x + tgt.width / 2;
+      const tgtCy = tgt.y + tgt.height / 2;
+      const dx = tgtCx - srcCx;
+      const dy = tgtCy - srcCy;
+
+      const sameGroup = (src.groupId && src.groupId === tgt.groupId) || (!src.groupId && !tgt.groupId);
+      const isBackEdge = globalBackEdges.has(`${e.sourceId}->${e.targetId}`);
+      const sibOut = outEdgesByNode[e.sourceId] || [];
+
       let srcPin = 'S', tgtPin = 'N';
+      let handleOffset = { dx: 0, dy: 0 };
+
       if (isTD) {
-        if (tgt.y > src.y + 20) {
-          srcPin = 'S'; tgtPin = 'N';
-        } else if (tgt.y < src.y - 20) {
-          srcPin = 'W'; tgtPin = 'W'; // Loopback ke atas lewat sisi kiri
+        if (sameGroup) {
+          if (isBackEdge || dy < -20) {
+            if (srcCx >= tgtCx) {
+              srcPin = 'E'; tgtPin = 'E';
+            } else {
+              srcPin = 'W'; tgtPin = 'W';
+            }
+          } else if (Math.abs(dy) <= 25) {
+            srcPin = dx >= 0 ? 'E' : 'W';
+            tgtPin = dx >= 0 ? 'W' : 'E';
+          } else {
+            if ((src.type === 'diamond' || sibOut.length >= 2) && Math.abs(dx) > 45) {
+              srcPin = dx < 0 ? 'W' : 'E';
+              tgtPin = 'N';
+            } else {
+              srcPin = 'S';
+              tgtPin = 'N';
+            }
+          }
         } else {
-          srcPin = tgt.x > src.x ? 'E' : 'W';
-          tgtPin = tgt.x > src.x ? 'W' : 'E';
+          const srcCont = src.groupId ? finalNodes[`subgraph_${src.groupId}`] : null;
+          const tgtCont = tgt.groupId ? finalNodes[`subgraph_${tgt.groupId}`] : null;
+          const containersSideBySide = srcCont && tgtCont && (
+            (srcCont.x + srcCont.width <= tgtCont.x + 20) ||
+            (tgtCont.x + tgtCont.width <= srcCont.x + 20)
+          ) && Math.abs((srcCont.y + srcCont.height / 2) - (tgtCont.y + tgtCont.height / 2)) < Math.max(srcCont.height, tgtCont.height) * 0.7;
+
+          if (containersSideBySide) {
+            srcPin = tgtCx > srcCx ? 'E' : 'W';
+            tgtPin = tgtCx > srcCx ? 'W' : 'E';
+          } else if (dy > 40) {
+            srcPin = 'S';
+            tgtPin = 'N';
+          } else {
+            srcPin = 'S';
+            tgtPin = dx >= 0 ? 'W' : 'E';
+          }
         }
       } else {
-        if (tgt.x > src.x + 20) {
-          srcPin = 'E'; tgtPin = 'W';
-        } else if (tgt.x < src.x - 20) {
-          srcPin = 'S'; tgtPin = 'S'; // Loopback ke kiri lewat bawah
+        if (dx > 20) {
+          if ((src.type === 'diamond' || sibOut.length >= 2) && Math.abs(dy) > 45) {
+            srcPin = dy < 0 ? 'N' : 'S';
+            tgtPin = 'W';
+          } else {
+            srcPin = 'E';
+            tgtPin = 'W';
+          }
+        } else if (dx < -20) {
+          srcPin = dy >= 0 ? 'S' : 'N';
+          tgtPin = dy >= 0 ? 'S' : 'N';
         } else {
-          srcPin = tgt.y > src.y ? 'S' : 'N';
-          tgtPin = tgt.y > src.y ? 'N' : 'S';
+          srcPin = dy >= 0 ? 'S' : 'N';
+          tgtPin = dy >= 0 ? 'N' : 'S';
         }
       }
 
@@ -755,7 +1177,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         radius: 8,
         source: { nodeId: e.sourceId, pin: srcPin },
         target: { nodeId: e.targetId, pin: tgtPin },
-        handleOffset: { dx: 0, dy: 0 },
+        handleOffset,
         label: e.label || '',
         style: {
           stroke: isDark ? "#f4f4f5" : "#18181b",
@@ -763,7 +1185,9 @@ window.MinimalFlow = window.MinimalFlow || {};
           dashed: e.dashed || "solid",
           markerStart: "none",
           markerEnd: "arrow",
-          radius: 8
+          radius: 8,
+          fontFamily: effFontFamily,
+          fontSize: Math.max(9.5, effFontSize - 0.5)
         }
       };
     });
@@ -777,6 +1201,10 @@ window.MinimalFlow = window.MinimalFlow || {};
   function parseMashimurelayJson(data, isDark = false) {
     const bom = data.bill_of_materials || [];
     const connections = data.wiring_connections || [];
+    const fontOptions = {
+      fontFamily: data.fontFamily || "Poppins, sans-serif",
+      fontSize: Number(data.fontSize) || 12
+    };
 
     const nodes = {};
     const edges = {};
@@ -795,23 +1223,16 @@ window.MinimalFlow = window.MinimalFlow || {};
         type = 'circle';
       } else if (name.toLowerCase().includes('protokol') || name.toLowerCase().includes('qr')) {
         type = 'parallelogram';
-      } else if (id.startsWith('SW') || id.startsWith('RLY') || id.startsWith('IGN')) {
-        type = 'rectangle';
       }
 
       const label = `${item.name}${item.spec ? '\n[' + item.spec + ']' : ''}`;
-      nodes[id] = {
-        id,
-        type,
-        rawText: label,
-        inDegree: 0,
-        outDegree: 0
-      };
+      nodes[id] = { id, type, rawText: label, inDegree: 0, outDegree: 0 };
     });
 
     connections.forEach(conn => {
       const fromComp = (conn.from || '').split(':')[0].trim();
       const toComp = (conn.to || '').split(':')[0].trim();
+      if (!fromComp || !toComp) return;
 
       if (!nodes[fromComp]) {
         nodes[fromComp] = { id: fromComp, type: 'rounded', rawText: fromComp, inDegree: 0, outDegree: 0 };
@@ -834,7 +1255,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       nodes[toComp].inDegree++;
     });
 
-    const layout = layoutGraph(nodes, edges, 'LR', isDark);
+    const layout = layoutGraph(nodes, edges, 'LR', isDark, {}, fontOptions);
 
     return {
       version: "1.5.0",
@@ -862,8 +1283,8 @@ window.MinimalFlow = window.MinimalFlow || {};
   // ==========================================================================
   function parseMashimurelayWorkflowJson(data, isDark = false) {
     const fontOptions = {
-      fontFamily: "'Book Antiqua', Palatino, serif",
-      fontSize: 10
+      fontFamily: data.fontFamily || "'Book Antiqua', Palatino, serif",
+      fontSize: Number(data.fontSize) || 10
     };
 
     if (data.runtime_flowchart && Array.isArray(data.runtime_flowchart.nodes)) {
@@ -901,8 +1322,11 @@ window.MinimalFlow = window.MinimalFlow || {};
           inDegree: 0,
           outDegree: 0
         };
-        const gid = groupMapping[id] || "GROUP_CORE";
-        if (subgraphs[gid]) subgraphs[gid].nodeIds.push(id);
+        const gid = n.groupId || n.subgraph || groupMapping[id] || "GROUP_CORE";
+        if (!subgraphs[gid]) {
+          subgraphs[gid] = { id: gid, title: gid, nodeIds: [] };
+        }
+        subgraphs[gid].nodeIds.push(id);
       });
 
       let edgeIdx = 1;
@@ -915,7 +1339,7 @@ window.MinimalFlow = window.MinimalFlow || {};
             id: edgeId,
             sourceId: srcId,
             targetId: tgtId,
-            dashed: (tgtId === 'WAIT_USER') ? 'dashed' : 'solid',
+            dashed: (tgtId === 'WAIT_USER' || e.dashed) ? 'dashed' : 'solid',
             label: e.label || ''
           };
           if (intermediateNodes[srcId]) intermediateNodes[srcId].outDegree++;
@@ -929,7 +1353,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         theme: isDark ? "dark" : "light",
         canvas: {
           pan: { x: 50, y: 50 },
-          zoom: 0.65,
+          zoom: 0.55,
           gridSize: 24,
           workspace: {
             preset: "16:9_landscape",
@@ -950,6 +1374,7 @@ window.MinimalFlow = window.MinimalFlow || {};
       const intermediateEdges = {};
       const subgraphs = {};
       let edgeIdx = 1;
+      let prevPhaseLastTaskId = null;
 
       data.engineering_workflow.phases.forEach((p, pIdx) => {
         const pId = p.phase_id || `PHASE_${pIdx + 1}`;
@@ -960,13 +1385,13 @@ window.MinimalFlow = window.MinimalFlow || {};
         };
 
         const tasks = Array.isArray(p.tasks) ? p.tasks : [];
-        let prevTaskId = null;
+        let prevTaskId = prevPhaseLastTaskId;
         tasks.forEach((t, tIdx) => {
           const tId = `${pId}_task_${tIdx + 1}`;
           intermediateNodes[tId] = {
             id: tId,
             type: "rectangle",
-            rawText: cleanLabelText(t),
+            rawText: cleanLabelText(typeof t === 'string' ? t : (t.label || t.title || t.name || tId)),
             inDegree: 0,
             outDegree: 0
           };
@@ -986,6 +1411,7 @@ window.MinimalFlow = window.MinimalFlow || {};
           }
           prevTaskId = tId;
         });
+        if (prevTaskId) prevPhaseLastTaskId = prevTaskId;
       });
 
       const layout = layoutGraph(intermediateNodes, intermediateEdges, 'TD', isDark, subgraphs, fontOptions);
@@ -1010,28 +1436,73 @@ window.MinimalFlow = window.MinimalFlow || {};
       };
     }
 
-    return parseGenericJson(data, isDark);
+    return parseGenericJson(data, isDark, fontOptions);
   }
 
   // ==========================================================================
-  // 5. ADAPTER GENERIC DIAGRAM JSON (ARRAY FORMAT)
+  // 5. ADAPTER GENERIC DIAGRAM JSON (MULTI-SCHEMA SUPPORT)
   // ==========================================================================
-  function parseGenericJson(data, isDark = false) {
+  function parseGenericJson(data, isDark = false, customFontOptions = null) {
     let rawNodes = [];
     let rawEdges = [];
+    let rawSubgraphs = {};
 
-    if (Array.isArray(data)) {
-      rawNodes = data;
-    } else if (data.nodes && Array.isArray(data.nodes)) {
-      rawNodes = data.nodes;
-      rawEdges = Array.isArray(data.edges) ? data.edges : [];
-    } else if (data.elements) {
-      if (Array.isArray(data.elements.nodes)) rawNodes = data.elements.nodes;
-      if (Array.isArray(data.elements.edges)) rawEdges = data.elements.edges;
-      if (Array.isArray(data.elements)) {
-        data.elements.forEach(el => {
-          if (el.group === "nodes" || el.data?.id) rawNodes.push(el);
-          else if (el.group === "edges" || (el.data?.source && el.data?.target)) rawEdges.push(el);
+    const rootObj = (!Array.isArray(data) && (data.workflow || data.flowchart || data.diagram))
+      ? (data.workflow || data.flowchart || data.diagram)
+      : data;
+
+    const fontOptions = customFontOptions || {
+      fontFamily: data.fontFamily || rootObj.fontFamily || "Poppins, sans-serif",
+      fontSize: Number(data.fontSize || rootObj.fontSize) || 12
+    };
+    const orientation = (data.orientation || data.direction || rootObj.orientation || rootObj.direction || 'TD').toUpperCase();
+
+    const subSource = data.subgraphs || data.groups || data.lanes || rootObj.subgraphs || rootObj.groups;
+    if (Array.isArray(subSource)) {
+      subSource.forEach((s, idx) => {
+        const sid = String(s.id || s.key || `GROUP_${idx + 1}`);
+        rawSubgraphs[sid] = { id: sid, title: s.title || s.name || s.label || sid, nodeIds: Array.isArray(s.nodeIds) ? [...s.nodeIds] : [] };
+      });
+    } else if (subSource && typeof subSource === 'object') {
+      Object.entries(subSource).forEach(([sid, s]) => {
+        rawSubgraphs[sid] = { id: sid, title: s.title || s.name || s.label || sid, nodeIds: Array.isArray(s.nodeIds) ? [...s.nodeIds] : [] };
+      });
+    }
+
+    if (Array.isArray(rootObj)) {
+      rawNodes = rootObj;
+    } else if (Array.isArray(rootObj.nodes)) {
+      rawNodes = rootObj.nodes;
+      rawEdges = rootObj.edges || rootObj.links || rootObj.connections || rootObj.transitions || [];
+    } else if (Array.isArray(rootObj.steps) || Array.isArray(rootObj.stages)) {
+      rawNodes = rootObj.steps || rootObj.stages;
+      rawEdges = rootObj.edges || rootObj.links || rootObj.connections || [];
+    } else if (Array.isArray(rootObj.phases)) {
+      let prevId = null;
+      rootObj.phases.forEach((p, pIdx) => {
+        const pid = String(p.id || p.phase_id || `PHASE_${pIdx + 1}`);
+        const pTitle = p.title || p.phase_name || p.name || pid;
+        rawSubgraphs[pid] = { id: pid, title: pTitle, nodeIds: [] };
+        const items = p.nodes || p.steps || p.tasks || [];
+        items.forEach((item, iIdx) => {
+          const nid = typeof item === 'object' && item.id ? String(item.id) : `${pid}_step_${iIdx + 1}`;
+          const nLabel = typeof item === 'string' ? item : (item.label || item.title || item.text || item.name || nid);
+          const nType = typeof item === 'object' && item.type ? item.type : undefined;
+          rawNodes.push({ id: nid, label: nLabel, type: nType, groupId: pid });
+          if (prevId && (!rootObj.edges || rootObj.edges.length === 0)) {
+            rawEdges.push({ from: prevId, to: nid });
+          }
+          prevId = nid;
+        });
+      });
+      if (Array.isArray(rootObj.edges)) rawEdges.push(...rootObj.edges);
+    } else if (rootObj.elements) {
+      if (Array.isArray(rootObj.elements.nodes)) rawNodes = rootObj.elements.nodes;
+      if (Array.isArray(rootObj.elements.edges)) rawEdges = rootObj.elements.edges;
+      if (Array.isArray(rootObj.elements)) {
+        rootObj.elements.forEach(el => {
+          if (el.group === "nodes" || (el.data && el.data.id && !el.data.source)) rawNodes.push(el);
+          else if (el.group === "edges" || (el.data && el.data.source && el.data.target)) rawEdges.push(el);
         });
       }
     }
@@ -1040,48 +1511,109 @@ window.MinimalFlow = window.MinimalFlow || {};
     const intermediateEdges = {};
     let edgeIdx = 1;
 
+    function normalizeShapeType(rawType, text) {
+      if (rawType) {
+        const t = String(rawType).toLowerCase();
+        if (t === 'decision' || t === 'diamond' || t === 'condition') return 'diamond';
+        if (t === 'start_end' || t === 'start' || t === 'end' || t === 'terminator' || t === 'stadium' || t === 'rounded') return 'rounded';
+        if (t === 'database' || t === 'db' || t === 'cylinder' || t === 'storage') return 'cylinder';
+        if (t === 'io' || t === 'input' || t === 'output' || t === 'parallelogram') return 'parallelogram';
+        if (t === 'circle' || t === 'event') return 'circle';
+        if (t === 'rectangle' || t === 'process' || t === 'task' || t === 'step') return 'rectangle';
+      }
+      const lower = String(text || '').toLowerCase();
+      if (/\?|\bapakah\b|\bevaluasi\b|\bdecision\b|\bkondisi\b/.test(lower)) return 'diamond';
+      if (/^(?:mulai|start|selesai|finish|end)\b/i.test(lower)) return 'rounded';
+      return 'rectangle';
+    }
+
     rawNodes.forEach((n, idx) => {
-      const id = String(n.id || n.data?.id || `node_${idx + 1}`);
-      const text = n.label || n.data?.label || n.text || n.title || n.name || id;
-      const type = n.type || 'rectangle';
+      if (typeof n === 'string') {
+        const id = `node_${idx + 1}`;
+        intermediateNodes[id] = { id, type: normalizeShapeType(null, n), rawText: cleanLabelText(n), inDegree: 0, outDegree: 0 };
+        return;
+      }
+      const id = String(n.id || n.key || n.data?.id || `node_${idx + 1}`);
+      const text = n.label || n.data?.label || n.text?.content || n.text || n.title || n.name || id;
+      const type = normalizeShapeType(n.type || n.shape || n.data?.type, text);
+      const gid = n.groupId || n.subgraph || n.group || n.phase || n.lane || n.data?.parent || null;
+
       intermediateNodes[id] = {
         id,
         type,
         rawText: cleanLabelText(text),
+        subgraph: gid,
         inDegree: 0,
         outDegree: 0
       };
+
+      if (gid) {
+        if (!rawSubgraphs[gid]) {
+          rawSubgraphs[gid] = { id: String(gid), title: String(gid), nodeIds: [] };
+        }
+        if (!rawSubgraphs[gid].nodeIds.includes(id)) {
+          rawSubgraphs[gid].nodeIds.push(id);
+        }
+      }
     });
 
-    rawEdges.forEach((e, idx) => {
-      const srcId = String(e.source || e.data?.source || e.from || '');
-      const tgtId = String(e.target || e.data?.target || e.to || '');
-      if (srcId && tgtId) {
+    if (rawEdges.length === 0 && rawNodes.length > 1) {
+      let hasExplicitNext = false;
+      rawNodes.forEach((n, idx) => {
+        if (typeof n !== 'object' || !n) return;
+        const srcId = String(n.id || n.key || `node_${idx + 1}`);
+        const nexts = n.next || n.targets || n.to || n.children;
+        if (nexts) {
+          hasExplicitNext = true;
+          const nextArr = Array.isArray(nexts) ? nexts : [nexts];
+          nextArr.forEach(item => {
+            if (typeof item === 'string') {
+              rawEdges.push({ from: srcId, to: item });
+            } else if (typeof item === 'object' && item) {
+              rawEdges.push({ from: srcId, to: item.id || item.to || item.target, label: item.label || item.condition || '' });
+            }
+          });
+        }
+      });
+
+      if (!hasExplicitNext) {
+        const ids = Object.keys(intermediateNodes);
+        for (let i = 0; i < ids.length - 1; i++) {
+          rawEdges.push({ from: ids[i], to: ids[i + 1] });
+        }
+      }
+    }
+
+    rawEdges.forEach((e) => {
+      const srcId = String(e.source?.nodeId || e.source || e.data?.source || e.from || '');
+      const tgtId = String(e.target?.nodeId || e.target || e.data?.target || e.to || '');
+      if (srcId && tgtId && intermediateNodes[srcId] && intermediateNodes[tgtId]) {
         const edgeId = `edge_${edgeIdx++}`;
         intermediateEdges[edgeId] = {
           id: edgeId,
           sourceId: srcId,
           targetId: tgtId,
-          dashed: e.dashed ? 'dashed' : 'solid',
-          label: e.label || e.data?.label || ''
+          dashed: (e.dashed === true || e.dashed === 'dashed' || e.style?.dashed === 'dashed') ? 'dashed' : 'solid',
+          label: cleanLabelText(e.label || e.data?.label || e.condition || '')
         };
-        if (intermediateNodes[srcId]) intermediateNodes[srcId].outDegree++;
-        if (intermediateNodes[tgtId]) intermediateNodes[tgtId].inDegree++;
+        intermediateNodes[srcId].outDegree++;
+        intermediateNodes[tgtId].inDegree++;
       }
     });
 
-    const layout = layoutGraph(intermediateNodes, intermediateEdges, 'TD', isDark);
+    const layout = layoutGraph(intermediateNodes, intermediateEdges, orientation, isDark, rawSubgraphs, fontOptions);
+    const isTall = layout.totalHeight > layout.totalWidth * 1.15;
 
     return {
       version: "1.5.0",
       theme: isDark ? "dark" : "light",
       canvas: {
         pan: { x: 50, y: 50 },
-        zoom: 1.0,
+        zoom: isTall ? 0.65 : 0.8,
         gridSize: 24,
         workspace: {
-          preset: "16:9_landscape",
-          orientation: "landscape",
+          preset: isTall ? "custom_portrait" : "16:9_landscape",
+          orientation: isTall ? "portrait" : "landscape",
           x: 40,
           y: 40,
           width: layout.totalWidth,
@@ -1096,10 +1628,164 @@ window.MinimalFlow = window.MinimalFlow || {};
   // ==========================================================================
   // 6. ADAPTER MERMAID KE MINIMALFLOW DOCUMENT
   // ==========================================================================
-  function parseMermaidToDocument(rawContent, isDark = false) {
+  function parseMermaidToDocument(rawContent, isDark = false, customFontOptions = null) {
     const parsed = parseMermaidScript(rawContent);
-    const layout = layoutGraph(parsed.nodes, parsed.edges, parsed.orientation, isDark, parsed.subgraphs);
-    const isTall = layout.totalHeight > layout.totalWidth;
+    const isBookAntiquaRequested = /book\s*antiqua/i.test(rawContent);
+    const fontOptions = customFontOptions || (isBookAntiquaRequested ? {
+      fontFamily: "'Book Antiqua', Palatino, serif",
+      fontSize: 10
+    } : {
+      fontFamily: "Poppins, sans-serif",
+      fontSize: 11.5
+    });
+
+    const layout = layoutGraph(parsed.nodes, parsed.edges, parsed.orientation, isDark, parsed.subgraphs, fontOptions);
+    const isTall = layout.totalHeight > layout.totalWidth * 1.15;
+
+    return {
+      version: "1.5.0",
+      theme: isDark ? "dark" : "light",
+      canvas: {
+        pan: { x: 50, y: 50 },
+        zoom: isTall ? 0.60 : 0.75,
+        gridSize: 24,
+        workspace: {
+          preset: isTall ? "custom_portrait" : "16:9_landscape",
+          orientation: isTall ? "portrait" : "landscape",
+          x: 40,
+          y: 40,
+          width: layout.totalWidth,
+          height: layout.totalHeight
+        }
+      },
+      nodes: layout.nodes,
+      edges: layout.edges
+    };
+  }
+
+  // ==========================================================================
+  // 6b. ADAPTER NATURAL LANGUAGE PROMPT & STRUCTURED STEP LIST
+  // ==========================================================================
+  function parseStepListToDocument(rawText, isDark = false) {
+    if (!rawText) {
+      return {
+        nodes: {}, edges: {},
+        canvas: { pan: { x: 50, y: 50 }, zoom: 1, gridSize: 24, workspace: { preset: "16:9_landscape", orientation: "landscape", x: 40, y: 40, width: 1600, height: 900 } }
+      };
+    }
+
+    let clean = rawText.trim().replace(/^```[a-zA-Z0-9_-]*\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+
+    const intermediateNodes = {};
+    const intermediateEdges = {};
+    const subgraphs = {};
+    let currentSubId = null;
+    let nodeCounter = 1;
+    let edgeCounter = 1;
+    let lastMainNodeId = null;
+    let lastDecisionNodeId = null;
+    let pendingBranchLeafIds = [];
+
+    function inferShape(label) {
+      const lower = label.toLowerCase();
+      if (/\b(mulai|start|begin|selesai|finish|end|berhenti|stop)\b/i.test(lower)) return "rounded";
+      if (/\?|\b(apakah|jika|if|kondisi|valid\?|cek|evaluasi|decision)\b/i.test(lower)) return "diamond";
+      if (/\b(input|output|masukkan|keluaran|baca|read|print|cetak|tampilkan|display)\b/i.test(lower)) return "parallelogram";
+      if (/\b(database|db|basis data|tabel|table|simpan ke db|storage|penyimpanan)\b/i.test(lower)) return "cylinder";
+      return "rectangle";
+    }
+
+    function addStepNode(label, explicitType = null) {
+      const id = `step_${nodeCounter++}`;
+      const type = explicitType || inferShape(label);
+      intermediateNodes[id] = {
+        id,
+        type,
+        rawText: cleanLabelText(label),
+        subgraph: currentSubId,
+        inDegree: 0,
+        outDegree: 0
+      };
+      if (currentSubId && subgraphs[currentSubId]) {
+        subgraphs[currentSubId].nodeIds.push(id);
+      }
+      return id;
+    }
+
+    function addStepEdge(srcId, tgtId, label = '') {
+      if (!srcId || !tgtId) return;
+      const eid = `edge_${edgeCounter++}`;
+      intermediateEdges[eid] = {
+        id: eid,
+        sourceId: srcId,
+        targetId: tgtId,
+        dashed: 'solid',
+        label: cleanLabelText(label)
+      };
+      if (intermediateNodes[srcId]) intermediateNodes[srcId].outDegree++;
+      if (intermediateNodes[tgtId]) intermediateNodes[tgtId].inDegree++;
+    }
+
+    if (!clean.includes('\n') && /->|-->|=>|\u2794|→/.test(clean)) {
+      const parts = clean.split(/->|-->|=>|\u2794|→/).map(p => p.trim()).filter(Boolean);
+      parts.forEach(p => {
+        const lbl = p.replace(/^\[?\d+[\]\.\:\-\)]\s*/, "").trim() || p;
+        const nid = addStepNode(lbl);
+        if (lastMainNodeId) addStepEdge(lastMainNodeId, nid);
+        lastMainNodeId = nid;
+      });
+    } else {
+      const lines = clean.split('\n').map(l => l.trim()).filter(Boolean);
+      let subIdx = 1;
+
+      for (const line of lines) {
+        if (line.startsWith('//') || line.startsWith('%%')) continue;
+
+        const phaseMatch = line.match(/^(?:#+\s*)?(?:(?:fase|phase|tahap|bagian|modul|group|subgraph)\s+\d*[:\-\.]?\s*(.+)|\[(.+)\])$/i);
+        if (phaseMatch && !line.includes('->') && !line.endsWith('?')) {
+          const title = (phaseMatch[1] || phaseMatch[2] || line).trim();
+          currentSubId = `PHASE_${subIdx++}`;
+          subgraphs[currentSubId] = { id: currentSubId, title, nodeIds: [] };
+          continue;
+        }
+
+        const branchMatch = line.match(/^(?:[-*•]\s*)?(?:jika\s+|if\s+|cabang\s+)?(ya|tidak|yes|no|lulus|gagal|valid|invalid|benar|salah|normal|korsleting|offline|online)\s*(?:[:\-]|->|-->|=>)\s*(.+)$/i);
+        if (branchMatch && (lastDecisionNodeId || lastMainNodeId)) {
+          const branchLabel = branchMatch[1].trim();
+          const targetText = branchMatch[2].trim();
+          const anchorId = lastDecisionNodeId || lastMainNodeId;
+          if (intermediateNodes[anchorId]) {
+            intermediateNodes[anchorId].type = 'diamond';
+          }
+          const branchNodeId = addStepNode(targetText);
+          addStepEdge(anchorId, branchNodeId, branchLabel);
+          pendingBranchLeafIds.push(branchNodeId);
+          continue;
+        }
+
+        const cleaned = line.replace(/^(?:(?:\d+[\.\)\:-])|[-*•]|\b(?:langkah|step)\s+\d+[:\.\-]?)\s*/i, "").trim();
+        if (!cleaned) continue;
+
+        const nid = addStepNode(cleaned);
+        if (pendingBranchLeafIds.length > 0) {
+          pendingBranchLeafIds.forEach(leafId => addStepEdge(leafId, nid));
+          pendingBranchLeafIds = [];
+          lastDecisionNodeId = null;
+        } else if (lastMainNodeId) {
+          addStepEdge(lastMainNodeId, nid);
+        }
+
+        lastMainNodeId = nid;
+        if (intermediateNodes[nid].type === 'diamond') {
+          lastDecisionNodeId = nid;
+        } else {
+          lastDecisionNodeId = null;
+        }
+      }
+    }
+
+    const layout = layoutGraph(intermediateNodes, intermediateEdges, 'TD', isDark, subgraphs);
+    const isTall = layout.totalHeight > layout.totalWidth * 1.15;
 
     return {
       version: "1.5.0",
@@ -1123,141 +1809,7 @@ window.MinimalFlow = window.MinimalFlow || {};
   }
 
   // ==========================================================================
-  // 6b. ADAPTER NATURAL LANGUAGE PROMPT & STEP LIST
-  // ==========================================================================
-  function parseStepListToDocument(rawText, isDark = false) {
-    if (!rawText) {
-      return {
-        nodes: {}, edges: {},
-        canvas: { pan: { x: 50, y: 50 }, zoom: 1, gridSize: 24, workspace: { preset: "16:9_landscape", orientation: "landscape", x: 40, y: 40, width: 1600, height: 900 } }
-      };
-    }
-
-    let clean = rawText.trim().replace(/^```[a-zA-Z0-9_-]*\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
-    let steps = [];
-
-    if (/->|-->|=>|➔|→/.test(clean)) {
-      const parts = clean.split(/->|-->|=>|➔|→/);
-      steps = parts.map(p => p.trim()).filter(p => p.length > 0).map(s => {
-        return { label: s.replace(/^\[?\d+[\]\.\:\-\)]\s*/, "").trim() || s };
-      });
-    } else {
-      const lines = clean.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      lines.forEach(l => {
-        if (l.startsWith("#") || l.startsWith("//")) return;
-        const cleaned = l.replace(/^(?:(?:\d+[\.\)\:-])|[-*•]|\b(?:langkah|step)\s+\d+[:\.\-]?)\s*/i, "").trim();
-        if (cleaned.length > 0) steps.push({ label: cleaned });
-      });
-    }
-
-    if (steps.length === 0) steps.push({ label: clean });
-
-    const nodes = {};
-    const edges = {};
-    const strokeColor = isDark ? "#f4f4f5" : "#18181b";
-    const fillColor = isDark ? "#27272a" : "#ffffff";
-    const textColor = isDark ? "#f4f4f5" : "#18181b";
-
-    const width = 1600;
-    const height = Math.max(900, steps.length * 150 + 160);
-    const centerX = 800;
-    let curY = 80;
-
-    steps.forEach((step, idx) => {
-      const id = "node_step_" + (idx + 1);
-      const lower = step.label.toLowerCase();
-      let type = "rectangle";
-      if (/\b(mulai|start|begin|selesai|finish|end|berhenti|stop)\b/i.test(lower)) type = "rounded";
-      else if (/\?|\bapakah\b|\bjika\b|\bif\b|\bkondisi\b|\bvalid\?|\bcek\b|\bevaluasi\b|\bdecision\b/i.test(lower)) type = "diamond";
-      else if (/\b(input|output|masukkan|keluaran|baca|read|print|cetak|tampilkan|display)\b/i.test(lower)) type = "parallelogram";
-      else if (/\b(database|db|basis data|tabel|table|simpan ke db|storage|penyimpanan)\b/i.test(lower)) type = "cylinder";
-
-      let nw = 160, nh = 80;
-      if (type === "diamond") { nw = 150; nh = 100; }
-      else if (type === "parallelogram") { nw = 170; nh = 76; }
-
-      nodes[id] = {
-        id,
-        type,
-        x: Math.round(centerX - nw / 2),
-        y: curY,
-        width: nw,
-        height: nh,
-        baseWidth: nw,
-        baseHeight: nh,
-        rotation: 0,
-        locked: false,
-        groupId: null,
-        src: null,
-        zIndex: (idx + 1) * 10,
-        style: {
-          fill: fillColor,
-          stroke: strokeColor,
-          strokeWidth: 1.5,
-          dashed: "solid"
-        },
-        text: {
-          content: step.label,
-          fontFamily: "Poppins, sans-serif",
-          fontSize: 13,
-          bold: false,
-          italic: false,
-          underline: false,
-          align: "center",
-          valign: "middle",
-          paddingX: 14,
-          color: textColor
-        }
-      };
-
-      if (idx > 0) {
-        const prevId = "node_step_" + idx;
-        const edgeId = "edge_step_" + idx;
-        edges[edgeId] = {
-          id: edgeId,
-          type: "step",
-          radius: 8,
-          source: { nodeId: prevId, pin: "S" },
-          target: { nodeId: id, pin: "N" },
-          handleOffset: { dx: 0, dy: 0 },
-          zIndex: (idx + 1) * 10 - 5,
-          style: {
-            stroke: strokeColor,
-            strokeWidth: 1.5,
-            dashed: "solid",
-            markerStart: "none",
-            markerEnd: "arrow",
-            radius: 8
-          }
-        };
-      }
-
-      curY += nh + 50;
-    });
-
-    return {
-      version: "1.5.0",
-      theme: isDark ? "dark" : "light",
-      canvas: {
-        pan: { x: 50, y: 50 },
-        zoom: 0.85,
-        gridSize: 24,
-        workspace: {
-          preset: height > 1000 ? "a4_portrait" : "16:9_landscape",
-          orientation: height > 1000 ? "portrait" : "landscape",
-          x: 40,
-          y: 40,
-          width: 1600,
-          height: Math.max(curY + 60, 900)
-        }
-      },
-      nodes,
-      edges
-    };
-  }
-
-  // ==========================================================================
-  // 6b. AI VISION DIRECT SPATIAL RECONSTRUCTION ENGINE (box_2d + Verbatim Rich Text)
+  // 6c. AI VISION DIRECT SPATIAL RECONSTRUCTION ENGINE (box_2d + Verbatim Rich Text)
   // ==========================================================================
   function normalizeVisionShapeType(rawType) {
     const t = String(rawType || "rectangle").toLowerCase().trim();
@@ -1300,7 +1852,6 @@ window.MinimalFlow = window.MinimalFlow || {};
     const imgH = Number(data.imageHeight) > 100 ? Number(data.imageHeight) : 900;
     const aspect = imgW / imgH;
 
-    // Tentukan ukuran kanvas target yang mempertahankan rasio aspek asli gambar
     let canvasW = 1440;
     let canvasH = Math.round(canvasW / aspect);
     if (canvasH > 1400) {
@@ -1317,7 +1868,6 @@ window.MinimalFlow = window.MinimalFlow || {};
     const drawW = canvasW - marginX * 2;
     const drawH = canvasH - marginY * 2;
 
-    // Cari rentang koordinat box_2d agar diagram memenuhi area kerja secara proporsional
     const validBoxes = rawNodes.filter(n => Array.isArray(n.box_2d) && n.box_2d.length === 4);
     let minNormX = 0, maxNormX = 1000, minNormY = 0, maxNormY = 1000;
     if (validBoxes.length > 0) {
@@ -1335,7 +1885,6 @@ window.MinimalFlow = window.MinimalFlow || {};
 
     const normSpanX = Math.max(100, maxNormX - minNormX);
     const normSpanY = Math.max(100, maxNormY - minNormY);
-    // Gunakan skala seragam berdasarkan dimensi fisik asli agar kotak tidak gepeng
     const physSpanW = (normSpanX / 1000) * imgW;
     const physSpanH = (normSpanY / 1000) * imgH;
     const uniformScale = Math.min(drawW / physSpanW, drawH / physSpanH);
@@ -1366,7 +1915,6 @@ window.MinimalFlow = window.MinimalFlow || {};
         height = Math.max(48, (y2 - y1) * scaleY);
       }
 
-      // Bangun konten paragraf kaya (mendukung per-paragraph align, bold/italic/underline, & numbering)
       let contentStr = "";
       let dominantAlign = "center";
       let totalPlainLen = 0;
@@ -1390,7 +1938,6 @@ window.MinimalFlow = window.MinimalFlow || {};
           return { html, align, list };
         });
 
-        // Tentukan alignment dominan
         const alignCounts = {};
         paras.forEach(p => {
           const a = p.align || (p.list ? "left" : "center");
@@ -1416,14 +1963,34 @@ window.MinimalFlow = window.MinimalFlow || {};
         totalPlainLen = TE && TE.getPlainText ? TE.getPlainText(contentStr).length : contentStr.length;
       }
 
-      // Pilih fontSize adaptif agar teks padat di kolom sempit tetap terbaca bersih tanpa kepenuhan
-      let fontSize = 13;
+      let fontSize = data.fontSize ? Number(data.fontSize) : 13;
+      if (!data.fontSize) {
+        if (!isContainer) {
+          if (totalPlainLen > 240 && width < 260) fontSize = 11.5;
+          else if (totalPlainLen > 120 && width < 260) fontSize = 12;
+          else if (totalPlainLen > 320) fontSize = 12.5;
+        } else {
+          fontSize = 12;
+        }
+      }
+
+      // Gunakan computeNodeDimensions sebagai jaminan ukuran minimal bebas overflow
       if (!isContainer) {
-        if (totalPlainLen > 240 && width < 260) fontSize = 11.5;
-        else if (totalPlainLen > 120 && width < 260) fontSize = 12;
-        else if (totalPlainLen > 320) fontSize = 12.5;
-      } else {
-        fontSize = 12;
+        const plainForMeasure = contentStr.replace(/<[^>]+>/g, '');
+        const minDims = computeNodeDimensions(plainForMeasure, shapeType, {
+          fontFamily: data.fontFamily || "Poppins, sans-serif",
+          fontSize,
+          paddingX: 14,
+          paddingY: 10
+        });
+        if (width < minDims.width && totalPlainLen > 35) width = Math.max(width, Math.min(minDims.width, 280));
+        const recomputed = computeNodeDimensions(plainForMeasure, shapeType, {
+          fontFamily: data.fontFamily || "Poppins, sans-serif",
+          fontSize,
+          paddingX: 14,
+          paddingY: 10
+        });
+        if (height < recomputed.height) height = recomputed.height;
       }
 
       const isFillDark = rn.fill === "dark";
@@ -1441,10 +2008,14 @@ window.MinimalFlow = window.MinimalFlow || {};
         y: Math.round(y),
         width: Math.round(width),
         height: Math.round(height),
+        origX: Math.round(x),
+        origY: Math.round(y),
+        origW: Math.round(width),
+        origH: Math.round(height),
         rotation: 0,
         locked: isContainer,
         isContainer,
-        groupId: null,
+        groupId: rn.groupId || null,
         zIndex: isContainer ? 1 : (10 + idx * 10),
         style: {
           fill: fillCol,
@@ -1454,7 +2025,7 @@ window.MinimalFlow = window.MinimalFlow || {};
         },
         text: {
           content: contentStr,
-          fontFamily: "Poppins, sans-serif",
+          fontFamily: data.fontFamily || "Poppins, sans-serif",
           fontSize,
           bold: isContainer,
           italic: false,
@@ -1472,17 +2043,32 @@ window.MinimalFlow = window.MinimalFlow || {};
       nodeMap[id] = nodeObj;
     });
 
-    // Pass 1: Kelompokkan node non-container ke dalam baris horizontal & rapikan kesejajaran
+    // Tentukan keanggotaan container sebelum pergeseran baris
+    const containers = builtNodes.filter(n => n.isContainer);
     const nonContainers = builtNodes.filter(n => !n.isContainer);
-    nonContainers.sort((a, b) => a.y - b.y || a.x - b.x);
+    const containerMembers = {};
+    containers.forEach(c => { containerMembers[c.id] = []; });
 
+    nonContainers.forEach(n => {
+      const cx = n.origX + n.origW / 2;
+      const cy = n.origY + n.origH / 2;
+      for (const c of containers) {
+        if (cx >= c.origX && cx <= c.origX + c.origW && cy >= c.origY && cy <= c.origY + c.origH) {
+          containerMembers[c.id].push(n);
+          if (!n.groupId) n.groupId = c.id;
+          break;
+        }
+      }
+    });
+
+    // Pass 1: Kelompokkan node non-container ke dalam baris horizontal & rapikan kesejajaran
+    nonContainers.sort((a, b) => a.y - b.y || a.x - b.x);
     const rows = [];
     for (const n of nonContainers) {
       let placed = false;
       for (const row of rows) {
         const refY = row[0].y;
         const refH = row[0].height;
-        // Node berada pada baris sama jika bagian atasnya sejajar (<= 28px) atau bertumpuk vertikal > 55%
         const overlapY = Math.min(refY + refH, n.y + n.height) - Math.max(refY, n.y);
         if (Math.abs(n.y - refY) <= 28 || overlapY > Math.min(refH, n.height) * 0.55) {
           row.push(n);
@@ -1493,31 +2079,29 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (!placed) rows.push([n]);
     }
 
-    // Rapikan y & spacing horizontal dalam setiap baris, lalu auto-fit tinggi agar 0% teks terpotong
-    let cumulativeShiftY = 0;
-    for (const row of rows) {
+    let prevRowBottom = 0;
+    for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+      const row = rows[rIdx];
       row.sort((a, b) => a.x - b.x);
 
-      // Snap Y sejajar untuk semua kotak di baris yang sama
-      const avgY = Math.round(row.reduce((s, n) => s + n.y, 0) / row.length) + cumulativeShiftY;
+      let avgY = Math.round(row.reduce((s, n) => s + n.y, 0) / row.length);
+      if (rIdx > 0 && avgY < prevRowBottom + 36) {
+        avgY = prevRowBottom + 36;
+      }
       row.forEach(n => { n.y = avgY; });
 
-      // Pastikan celah horizontal minimal 16px antar kotak yang berdampingan di baris yang sama
       for (let i = 1; i < row.length; i++) {
         const prev = row[i - 1];
         const curr = row[i];
-        const minX = prev.x + prev.width + 16;
+        const minX = prev.x + prev.width + 20;
         if (curr.x < minX) {
           curr.x = minX;
         }
       }
 
-      // Cek apakah kotak-kotak di baris ini semula memiliki tinggi hampir sama
       const origHeights = row.map(n => n.height);
       const wasUniformHeight = row.length > 1 && (Math.max(...origHeights) - Math.min(...origHeights)) <= 36;
-      const origRowMaxH = Math.max(...origHeights);
 
-      // Auto-measure tinggi teks aktual dengan TextEditor agar ZERO clipping
       if (TE && TE.layoutNodeText && TE.computeRequiredNodeHeight) {
         row.forEach(n => {
           const layout = TE.layoutNodeText(n);
@@ -1532,18 +2116,32 @@ window.MinimalFlow = window.MinimalFlow || {};
       if (wasUniformHeight) {
         row.forEach(n => { n.height = newRowMaxH; });
       }
-
-      const rowExpansion = Math.max(0, newRowMaxH - origRowMaxH);
-      if (rowExpansion > 0) {
-        cumulativeShiftY += rowExpansion + 16;
-      }
+      prevRowBottom = avgY + newRowMaxH;
     }
 
-    // Hitung ulang batas kanvas agar semua node muat lega
+    // Pass 2: Sesuaikan kotak container agar selalu membungkus penuh seluruh anggotanya
+    containers.forEach(c => {
+      const members = containerMembers[c.id] || [];
+      if (members.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        members.forEach(m => {
+          minX = Math.min(minX, m.x);
+          minY = Math.min(minY, m.y);
+          maxX = Math.max(maxX, m.x + m.width);
+          maxY = Math.max(maxY, m.y + m.height);
+        });
+        c.x = Math.min(c.x, minX - 28);
+        c.y = Math.min(c.y, minY - 44);
+        c.width = Math.max(c.width, (maxX + 28) - c.x);
+        c.height = Math.max(c.height, (maxY + 28) - c.y);
+      }
+    });
+
     let maxRight = 1400;
     let maxBottom = 860;
     const finalNodes = {};
     builtNodes.forEach(n => {
+      delete n.origX; delete n.origY; delete n.origW; delete n.origH;
       n.baseWidth = n.width;
       n.baseHeight = n.height;
       finalNodes[n.id] = n;
@@ -1551,7 +2149,6 @@ window.MinimalFlow = window.MinimalFlow || {};
       maxBottom = Math.max(maxBottom, n.y + n.height + 80);
     });
 
-    // Bangun koneksi panah (edges) dengan pin yang akurat
     const VALID_PINS = new Set(["N", "E", "S", "W"]);
     const finalEdges = {};
     let edgeCounter = 1;
@@ -1714,7 +2311,7 @@ window.MinimalFlow = window.MinimalFlow || {};
 
       case "step_list": {
         const doc = parseStepListToDocument(detection.raw, isDark);
-        const nodeCount = Object.keys(doc.nodes).length;
+        const nodeCount = Object.keys(doc.nodes).filter(k => !doc.nodes[k].isContainer).length;
         const edgeCount = Object.keys(doc.edges).length;
         return {
           success: true,
@@ -1728,12 +2325,12 @@ window.MinimalFlow = window.MinimalFlow || {};
 
       case "generic_json": {
         const doc = parseGenericJson(detection.data, isDark);
-        const nodeCount = Object.keys(doc.nodes).length;
+        const nodeCount = Object.keys(doc.nodes).filter(k => !doc.nodes[k].isContainer).length;
         const edgeCount = Object.keys(doc.edges).length;
         return {
           success: true,
           detectedType: "generic_json",
-          formatTitle: "Generic Diagram JSON (Array)",
+          formatTitle: "Universal Diagram JSON",
           document: doc,
           nodeCount,
           edgeCount
@@ -1750,12 +2347,16 @@ window.MinimalFlow = window.MinimalFlow || {};
 
   // Export module ke namespace MinimalFlow
   exports.Adapter = {
+    computeNodeDimensions,
     detectFormat,
     parseUniversal,
     parseMermaidScript,
+    parseMermaidToDocument,
     parseMinimalFlowVisionJson,
     parseMashimurelayJson,
+    parseMashimurelayWorkflowJson,
     parseGenericJson,
+    parseStepListToDocument,
     layoutGraph
   };
 
